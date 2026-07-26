@@ -1,0 +1,39 @@
+- generic [ref=e134]:
+  - banner [ref=e135]:
+    - generic [ref=e136]:
+      - link "Avero home" [ref=e137] [cursor=pointer]:
+        - /url: /spaces
+        - text: Avero
+      - generic [ref=e138]:
+        - generic [ref=e139]: Faraz Kayan Haque
+        - button "Sign out" [ref=e140] [cursor=pointer]
+  - main [ref=e141]:
+    - link "Back to Spaces" [ref=e143] [cursor=pointer]:
+      - /url: /spaces
+    - generic [ref=e145]:
+      - generic [ref=e146]:
+        - heading "Timeline Card Test" [level=1] [ref=e147]
+        - paragraph [ref=e148]: Verifying the redesigned Memory timeline card
+      - link "Space settings" [ref=e149] [cursor=pointer]:
+        - /url: /spaces/ff0b4cf4-a0e6-43a3-9b0d-975dcb593d94/settings
+        - img [ref=e150]
+    - link "Create Memory" [ref=e154] [cursor=pointer]:
+      - /url: /spaces/ff0b4cf4-a0e6-43a3-9b0d-975dcb593d94/memories/new
+    - generic [ref=e155]:
+      - generic [ref=e157]:
+        - generic:
+          - img
+        - textbox "Search memories" [ref=e158]:
+          - /placeholder: Search memories…
+      - list [ref=e159]:
+        - listitem [ref=e160]:
+          - generic [ref=e163]:
+            - generic [ref=e164]:
+              - heading "Sunset at Cox's Bazar" [level=3] [ref=e165]:
+                - link "Sunset at Cox's Bazar" [ref=e166] [cursor=pointer]:
+                  - /url: /spaces/ff0b4cf4-a0e6-43a3-9b0d-975dcb593d94/memories/86a29154-1783-416e-b61f-5c1aa2b4b0ae
+              - generic [ref=e167]: Trip
+            - paragraph [ref=e168]: Jul 23, 2026·Cox's Bazar
+            - paragraph [ref=e169]: Long walk on the beach as the sun went down. The light turned everything gold.
+            - button "React with Heart" [ref=e172] [cursor=pointer]:
+              - img [ref=e173]

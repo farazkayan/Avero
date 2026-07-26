@@ -1,0 +1,29 @@
+- main [ref=e5]:
+  - generic [ref=e6]: Avero
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - heading "Welcome back." [level=1] [ref=e10]
+      - paragraph [ref=e11]: Sign in to return to your Spaces.
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]: Email
+        - textbox "Email" [active] [ref=e16]:
+          - /placeholder: you@example.com
+          - text: tester.a@example.com
+      - generic [ref=e17]:
+        - generic [ref=e18]: Password
+        - generic [ref=e19]:
+          - textbox "Password" [ref=e20]:
+            - /placeholder: Enter your password
+            - text: TestPass123!
+          - button "Show password" [ref=e21] [cursor=pointer]:
+            - img [ref=e22]
+      - link "Forgot password?" [ref=e26] [cursor=pointer]:
+        - /url: /forgot-password
+      - alert [ref=e31]: That email or password doesn't match.
+      - button "Sign in" [ref=e27] [cursor=pointer]:
+        - generic [ref=e28]: Sign in
+    - paragraph [ref=e29]:
+      - text: Don't have an account?
+      - link "Create one." [ref=e30] [cursor=pointer]:
+        - /url: /signup

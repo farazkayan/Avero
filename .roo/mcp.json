@@ -1,0 +1,58 @@
+{
+	"mcpServers": {
+		"context7": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@upstash/context7-mcp@latest"
+			],
+			"alwaysAllow": [
+				"query-docs",
+				"resolve-library-id"
+			]
+		},
+		"sequential-thinking": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-sequential-thinking"
+			],
+			"alwaysAllow": [
+				"sequentialthinking"
+			]
+		},
+		"playwright": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@playwright/mcp"
+			],
+			"alwaysAllow": [
+				"browser_snapshot",
+				"browser_fill_form",
+				"browser_click",
+				"browser_console_messages",
+				"browser_network_requests",
+				"browser_network_request",
+				"browser_evaluate",
+				"browser_run_code_unsafe",
+				"browser_file_upload",
+				"browser_close",
+				"browser_take_screenshot",
+				"browser_wait_for",
+				"browser_navigate_back"
+			],
+			"disabled": true
+		},
+		"magic": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@21st-dev/magic"
+			],
+			"env": {
+				"API_KEY": "21st_sk_c3a52afec794752878f74705107382989618cc9cc0effd1aed81678177693af8"
+			}
+		}
+	}
+}

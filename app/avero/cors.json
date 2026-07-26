@@ -1,0 +1,24 @@
+[
+  {
+    "corsRuleName": "downloadFromAnyOrigin",
+    "allowedOrigins": ["*"],
+    "allowedOperations": ["b2_download_file_by_id", "b2_download_file_by_name"],
+    "allowedHeaders": ["authorization", "range"],
+    "maxAgeSeconds": 3600
+  },
+  {
+    "corsRuleName": "s3DownloadFromAnyOrigin",
+    "allowedOrigins": ["*"],
+    "allowedOperations": ["s3_head", "s3_get"],
+    "allowedHeaders": ["authorization", "range"],
+    "maxAgeSeconds": 3600
+  },
+  {
+    "corsRuleName": "s3UploadFromLocalDev",
+    "allowedOrigins": ["http://localhost:5173"],
+    "allowedOperations": ["s3_put", "s3_head", "s3_get"],
+    "allowedHeaders": ["*"],
+    "exposeHeaders": ["ETag"],
+    "maxAgeSeconds": 3600
+  }
+]

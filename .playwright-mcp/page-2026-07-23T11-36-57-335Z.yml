@@ -1,0 +1,62 @@
+- generic [ref=e48]:
+  - banner [ref=e49]:
+    - generic [ref=e50]:
+      - link "Avero home" [ref=e51] [cursor=pointer]:
+        - /url: /spaces
+        - text: Avero
+      - generic [ref=e52]:
+        - generic [ref=e53]: Faraz Kayan Haque
+        - button "Sign out" [ref=e54] [cursor=pointer]
+  - main [ref=e55]:
+    - link "Back to Space" [ref=e57] [cursor=pointer]:
+      - /url: /spaces/ff0b4cf4-a0e6-43a3-9b0d-975dcb593d94
+    - article [ref=e58]:
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - heading "Sunset at Cox's Bazar" [level=1] [ref=e62]
+            - generic [ref=e63]: Trip
+          - link "Edit" [ref=e64] [cursor=pointer]:
+            - /url: /spaces/ff0b4cf4-a0e6-43a3-9b0d-975dcb593d94/memories/86a29154-1783-416e-b61f-5c1aa2b4b0ae/edit
+        - paragraph [ref=e65]: July 23, 2026
+        - paragraph [ref=e66]: Cox's Bazar
+      - paragraph [ref=e68]: Long walk on the beach as the sun went down. The light turned everything gold.
+      - region "Media" [ref=e69]:
+        - generic [ref=e70]:
+          - generic [ref=e71] [cursor=pointer]:
+            - button "Tap to add photos or videos" [ref=e72]
+            - generic [ref=e73]: Tap to add photos or videos
+          - paragraph [ref=e74]: Videos must be under 100MB.
+      - region "Comments" [ref=e75]:
+        - heading "Comments" [level=2] [ref=e76]
+        - generic [ref=e78]:
+          - generic [ref=e79]: Add a comment
+          - textbox "Add a comment" [ref=e80]:
+            - /placeholder: Add a comment…
+          - generic [ref=e81]:
+            - paragraph [ref=e83]: .
+            - button "Comment" [disabled] [ref=e85]
+        - generic [ref=e87]:
+          - heading "No comments yet" [level=2] [ref=e88]
+          - paragraph [ref=e89]: Be the first to add to this memory — a thought, a detail, a moment only you remember.
+      - region "Reactions" [ref=e90]:
+        - heading "Reactions" [level=2] [ref=e91]
+        - list [ref=e93]:
+          - listitem [ref=e94]:
+            - button "React with Heart" [ref=e95] [cursor=pointer]:
+              - generic [ref=e96]: ❤️
+          - listitem [ref=e97]:
+            - button "React with Laugh" [ref=e98] [cursor=pointer]:
+              - generic [ref=e99]: 😂
+          - listitem [ref=e100]:
+            - button "React with Fire" [ref=e101] [cursor=pointer]:
+              - generic [ref=e102]: 🔥
+          - listitem [ref=e103]:
+            - button "React with Tearful" [ref=e104] [cursor=pointer]:
+              - generic [ref=e105]: 🥹
+          - listitem [ref=e106]:
+            - button "React with Clap" [ref=e107] [cursor=pointer]:
+              - generic [ref=e108]: 👏
+          - listitem [ref=e109]:
+            - button "React with Surprised" [ref=e110] [cursor=pointer]:
+              - generic [ref=e111]: 😮

@@ -1,0 +1,15 @@
+- generic [ref=e32]:
+  - banner [ref=e33]:
+    - generic [ref=e34]:
+      - link "Avero home" [ref=e35] [cursor=pointer]:
+        - /url: /spaces
+        - text: Avero
+      - generic [ref=e36]:
+        - generic [ref=e37]: Faraz Kayan Haque
+        - button "Sign out" [ref=e38] [cursor=pointer]
+  - main [ref=e39]:
+    - generic [ref=e40]:
+      - heading "Your Spaces" [level=1] [ref=e41]
+      - link "Create a Space" [ref=e42] [cursor=pointer]:
+        - /url: /spaces/new
+    - paragraph [ref=e44]: We couldn't load your Spaces. Please try again.

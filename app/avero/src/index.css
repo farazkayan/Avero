@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+   Design System v2.0 - token plumbing & base primitives.
+   Color tokens live in tailwind.config.js; this file holds the CSS-variable
+   RGB channels, grain texture, glass/elevation utilities, and motion pattern
+   so any rgba()/gradient/glow need references the token instead of hardcoding
+   hex channels and drifting over time.
+*/
+
+:root {
+  /* RGB channels for the accent (accent-400) and error, so keyframes,
+     gradients, and glows can use rgba(var(--accent-rgb), <alpha>) without
+     hardcoding values. Update here once; propagates everywhere. */
+  --accent-rgb: 184, 150, 104;
+  --error-rgb: 201, 138, 122;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    /* Lift body content above the grain layer (see body::before). */
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/*
+   Grain / texture - subtle warmth on the base background (Design System S2).
+   A fixed, pointer-events-none SVG noise overlay at ~3.5% opacity. Gives
+   warmth without looking noisy. Static (no motion concern).
+*/
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Respect reduced-motion: shorten decorative transitions while keeping
+   functional spinners (Design System S7). */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+   Glass & Elevation System (Design System S5.1) - a small, fixed set of
+   elevation levels so every glass surface pulls from the same defined values
+   rather than inventing blur/opacity per-component.
+
+   elevation-base   -> page background (canvas), no blur, no border.
+   elevation-raised -> cards/inputs (canvas-soft), hairline border, no blur.
+   elevation-glass  -> honest layering only (overlay panels, stat strips):
+                       real backdrop-filter blur + saturate, translucent fill.
+   scrim            -> modal/lightbox backdrops (formalizes existing usages).
+
+   Components should use the .glass-panel / .scrim utility classes instead of
+   hand-rolling backdrop-blur utilities and ad-hoc bg opacity values.
+ */
+.glass-panel {
+  background-color: rgba(28, 28, 30, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+.scrim {
+  background-color: rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/*
+   Motion - reusable hover-lift + glow pattern (Design System S7).
+   Subtle translateY, border-color transition, and one soft accent glow-in.
+   No bounce, no overshoot. This is the canonical hover affordance for
+   interactive surfaces; components add this class instead of one-off CSS.
+*/
+.hover-lift {
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--accent-rgb), 0.4);
+  /* One hairline glow - the only place accent glow is applied on hover. */
+  box-shadow:
+    0 0 0 1px rgba(var(--accent-rgb), 0.1),
+    0 8px 24px -12px rgba(var(--accent-rgb), 0.25);
+}
+
+/* One-time discoverability hint for the timeline reaction pill (Design System
+   S7 - "Motion should explain change, not distract"). A single, calm accent
+   glow that plays once on the first Memory card a user ever sees, then never
+   again (gated by a localStorage flag in useReactionHint). It does not block
+   interaction, show a tooltip, or loop - it just draws the eye once. */
+@keyframes reaction-hint-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0);
+  }
+  40% {
+    box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.28);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0);
+  }
+}
+
+.reaction-hint-pulse {
+  animation: reaction-hint-pulse 1.2s ease-out 1;
+}
+
+/* Calm enter for the reaction picker popup (Design System S7 - smooth,
+   subtle, meaningful). A short opacity + slight rise, once. */
+@keyframes reaction-popup-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.reaction-popup-enter {
+  animation: reaction-popup-enter 150ms ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reaction-popup-enter {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* Under reduced motion, the pulse becomes a single brief, near-instant glow
+   rather than a 1.2s animation - still a subtle cue, never a distraction. */
+@media (prefers-reduced-motion: reduce) {
+  .reaction-hint-pulse {
+    animation-duration: 0.01ms;
+  }
+}

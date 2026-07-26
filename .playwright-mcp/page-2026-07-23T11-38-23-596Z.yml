@@ -1,0 +1,14 @@
+- generic [ref=e112]:
+  - banner [ref=e113]:
+    - generic [ref=e114]:
+      - link "Avero home" [ref=e115] [cursor=pointer]:
+        - /url: /spaces
+        - text: Avero
+      - generic [ref=e116]:
+        - generic [ref=e117]: Faraz Kayan Haque
+        - button "Sign out" [ref=e118] [cursor=pointer]
+  - main [ref=e119]:
+    - link "Back to Spaces" [ref=e121] [cursor=pointer]:
+      - /url: /spaces
+    - status [ref=e122]:
+      - img [ref=e123]

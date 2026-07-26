@@ -1,0 +1,22 @@
+# ============================================================================
+# Supabase local / project configuration
+# ----------------------------------------------------------------------------
+# Project: avero (ref: lvsgaqykefkvsbnkglpg)
+# ============================================================================
+
+project_id = "lvsgaqykefkvsbnkglpg"
+
+[functions.media-storage]
+# The function performs its own JWT verification (via supabase.auth.getUser with
+# the caller's Authorization header) so it can return clean JSON error
+# responses for auth failures instead of the gateway's non-JSON "Invalid JWT".
+# Disabling gateway-level JWT verification is intentional and safe here because
+# every code path still requires a valid user before doing any work.
+verify_jwt = false
+
+[functions.media-thumbnail]
+# Same JWT-verification approach as media-storage: the function performs its
+# own auth (supabase.auth.getUser with the caller's Authorization header) so it
+# can return clean JSON error responses. verify_jwt = false is intentional and
+# safe — every code path requires a valid user before doing any work.
+verify_jwt = false
