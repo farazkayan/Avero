@@ -286,3 +286,50 @@ export function GearIcon({ className = "" }: IconProps) {
       </svg>
     );
   }
+
+  /**
+   * A vertical "more" (⋮) glyph used as the trigger for a comment's overflow
+   * menu (feature-specs §4 comments enhancement). Three dots, matching the
+   * outline style of the other icons (Design System §9).
+   */
+  export function MoreIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="5" r="1.6" />
+        <circle cx="12" cy="12" r="1.6" />
+        <circle cx="12" cy="19" r="1.6" />
+      </svg>
+    );
+  }
+
+  /**
+   * An outline pencil glyph used for the "Edit" affordance in a comment's
+   * overflow menu (feature-specs §4 comments enhancement). Matches the
+   * outline style of the other icons (Design System §9).
+   */
+  export function PencilIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 20h9" />
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+      </svg>
+    );
+  }

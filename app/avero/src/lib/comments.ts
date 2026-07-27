@@ -36,6 +36,9 @@ const GENERIC_ADD_ERROR = "We couldn't post your comment. Please try again.";
 /** Calm, honest fallback message for a failed delete (auth-design §7 voice). */
 const GENERIC_DELETE_ERROR = "We couldn't delete this comment. Please try again.";
 
+/** Calm, honest fallback message for a failed edit (auth-design §7 voice). */
+const GENERIC_UPDATE_ERROR = "We couldn't save your edit. Please try again.";
+
 // ============================================================================
 // Fetch (feature-specs §4 — chronological order)
 // ============================================================================
@@ -202,6 +205,79 @@ export async function deleteComment(
     // Network failures and unexpected thrown errors resolve to the same calm,
     // honest message (auth-design §7). The caller never sees a raw exception.
     return { ok: false, error: GENERIC_DELETE_ERROR };
+  }
+}
+
+// ============================================================================
+// Update / edit (feature-specs §4 enhancement — author only)
+// ============================================================================
+
+/** Parameters for {@link updateComment}. */
+export type UpdateCommentParams = {
+  /** The `comments.id` of the row to edit. */
+  commentId: string;
+  /** The editing user's id. Used to scope the update to the current user's
+   *  row — the `comments_update` RLS policy is `user_id = auth.uid()`, so an
+   *  update scoped to `(id, user_id)` can only ever edit the current user's
+   *  own comment. (Unlike delete, owners may NOT edit others' comments —
+   *  editing is author-only, matching the RLS policy exactly.) */
+  userId: string;
+  /** The new comment text. The caller must trim and enforce
+   *  {@link MAX_COMMENT_LENGTH} before calling. */
+  content: string;
+};
+
+/**
+ * Result of {@link updateComment}. `ok` carries the updated comment (with its
+ * author name resolved) so the list can replace the row without a refetch;
+ * `error` carries a user-facing message when the update failed. The function
+ * never throws — callers can use a plain `if`/`else` without a try/catch.
+ */
+export type UpdateCommentResult =
+  | { ok: true; comment: CommentWithAuthor }
+  | { ok: false; error: string };
+
+/**
+ * Edits a single comment's content and returns the updated row (with author
+ * name) so the list can swap it in place — no full reload.
+ *
+ * The `comments_update` RLS policy is the real gate: it requires
+ * `user_id = auth.uid()` (author only — owners may delete but NOT edit
+ * others' comments). The update is scoped to `(id, user_id)` so a mismatched
+ * `user_id` is rejected at the database; the function surfaces that as a calm
+ * error. The `updated_at` column is auto-maintained by a trigger
+ * (migration 20260703170700), so only `content` is set here.
+ *
+ * @returns the updated comment (with `profiles.name` resolved) on success,
+ *   or a calm error message on failure.
+ */
+export async function updateComment(
+  params: UpdateCommentParams,
+): Promise<UpdateCommentResult> {
+  const { commentId, userId, content } = params;
+
+  try {
+    const { data, error } = await supabase
+      .from("comments")
+      .update({ content })
+      // Scope to the current user's own row — the comments_update RLS policy
+      // enforces user_id = auth.uid() (author only).
+      .eq("id", commentId)
+      .eq("user_id", userId)
+      // Return the row joined to profiles so the list can swap it in with the
+      // author name already resolved — no second round trip.
+      .select("*, profiles(name)")
+      .single();
+
+    if (error || !data) {
+      return { ok: false, error: GENERIC_UPDATE_ERROR };
+    }
+
+    return { ok: true, comment: data as CommentWithAuthor };
+  } catch {
+    // Network failures and unexpected thrown errors resolve to the same calm,
+    // honest message (auth-design §7). The caller never sees a raw exception.
+    return { ok: false, error: GENERIC_UPDATE_ERROR };
   }
 }
 
