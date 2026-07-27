@@ -4,23 +4,86 @@
 
 /*
    Design System v2.0 - token plumbing & base primitives.
-   Color tokens live in tailwind.config.js; this file holds the CSS-variable
-   RGB channels, grain texture, glass/elevation utilities, and motion pattern
-   so any rgba()/gradient/glow need references the token instead of hardcoding
-   hex channels and drifting over time.
+   Color tokens live in tailwind.config.js (resolved through the CSS-variable
+   RGB triplets below); this file holds the theme token values, grain texture,
+   glass/elevation utilities, and motion pattern so any rgba()/gradient/glow
+   need references the token instead of hardcoding hex channels and drifting
+   over time.
+
+   Theming (roadmap Phase 6): `:root` carries the dark palette (the default);
+   `:root.light` overrides the same custom properties with the light palette.
+   `ThemeProvider` toggles the `light` class on <html> and sets
+   `color-scheme` so native form controls and scrollbars follow.
 */
 
 :root {
+  /* --- Dark palette (default) --- warm-neutral near-black, hue ≈ 75°. */
+  --color-canvas: 11 11 12;          /* #0b0b0c  oklch(0.14 0.004 75) */
+  --color-canvas-soft: 19 19 20;     /* #131314  oklch(0.18 0.004 75) */
+  --color-canvas-raised: 28 28 30;   /* #1c1c1e  oklch(0.23 0.005 75) */
+  --color-ink: 236 236 236;          /* #ececec  oklch(0.92 0.004 75) */
+  --color-ink-muted: 141 141 138;    /* #8d8d8a  oklch(0.62 0.006 75) */
+  --color-ink-disabled: 90 90 87;    /* #5a5a57  oklch(0.42 0.006 75) */
+  --color-accent-400: 184 150 104;  /* #b89668  oklch(0.72 0.085 75) */
+  --color-accent-500: 156 125 82;   /* #9c7d52  oklch(0.62 0.085 75) */
+  --color-accent-600: 128 101 64;   /* #806540  oklch(0.52 0.085 75) */
+  --color-accent-700: 107 85 53;     /* #6b5535  oklch(0.45 0.085 75) */
+  --color-error: 201 138 122;        /* #c98a7a */
+
   /* RGB channels for the accent (accent-400) and error, so keyframes,
      gradients, and glows can use rgba(var(--accent-rgb), <alpha>) without
-     hardcoding values. Update here once; propagates everywhere. */
-  --accent-rgb: 184, 150, 104;
-  --error-rgb: 201, 138, 122;
+     hardcoding values. Update here once; propagates everywhere. These follow
+     the active theme so the hover glow and reaction pulse use the correct
+     brass in light mode too. */
+  --accent-rgb: var(--color-accent-400);
+  --error-rgb: var(--color-error);
+
+  /* Glass / elevation surface fills (Design System §5.1). Theme-aware so a
+     light glass panel is a translucent warm-white, not a translucent black. */
+  --glass-fill: 28 28 30;           /* canvas-raised, dark */
+  --glass-border: 255 255 255;      /* hairline, dark */
+  --scrim-fill: 0 0 0;              /* modal/lightbox backdrop, dark */
+}
+
+:root.light {
+  /* --- Light palette --- same warm-neutral hue ≈ 75° at near-zero chroma,
+     inverted for light backgrounds (Design System §2). The lightness ramp
+     keeps the same elevation direction as dark: raised surfaces are lighter
+     than the page, so cards read as lifted, not as a color change. */
+  --color-canvas: 245 244 238;      /* #f5f4ee  oklch(0.96 0.005 75) — warm paper */
+  --color-canvas-soft: 251 250 245; /* #fbfaf5  oklch(0.985 0.004 75) — cards */
+  --color-canvas-raised: 255 255 255;/* #ffffff  oklch(1 0 0) — glass base */
+  --color-ink: 33 31 26;            /* #211f1a  oklch(0.18 0.006 75) — near-black */
+  --color-ink-muted: 107 105 99;    /* #6b6963  oklch(0.50 0.006 75) — secondary */
+  --color-ink-disabled: 163 161 153;/* #a3a199  oklch(0.70 0.006 75) — faint */
+  /* Accent — same aged-brass hexes, remapped for contrast on a light surface.
+     accent-400 (text/icons/links) darkens to the brass deep end so it stays
+     legible on cream; accent-600 keeps the dark value so `text-white` on solid
+     fills still passes AA. No new hue/chroma is introduced. */
+  --color-accent-400: 107 85 53;    /* #6b5535  oklch(0.45 0.085 75) — text/icons */
+  --color-accent-500: 128 101 64;   /* #806540  oklch(0.52 0.085 75) — core */
+  --color-accent-600: 128 101 64;   /* #806540  oklch(0.52 0.085 75) — fills */
+  --color-accent-700: 107 85 53;    /* #6b5535  oklch(0.45 0.085 75) — pressed */
+  --color-error: 167 106 88;        /* #a76a58  — darkened terracotta for light */
+
+  --accent-rgb: var(--color-accent-400);
+  --error-rgb: var(--color-error);
+
+  /* Light glass: translucent warm-white fill with a dark hairline so the
+     panel reads as a layer above the page, not a hole. */
+  --glass-fill: 255 255 255;
+  --glass-border: 33 31 26;
+  /* Scrims over media stay dark in both themes — a dark backdrop over photos
+     is correct even in light mode (keeps the media the focal point). */
+  --scrim-fill: 0 0 0;
 }
 
 @layer base {
   html {
     color-scheme: dark;
+  }
+  html.light {
+    color-scheme: light;
   }
 
   body {
@@ -34,7 +97,8 @@
 /*
    Grain / texture - subtle warmth on the base background (Design System S2).
    A fixed, pointer-events-none SVG noise overlay at ~3.5% opacity. Gives
-   warmth without looking noisy. Static (no motion concern).
+   warmth without looking noisy. Static (no motion concern). Kept in both
+   themes; on light the same low-opacity noise adds the warm "paper" feel.
 */
 body::before {
   content: "";
@@ -62,21 +126,21 @@ body::before {
    elevation-base   -> page background (canvas), no blur, no border.
    elevation-raised -> cards/inputs (canvas-soft), hairline border, no blur.
    elevation-glass  -> honest layering only (overlay panels, stat strips):
-                       real backdrop-filter blur + saturate, translucent fill.
+                        real backdrop-filter blur + saturate, translucent fill.
    scrim            -> modal/lightbox backdrops (formalizes existing usages).
 
    Components should use the .glass-panel / .scrim utility classes instead of
    hand-rolling backdrop-blur utilities and ad-hoc bg opacity values.
- */
+*/
 .glass-panel {
-  background-color: rgba(28, 28, 30, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgb(var(--glass-fill) / 0.6);
+  border: 1px solid rgb(var(--glass-border) / 0.08);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
   backdrop-filter: blur(16px) saturate(140%);
 }
 
 .scrim {
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgb(var(--scrim-fill) / 0.7);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }

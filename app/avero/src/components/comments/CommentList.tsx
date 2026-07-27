@@ -163,7 +163,7 @@ export default function CommentList({
             <Spinner size={22} />
           </div>
         ) : loadError ? (
-          <div className="rounded-xl border border-white/5 bg-canvas-soft p-4 text-center">
+          <div className="rounded-xl border border-ink/5 bg-canvas-soft p-4 text-center">
             <p className="text-sm text-error">{loadError}</p>
           </div>
         ) : comments.length === 0 ? (
@@ -237,7 +237,7 @@ function CommentRow({
   onConfirmDelete,
 }: CommentRowProps) {
   return (
-    <div className="group rounded-xl border border-white/5 bg-canvas-soft p-4 transition-colors duration-200 hover:border-white/10 focus-within:border-white/10">
+    <div className="group rounded-xl border border-ink/5 bg-canvas-soft p-4 transition-colors duration-200 hover:border-ink/10 focus-within:border-ink/10">
       <div className="flex items-baseline justify-between gap-3">
         <div className="min-w-0 flex items-baseline gap-2">
           <span className="text-sm font-medium text-ink">

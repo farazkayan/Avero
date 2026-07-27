@@ -171,7 +171,7 @@ export default function SpacesDashboardPage() {
           <Spinner size={28} />
         </div>
       ) : error ? (
-        <div className="mt-10 rounded-xl border border-white/5 bg-canvas-soft p-6 text-center">
+        <div className="mt-10 rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
           <p className="text-sm text-error">{error}</p>
         </div>
       ) : memberships.length === 0 ? (

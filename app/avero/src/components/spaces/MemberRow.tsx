@@ -89,7 +89,7 @@ function RoleBadge({ role }: { role: SpaceRole }) {
     );
   }
   return (
-    <span className="shrink-0 rounded-full bg-white/5 px-2.5 py-0.5 text-xs font-medium text-ink-muted">
+    <span className="shrink-0 rounded-full bg-ink/5 px-2.5 py-0.5 text-xs font-medium text-ink-muted">
       Member
     </span>
   );

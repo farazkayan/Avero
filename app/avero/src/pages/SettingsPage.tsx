@@ -238,7 +238,7 @@ export default function SettingsPage() {
             <span className="block text-sm font-medium text-ink-muted mb-2">
               Email
             </span>
-            <p className="rounded-lg border border-white/10 bg-canvas px-3.5 py-2.5 text-base text-ink-muted">
+            <p className="rounded-lg border border-ink/10 bg-canvas px-3.5 py-2.5 text-base text-ink-muted">
               {email || "—"}
             </p>
           </div>
@@ -274,7 +274,7 @@ export default function SettingsPage() {
             calm outline. Two real <button>s (not a hidden radio group) so
             the affordance is obvious and keyboard-accessible. */}
         <div
-          className="mt-4 inline-flex rounded-lg border border-white/10 p-1"
+          className="mt-4 inline-flex rounded-lg border border-ink/10 p-1"
           role="group"
           aria-label="Theme preference"
         >

@@ -299,7 +299,7 @@ function ThumbnailFace({
   return (
     <div
       className={[
-        "absolute inset-0 overflow-hidden rounded-lg border border-white/5",
+        "absolute inset-0 overflow-hidden rounded-lg border border-ink/5",
         "bg-canvas-raised",
         // When stacked, lift the front above the peeking edge.
         isStacked ? "z-10" : "",
@@ -348,7 +348,7 @@ function PeekingEdge({ media, state }: { media: Media; state?: ThumbState }) {
 
   return (
     <div
-      className="absolute inset-0 overflow-hidden rounded-lg border border-white/5 bg-canvas-raised"
+      className="absolute inset-0 overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised"
       // Restrained fanned effect: a small offset up-left + a slight clockwise
       // rotation. Reads as a stacked photo edge, not a cartoon fan.
       style={{

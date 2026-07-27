@@ -149,7 +149,7 @@ export default function TagInput({
           "focus-within:ring-2 focus-within:ring-accent-500/60 focus-within:border-accent-500",
           hasError
             ? "border-error/60 focus-within:border-error focus-within:ring-error/30"
-            : "border-white/10 hover:border-white/20",
+            : "border-ink/10 hover:border-ink/20",
           disabled ? "opacity-60" : "",
         ].join(" ")}
       >

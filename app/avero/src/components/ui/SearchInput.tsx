@@ -77,7 +77,7 @@ export default function SearchInput({
             // Room for the leading search glyph and the trailing clear button
             // so the typed text never underlaps either.
             "pl-10 pr-10",
-            "border-white/10 hover:border-white/20",
+            "border-ink/10 hover:border-ink/20",
           ].join(" ")}
         />
 

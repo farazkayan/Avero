@@ -75,7 +75,7 @@ const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
               trailingAddon ? "pr-11" : "",
               hasError
                 ? "border-error/60 focus:border-error focus:ring-error/30"
-                : "border-white/10 hover:border-white/20",
+                : "border-ink/10 hover:border-ink/20",
             ].join(" ")}
             {...inputProps}
           />

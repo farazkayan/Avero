@@ -312,7 +312,7 @@ export default function MemoryDetailPage() {
           </div>
         </div>
       ) : loadError ? (
-        <div className="rounded-xl border border-white/5 bg-canvas-soft p-6 text-center">
+        <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
           <p className="text-sm text-error">{loadError}</p>
         </div>
       ) : memory ? (

@@ -508,7 +508,7 @@ export default function EditMemoryPage() {
           </div>
         </div>
       ) : loadError ? (
-        <div className="rounded-xl border border-white/5 bg-canvas-soft p-6 text-center">
+        <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
           <p className="text-sm text-error">{loadError}</p>
         </div>
       ) : memory ? (
@@ -585,7 +585,7 @@ export default function EditMemoryPage() {
                   "focus:outline-none focus:ring-2 focus:ring-accent-500/60 focus:border-accent-500",
                   memoryTypeError
                     ? "border-error/60 focus:border-error focus:ring-error/30"
-                    : "border-white/10 hover:border-white/20",
+                    : "border-ink/10 hover:border-ink/20",
                 ].join(" ")}
               >
                 <option value="" disabled>

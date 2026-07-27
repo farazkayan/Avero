@@ -30,15 +30,15 @@ type SpaceCardProps = {
  * Visual language (all from v2.0 tokens — no one-off values), mirroring
  * {@link MemoryTimelineCard}:
  *  - **Card surface:** `elevation-raised` → `bg-canvas-soft` + hairline
- *    `border border-white/5`, `rounded-xl`.
+ *    `border border-ink/5`, `rounded-xl`.
  *  - **Hover:** the canonical `.hover-lift` utility (translateY, accent border,
  *    one hairline glow). This replaces the card's former ad-hoc
- *    `transition-colors duration-200 hover:border-white/10 hover:bg-canvas-raised`
+ *    `transition-colors duration-200 hover:border-ink/10 hover:bg-canvas-raised`
  *    — the deliberate `.hover-lift` application the design system calls for.
  *  - **Title:** `text-base font-semibold text-ink` (primary sans-serif, per
  *    Design System §3 — titles stay sans).
  *  - **Role badge:** `bg-accent-soft text-accent-400` (Owner) /
- *    `bg-white/5 text-ink-muted` (Member), with `font-mono` text — the role
+ *    `bg-ink/5 text-ink-muted` (Member), with `font-mono` text — the role
  *    label is metadata, so it uses the signature mono face per Design System
  *    §3 (mono reserved for dates/counts/metadata labels). The pill affordance
  *    is kept (a recognizable role indicator); only the text face changes.
@@ -58,7 +58,7 @@ export default function SpaceCard({ space, role, thumbnails }: SpaceCardProps) {
   return (
     <Link
       to={spaceDetailPath(space.id)}
-      className="hover-lift block rounded-xl border border-white/5 bg-canvas-soft p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
+      className="hover-lift block rounded-xl border border-ink/5 bg-canvas-soft p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
     >
       <div className="flex items-start gap-4">
         {/* Text content — flexes to fill, stays left of the thumbnail. */}
@@ -99,7 +99,7 @@ function RoleBadge({ role }: { role: SpaceRole }) {
     );
   }
   return (
-    <span className="shrink-0 rounded-full bg-white/5 px-2.5 py-0.5 font-mono text-xs font-medium text-ink-muted">
+    <span className="shrink-0 rounded-full bg-ink/5 px-2.5 py-0.5 font-mono text-xs font-medium text-ink-muted">
       Member
     </span>
   );

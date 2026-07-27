@@ -54,10 +54,10 @@ type MemoryTimelineCardProps = {
  *
  * Visual language (all from v2.0 tokens — no one-off values):
  *  - **Card surface:** `elevation-raised` → `bg-canvas-soft` + hairline
- *    `border border-white/5`, `rounded-xl`.
+ *    `border border-ink/5`, `rounded-xl`.
  *  - **Hover:** the canonical `.hover-lift` utility (translateY, accent border,
  *    one hairline glow). This replaces the card's former ad-hoc
- *    `transition-colors duration-200 hover:border-white/10 hover:bg-canvas-raised`
+ *    `transition-colors duration-200 hover:border-ink/10 hover:bg-canvas-raised`
  *    — the deliberate `.hover-lift` application the design system calls for.
  *  - **Title:** `text-base font-semibold text-ink` (primary sans-serif, per
  *    Design System §3 — titles stay sans).
@@ -90,7 +90,7 @@ export default function MemoryTimelineCard({
   onToggleReaction,
 }: MemoryTimelineCardProps) {
   return (
-    <div className="hover-lift rounded-xl border border-white/5 bg-canvas-soft p-5">
+    <div className="hover-lift rounded-xl border border-ink/5 bg-canvas-soft p-5">
       <div className="flex items-start gap-4">
         {/* Text content — flexes to fill, stays left of the thumbnail. */}
         <div className="min-w-0 flex-1">

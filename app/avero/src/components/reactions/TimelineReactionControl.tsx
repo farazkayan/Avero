@@ -343,7 +343,7 @@ export default function TimelineReactionControl({
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60",
           hasReacted
             ? "border-accent-500/60 bg-accent-soft text-ink"
-            : "border-white/10 bg-canvas text-ink-muted hover:border-white/20 hover:text-ink",
+            : "border-ink/10 bg-canvas text-ink-muted hover:border-ink/20 hover:text-ink",
           "disabled:cursor-not-allowed disabled:opacity-60",
           showHint ? "reaction-hint-pulse" : "",
         ].join(" ")}
@@ -485,7 +485,7 @@ const ReactionPickerPopup = forwardRef<HTMLDivElement, ReactionPickerPopupProps>
         onMouseLeave={onMouseLeave}
         onKeyDown={handleKeyDown}
         className={[
-          "z-50 flex items-center gap-1 rounded-full border border-white/10",
+          "z-50 flex items-center gap-1 rounded-full border border-ink/10",
           "bg-canvas-raised p-1.5 shadow-lg",
           "reaction-popup-enter",
         ].join(" ")}
@@ -508,8 +508,8 @@ const ReactionPickerPopup = forwardRef<HTMLDivElement, ReactionPickerPopupProps>
               className={[
                 "flex h-9 w-9 items-center justify-center rounded-full text-xl",
                 "transition-transform duration-150",
-                "hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60",
-                isActive ? "scale-125 bg-white/10" : "",
+                "hover:bg-ink/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60",
+                isActive ? "scale-125 bg-ink/10" : "",
               ].join(" ")}
             >
               <span aria-hidden="true">{emoji}</span>

@@ -501,7 +501,7 @@ export default function CreateMemoryPage() {
                 "focus:outline-none focus:ring-2 focus:ring-accent-500/60 focus:border-accent-500",
                 memoryTypeError
                   ? "border-error/60 focus:border-error focus:ring-error/30"
-                  : "border-white/10 hover:border-white/20",
+                  : "border-ink/10 hover:border-ink/20",
               ].join(" ")}
             >
               <option value="" disabled>
@@ -575,9 +575,9 @@ export default function CreateMemoryPage() {
               htmlFor="media-files"
               className={[
                 "flex cursor-pointer items-center justify-center rounded-lg",
-                "border border-dashed border-white/15 px-4 py-6",
+                "border border-dashed border-ink/15 px-4 py-6",
                 "text-sm text-ink-muted transition-colors duration-200",
-                "hover:border-white/25 hover:text-ink",
+                "hover:border-ink/25 hover:text-ink",
                 "focus-within:ring-2 focus-within:ring-accent-500/60 focus-within:border-accent-500",
                 (isSubmitting || memoryCreated) ? "pointer-events-none opacity-60" : "",
               ].join(" ")}
@@ -606,7 +606,7 @@ export default function CreateMemoryPage() {
                 return (
                   <li
                     key={file.id}
-                    className="flex items-start justify-between gap-3 rounded-lg border border-white/10 bg-canvas-soft px-3.5 py-2.5"
+                    className="flex items-start justify-between gap-3 rounded-lg border border-ink/10 bg-canvas-soft px-3.5 py-2.5"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm text-ink">{file.name}</p>

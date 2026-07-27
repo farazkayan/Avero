@@ -471,7 +471,7 @@ export default function MediaGallery({
   if (loadError) {
     return (
       <section className="mt-8" aria-label="Media">
-        <div className="rounded-xl border border-white/5 bg-canvas-soft p-4 text-center">
+        <div className="rounded-xl border border-ink/5 bg-canvas-soft p-4 text-center">
           <p className="text-sm text-error">{loadError}</p>
         </div>
       </section>
@@ -496,9 +496,9 @@ export default function MediaGallery({
             htmlFor="gallery-media-files"
             className={[
               "flex cursor-pointer items-center justify-center rounded-lg",
-              "border border-dashed border-white/15 px-4 py-6",
+              "border border-dashed border-ink/15 px-4 py-6",
               "text-sm text-ink-muted transition-colors duration-200",
-              "hover:border-white/25 hover:text-ink",
+              "hover:border-ink/25 hover:text-ink",
               "focus-within:ring-2 focus-within:ring-accent-500/60 focus-within:border-accent-500",
             ].join(" ")}
           >
@@ -527,7 +527,7 @@ export default function MediaGallery({
             return (
               <li
                 key={file.id}
-                className="flex items-start justify-between gap-3 rounded-lg border border-white/10 bg-canvas-soft px-3.5 py-2.5"
+                className="flex items-start justify-between gap-3 rounded-lg border border-ink/10 bg-canvas-soft px-3.5 py-2.5"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-ink">{file.name}</p>
@@ -654,7 +654,7 @@ function MediaTile({
 
   if (tile.status === "error") {
     return (
-      <div className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border border-white/5 bg-canvas-soft p-3 text-center">
+      <div className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border border-ink/5 bg-canvas-soft p-3 text-center">
         <p className="text-xs text-ink-muted">Couldn't load</p>
         <button
           type="button"
@@ -670,7 +670,7 @@ function MediaTile({
   const isVideo = item.type === "video";
 
   return (
-    <div className="group relative aspect-square w-full overflow-hidden rounded-lg border border-white/5 bg-canvas-soft transition-colors duration-200 hover:border-white/15 focus-within:border-white/15">
+    <div className="group relative aspect-square w-full overflow-hidden rounded-lg border border-ink/5 bg-canvas-soft transition-colors duration-200 hover:border-ink/15 focus-within:border-ink/15">
       {/* The thumbnail itself — clicking opens the lightbox. */}
       <button
         type="button"

@@ -403,7 +403,7 @@ export default function SpaceDetailPage() {
           </div>
         </div>
       ) : loadError ? (
-        <div className="rounded-xl border border-white/5 bg-canvas-soft p-6 text-center">
+        <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
           <p className="text-sm text-error">{loadError}</p>
         </div>
       ) : space ? (
@@ -482,7 +482,7 @@ export default function SpaceDetailPage() {
                     <button
                       type="button"
                       onClick={() => setSearchQuery("")}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-canvas px-4 py-2.5 text-sm font-semibold text-ink transition-colors duration-200 hover:border-white/20 hover:bg-canvas-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-ink/10 bg-canvas px-4 py-2.5 text-sm font-semibold text-ink transition-colors duration-200 hover:border-ink/20 hover:bg-canvas-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
                     >
                       Clear search
                     </button>

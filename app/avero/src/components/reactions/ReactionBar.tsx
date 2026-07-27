@@ -179,7 +179,7 @@ export default function ReactionBar({
             <Spinner size={20} />
           </div>
         ) : loadError ? (
-          <div className="rounded-xl border border-white/5 bg-canvas-soft p-4 text-center">
+          <div className="rounded-xl border border-ink/5 bg-canvas-soft p-4 text-center">
             <p className="text-sm text-error">{loadError}</p>
           </div>
         ) : summary ? (
@@ -274,7 +274,7 @@ function ReactionPill({
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60",
         hasReacted
           ? "border-accent-500/60 bg-accent-soft text-ink"
-          : "border-white/10 bg-canvas-soft text-ink-muted hover:border-white/20 hover:text-ink",
+          : "border-ink/10 bg-canvas-soft text-ink-muted hover:border-ink/20 hover:text-ink",
         "disabled:cursor-not-allowed disabled:opacity-60",
       ].join(" ")}
     >

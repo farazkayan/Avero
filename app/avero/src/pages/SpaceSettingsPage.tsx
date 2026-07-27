@@ -570,7 +570,7 @@ export default function SpaceSettingsPage() {
           </div>
         </div>
       ) : loadError ? (
-        <div className="rounded-xl border border-white/5 bg-canvas-soft p-6 text-center">
+        <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
           <p className="text-sm text-error">{loadError}</p>
         </div>
       ) : space ? (
@@ -747,7 +747,7 @@ export default function SpaceSettingsPage() {
               {/* Generated invite link — shown after a successful insert.
                   Copyable via the Clipboard API. */}
               {createdInviteLink && (
-                <div className="mt-5 max-w-[420px] rounded-lg border border-white/10 bg-canvas-soft p-4">
+                <div className="mt-5 max-w-[420px] rounded-lg border border-ink/10 bg-canvas-soft p-4">
                   <p className="text-sm font-medium text-ink">
                     Invite link ready
                   </p>

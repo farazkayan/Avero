@@ -9,7 +9,7 @@ export default function Button({ children, variant = "primary" }: ButtonProps) {
   const styles = {
     primary: "bg-white text-black hover:opacity-80",
     secondary: "border border-white text-white hover:bg-white hover:text-black",
-    ghost: "text-white hover:bg-white/10",
+    ghost: "text-white hover:bg-ink/10",
   };
 
   return (

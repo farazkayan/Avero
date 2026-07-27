@@ -111,7 +111,7 @@ export default function CommentInput({
           "focus:outline-none focus:ring-2 focus:ring-accent-500/60 focus:border-accent-500",
           isOverLimit
             ? "border-error/60 focus:border-error focus:ring-error/30"
-            : "border-white/10 hover:border-white/20",
+            : "border-ink/10 hover:border-ink/20",
           "disabled:opacity-60",
         ].join(" ")}
       />

@@ -96,7 +96,7 @@ export default function ConfirmDialog({
       />
 
       {/* Panel */}
-      <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-canvas-soft p-6 shadow-2xl">
+      <div className="relative w-full max-w-md rounded-2xl border border-ink/10 bg-canvas-soft p-6 shadow-2xl">
         <h2
           id="confirm-dialog-title"
           className="text-lg font-semibold text-ink"
@@ -119,7 +119,7 @@ export default function ConfirmDialog({
             ref={cancelRef}
             onClick={onCancel}
             disabled={loading}
-            className="inline-flex items-center justify-center rounded-lg border border-white/10 px-4 py-2 text-sm font-medium text-ink-muted transition-colors duration-200 hover:bg-white/5 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-lg border border-ink/10 px-4 py-2 text-sm font-medium text-ink-muted transition-colors duration-200 hover:bg-ink/5 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {cancelLabel}
           </button>
