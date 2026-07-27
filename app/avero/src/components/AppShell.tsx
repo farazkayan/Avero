@@ -1,10 +1,9 @@
-import { useState } from "react";
 import { Link } from "react-router";
 import BrandWordmark from "./auth/BrandWordmark";
 import { useAuth } from "../context/AuthContext";
-import { supabase } from "../lib/supabase";
-import { AUTHENTICATED_HOME_PATH } from "../constants/routes";
+import { AUTHENTICATED_HOME_PATH, SETTINGS_PATH } from "../constants/routes";
 import { AvatarUpload } from "./ui/AvatarUpload";
+import { GearIcon } from "./ui/icons";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -15,17 +14,19 @@ type AppShellProps = {
  *
  * Unlike `AuthShell` — the two-panel ambient frame unique to the
  * unauthenticated threshold experience — `AppShell` is the authenticated
- * layout: a top bar carrying the wordmark, user identity, and sign-out
- * action, above a centered, width-constrained content area
+ * layout: a top bar carrying the wordmark, user identity, and a link to
+ * account Settings, above a centered, width-constrained content area
  * (design-system §5: "Max width for content areas", "centered content for
  * readability"). Responsive: mobile single-column, desktop centered with a
  * comfortable max width.
  *
- * Sign-out uses Supabase directly. The existing `AuthProvider`
+ * The sign-out action now lives on the Settings page (roadmap Phase 6),
+ * so the header stays minimal: wordmark, identity, and a gear link. Sign-out
+ * itself still uses Supabase directly; the existing `AuthProvider`
  * `onAuthStateChange` listener updates authentication state automatically,
  * and the route guards then redirect the now-unauthenticated user to
- * sign-in — no manual navigation is performed here (the same pattern used
- * by `SpacesPlaceholderPage`).
+ * sign-in — no manual navigation is performed (the same pattern used by
+ * `SpacesPlaceholderPage`).
  *
  * `AppShell` renders only the frame; each page supplies its own heading and
  * content via `children`, so there is exactly one H1 per screen
@@ -33,18 +34,6 @@ type AppShellProps = {
  */
 export default function AppShell({ children }: AppShellProps) {
   const { user } = useAuth();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-
-  async function handleSignOut() {
-    if (isSigningOut) {
-      return;
-    }
-    setIsSigningOut(true);
-    await supabase.auth.signOut();
-    // No finally reset: the auth listener triggers a redirect away from the
-    // authenticated area on success, so the loading state should persist
-    // until that happens.
-  }
 
   // Prefer the profile name captured at sign-up (stored in user_metadata)
   // and fall back to the email — the canonical identity that is always
@@ -71,15 +60,18 @@ export default function AppShell({ children }: AppShellProps) {
                 {displayName}
               </span>
             )}
-            <button
-              type="button"
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-              aria-busy={isSigningOut || undefined}
-              className="inline-flex items-center rounded-md text-sm font-medium text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 disabled:cursor-not-allowed disabled:opacity-60"
+            {/* Settings — reachable from the header (roadmap Phase 6). A
+                gear glyph keeps the header calm while making the account
+                screen one tap away; the sign-out action now lives on the
+                Settings page itself, so it is removed from the header to
+                avoid duplicating the affordance. */}
+            <Link
+              to={SETTINGS_PATH}
+              aria-label="Settings"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
             >
-              {isSigningOut ? "Signing out…" : "Sign out"}
-            </button>
+              <GearIcon />
+            </Link>
           </div>
         </div>
       </header>

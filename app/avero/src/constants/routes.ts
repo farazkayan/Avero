@@ -11,6 +11,17 @@
 export const AUTHENTICATED_HOME_PATH = "/spaces";
 
 /**
+ * Account Settings route (roadmap Phase 6 — Identity & account).
+ *
+ * A single, calm screen for the signed-in user's profile (avatar + display
+ * name), theme preference, and sign-out action (design-system §5: "one
+ * primary focus per screen"). Authenticated-only — `ProtectedRoute` gates
+ * the whole authenticated area, so reaching it while logged out redirects
+ * to sign-in rather than rendering a confusing half-state.
+ */
+export const SETTINGS_PATH = "/settings";
+
+/**
  * Create-space route (spaces-design §6.2).
  */
 export const SPACE_CREATE_PATH = "/spaces/new";
