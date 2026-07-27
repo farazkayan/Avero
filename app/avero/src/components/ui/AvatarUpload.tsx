@@ -2,14 +2,25 @@
 // Avero Avatar Upload
 // ----------------------------------------------------------------------------
 // Upload button + preview for the AppShell header. Handles file selection,
-// validation, upload via lib/avatar.ts, and immediate UI update via
-// AuthContext refreshAvatar.
+// validation, the crop-positioning step (Phase C), upload via lib/avatar.ts,
+// and immediate UI update via AuthContext refreshAvatar.
+//
+// Flow (Phase C):
+//   pick file → validate (image/*, ≤ 2 MB) → load image → open AvatarCropDialog
+//   → user drags to reposition → confirm → uploadAvatar(file, offset)
+//   → resize→WebP→upload→profiles.avatar_url → refreshAvatar.
+// Cancel at the crop step uploads nothing (non-destructive).
 // ============================================================================
 
 import { useRef, useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { uploadAvatar, getAvatarDownloadUrl } from "../../lib/avatar";
+import {
+  uploadAvatar,
+  getAvatarDownloadUrl,
+  loadAvatarImage,
+} from "../../lib/avatar";
 import { AvatarFallback } from "./AvatarFallback";
+import AvatarCropDialog from "./AvatarCropDialog";
 
 interface AvatarUploadProps {
   /** User's display name (for fallback) */
@@ -24,6 +35,10 @@ export function AvatarUpload({ name, size = 32 }: AvatarUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [prevAvatarUrl, setPrevAvatarUrl] = useState(avatarUrl);
+  // Phase C: the image awaiting crop confirmation. When set, the crop dialog
+  // is open; the actual upload happens on confirm with the user's offset.
+  const [cropImage, setCropImage] = useState<HTMLImageElement | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset the cached download URL when the source `avatarUrl` changes —
@@ -59,11 +74,27 @@ export function AvatarUpload({ name, size = 32 }: AvatarUploadProps) {
     };
   }, [avatarUrl]);
 
+  // Phase C: validate + load the image, then open the crop dialog. The
+  // actual upload happens on confirm (with the user's pan offset). Validation
+  // is preserved here so an invalid file never reaches the dialog.
   const handleFileSelect = async (file: File) => {
     setError(null);
-    setIsUploading(true);
+    try {
+      const img = await loadAvatarImage(file);
+      setPendingFile(file);
+      setCropImage(img);
+    } catch {
+      setError("Couldn't load that image. Please try another file.");
+    }
+  };
 
-    const result = await uploadAvatar(file);
+  // User confirmed the crop — upload with the chosen offset.
+  const handleCropConfirm = async (offset: { x: number; y: number }) => {
+    if (!pendingFile) return;
+    setIsUploading(true);
+    setCropImage(null);
+
+    const result = await uploadAvatar(pendingFile, offset);
 
     if (result.ok) {
       // Refresh avatar from AuthContext (which will re-fetch from profiles)
@@ -72,7 +103,14 @@ export function AvatarUpload({ name, size = 32 }: AvatarUploadProps) {
       setError(result.error);
     }
 
+    setPendingFile(null);
     setIsUploading(false);
+  };
+
+  // User cancelled the crop — nothing uploads (non-destructive).
+  const handleCropCancel = () => {
+    setCropImage(null);
+    setPendingFile(null);
   };
 
   const handleClick = () => {
@@ -180,6 +218,17 @@ export function AvatarUpload({ name, size = 32 }: AvatarUploadProps) {
             />
           </svg>
         </div>
+      )}
+
+      {/* Phase C: crop-positioning step. Rendered as a portal-like overlay
+          (fixed, z-50) so it escapes the small avatar's clipping context. */}
+      {cropImage && (
+        <AvatarCropDialog
+          image={cropImage}
+          loading={isUploading}
+          onConfirm={handleCropConfirm}
+          onCancel={handleCropCancel}
+        />
       )}
     </div>
   );

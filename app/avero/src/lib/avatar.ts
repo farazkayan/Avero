@@ -3,11 +3,12 @@
 // ----------------------------------------------------------------------------
 // Client-side avatar upload pipeline:
 //  1. Validate file (image/*, ≤ 2 MB)
-//  2. Resize to 256×256 square (center-crop) and encode as WebP (quality 0.85)
-//  3. Request presigned PUT URL from media-storage Edge Function (action: request-avatar-upload-url)
-//  4. PUT the WebP blob to B2 via the presigned URL
-//  5. Update profiles.avatar_url with the durable object key (avatars/{user_id}/avatar.webp)
-//  6. Return the new avatar_url for immediate UI update
+//  2. (Phase C) User drags to reposition a fixed square crop frame (pan-only)
+//  3. Resize to 256×256 square (crop applied) and encode as WebP (quality 0.85)
+//  4. Request presigned PUT URL from media-storage Edge Function (action: request-avatar-upload-url)
+//  5. PUT the WebP blob to B2 via the presigned URL
+//  6. Update profiles.avatar_url with the durable object key (avatars/{user_id}/avatar.webp)
+//  7. Return the new avatar_url for immediate UI update
 //
 // Failure handling: non-destructive — if any step fails, the existing avatar_url
 // is preserved and a calm error message is returned.
@@ -72,10 +73,20 @@ function loadImageFromFile(file: File): Promise<HTMLImageElement> {
 }
 
 /**
- * Resizes and center-crops an image to a square, then encodes as WebP.
+ * Resizes and crops an image to a 256×256 square, then encodes as WebP.
+ *
+ * The crop is a square window onto the source image. By default it is a
+ * center-crop; passing a `cropOffset` (Phase C) shifts the window so the user
+ * can drag the subject into frame before finalizing. The offset is expressed in
+ * source pixels relative to the centered position, clamped so the window never
+ * leaves the image bounds.
+ *
+ * @param img        Loaded source image.
+ * @param cropOffset Optional {x, y} pan offset in source pixels (0,0 = center).
  */
 async function resizeAndEncodeAvatar(
   img: HTMLImageElement,
+  cropOffset: { x: number; y: number } = { x: 0, y: 0 },
 ): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = AVATAR_SIZE;
@@ -83,10 +94,14 @@ async function resizeAndEncodeAvatar(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D context unavailable.");
 
-  // Center-crop to square
+  // Square crop window sized to the shorter source side.
   const size = Math.min(img.naturalWidth, img.naturalHeight);
-  const sx = (img.naturalWidth - size) / 2;
-  const sy = (img.naturalHeight - size) / 2;
+  // Centered top-left of the window, then apply + clamp the user's pan offset
+  // so the window stays fully inside the source image.
+  const baseX = (img.naturalWidth - size) / 2;
+  const baseY = (img.naturalHeight - size) / 2;
+  const sx = Math.max(0, Math.min(img.naturalWidth - size, baseX + cropOffset.x));
+  const sy = Math.max(0, Math.min(img.naturalHeight - size, baseY + cropOffset.y));
 
   ctx.drawImage(img, sx, sy, size, size, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
 
@@ -103,20 +118,35 @@ async function resizeAndEncodeAvatar(
 }
 
 /**
+ * Loads a File as an HTMLImageElement. Exported (Phase C) so the crop dialog
+ * can load the image once, let the user reposition, and hand the same element
+ * (plus the chosen offset) back to the upload pipeline — no double decode.
+ */
+export async function loadAvatarImage(file: File): Promise<HTMLImageElement> {
+  return loadImageFromFile(file);
+}
+
+/**
  * Uploads a user avatar.
  *
- * @param file - The image file selected by the user.
+ * @param file       The image file selected by the user.
+ * @param cropOffset Optional {x, y} pan offset in source pixels (Phase C).
+ *                   Defaults to a center-crop. The AvatarCropDialog computes
+ *                   this from the user's drag and passes it through.
  * @returns The new avatar object key on success, or a calm error message.
  */
-export async function uploadAvatar(file: File): Promise<AvatarUploadResult> {
+export async function uploadAvatar(
+  file: File,
+  cropOffset?: { x: number; y: number },
+): Promise<AvatarUploadResult> {
   // 1. Validate
   const validationError = validateAvatarFile(file);
   if (validationError) return { ok: false, error: validationError };
 
   try {
-    // 2. Resize & encode to WebP
+    // 2. Resize & encode to WebP (with the user's crop offset, if any)
     const img = await loadImageFromFile(file);
-    const webpBlob = await resizeAndEncodeAvatar(img);
+    const webpBlob = await resizeAndEncodeAvatar(img, cropOffset);
 
     // 3. Request presigned PUT URL from Edge Function
     const { data, error } = await supabase.functions.invoke("media-storage", {
