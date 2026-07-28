@@ -7,7 +7,7 @@
 //
 // Flow (Phase C):
 //   pick file → validate (image/*, ≤ 2 MB) → load image → open AvatarCropDialog
-//   → user drags to reposition → confirm → uploadAvatar(file, offset)
+//   → user drags + zooms to position → confirm → uploadAvatar(file, crop)
 //   → resize→WebP→upload→profiles.avatar_url → refreshAvatar.
 // Cancel at the crop step uploads nothing (non-destructive).
 // ============================================================================
@@ -89,13 +89,18 @@ export function AvatarUpload({ name, size = 32 }: AvatarUploadProps) {
     }
   };
 
-  // User confirmed the crop — upload with the chosen offset.
-  const handleCropConfirm = async (offset: { x: number; y: number }) => {
+  // User confirmed the crop — upload with the chosen source-pixel crop region
+  // (top-left + size), resolved from the user's pan + zoom by the dialog.
+  const handleCropConfirm = async (crop: {
+    x: number;
+    y: number;
+    size: number;
+  }) => {
     if (!pendingFile) return;
     setIsUploading(true);
     // Keep cropImage alive during upload so the dialog stays visible (loading
     // state); revoke + clear once the upload resolves.
-    const result = await uploadAvatar(pendingFile, offset);
+    const result = await uploadAvatar(pendingFile, crop);
 
     if (result.ok) {
       // Refresh avatar from AuthContext (which will re-fetch from profiles)

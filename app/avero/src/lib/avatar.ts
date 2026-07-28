@@ -235,20 +235,46 @@ export function revokeAvatarImage(img: HTMLImageElement | null): void {
 }
 
 /**
+ * An explicit square crop window onto the source image, in source pixels.
+ *
+ * `{x, y}` is the top-left of the window and `size` is its side length. The
+ * window is drawn (upscaled or downscaled as needed) onto the 256×256 output
+ * canvas. This replaces the old pan-only `cropOffset` (an offset-from-center
+ * with an implicit `size = min(naturalW, naturalH)`): the avatar crop dialog
+ * now also supports zoom, so the source window can be *smaller* than the
+ * shorter side (a zoomed-in sub-region that gets upscaled to 256). Passing an
+ * explicit rectangle removes any offset/scale ambiguity.
+ *
+ * When omitted, a center-crop of the shorter side is used (the historical
+ * default).
+ */
+interface AvatarCropRegion {
+  /** Top-left X of the square crop window, in source pixels. */
+  x: number;
+  /** Top-left Y of the square crop window, in source pixels. */
+  y: number;
+  /** Side length of the square crop window, in source pixels. */
+  size: number;
+}
+
+/**
  * Resizes and crops an image to a 256×256 square, then encodes as WebP.
  *
  * The crop is a square window onto the source image. By default it is a
- * center-crop; passing a `cropOffset` (Phase C) shifts the window so the user
- * can drag the subject into frame before finalizing. The offset is expressed in
- * source pixels relative to the centered position, clamped so the window never
- * leaves the image bounds.
+ * center-crop of the shorter side; passing a `crop` region (Phase C, extended
+ * for zoom in the profile-picture-editor upgrade) selects an explicit square
+ * sub-window — the dialog computes this from the user's pan + zoom and passes
+ * the resolved source rectangle through. The region is clamped so the window
+ * never leaves the image bounds (defensive: the dialog's pan clamp already
+ * guarantees this).
  *
- * @param img        Loaded source image.
- * @param cropOffset Optional {x, y} pan offset in source pixels (0,0 = center).
+ * @param img  Loaded source image.
+ * @param crop Optional explicit square crop window in source pixels. Defaults
+ *             to a center-crop of the shorter side.
  */
 async function resizeAndEncodeAvatar(
   img: HTMLImageElement,
-  cropOffset: { x: number; y: number } = { x: 0, y: 0 },
+  crop?: AvatarCropRegion,
 ): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = AVATAR_SIZE;
@@ -256,14 +282,24 @@ async function resizeAndEncodeAvatar(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D context unavailable.");
 
-  // Square crop window sized to the shorter source side.
-  const size = Math.min(img.naturalWidth, img.naturalHeight);
-  // Centered top-left of the window, then apply + clamp the user's pan offset
-  // so the window stays fully inside the source image.
+  // Default: center-crop of the shorter side (historical behavior).
+  const minSide = Math.min(img.naturalWidth, img.naturalHeight);
+  let size = crop?.size ?? minSide;
+  // Clamp the window size to the shorter side so it can never exceed what the
+  // source can fill (a zoomed-in crop is smaller, never larger).
+  size = Math.max(1, Math.min(size, minSide));
   const baseX = (img.naturalWidth - size) / 2;
   const baseY = (img.naturalHeight - size) / 2;
-  const sx = Math.max(0, Math.min(img.naturalWidth - size, baseX + cropOffset.x));
-  const sy = Math.max(0, Math.min(img.naturalHeight - size, baseY + cropOffset.y));
+  // Apply the explicit top-left if provided, clamped to keep the window fully
+  // inside the source image.
+  const sx = Math.max(
+    0,
+    Math.min(img.naturalWidth - size, crop ? crop.x : baseX),
+  );
+  const sy = Math.max(
+    0,
+    Math.min(img.naturalHeight - size, crop ? crop.y : baseY),
+  );
 
   ctx.drawImage(img, sx, sy, size, size, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
 
@@ -291,24 +327,24 @@ export async function loadAvatarImage(file: File): Promise<HTMLImageElement> {
 /**
  * Uploads a user avatar.
  *
- * @param file       The image file selected by the user.
- * @param cropOffset Optional {x, y} pan offset in source pixels (Phase C).
- *                   Defaults to a center-crop. The AvatarCropDialog computes
- *                   this from the user's drag and passes it through.
+ * @param file The image file selected by the user.
+ * @param crop Optional explicit square crop window in source pixels
+ *             (top-left + size), computed by the AvatarCropDialog from the
+ *             user's pan + zoom. Defaults to a center-crop of the shorter side.
  * @returns The new avatar object key on success, or a calm error message.
  */
 export async function uploadAvatar(
   file: File,
-  cropOffset?: { x: number; y: number },
+  crop?: AvatarCropRegion,
 ): Promise<AvatarUploadResult> {
   // 1. Validate
   const validationError = validateAvatarFile(file);
   if (validationError) return { ok: false, error: validationError };
 
   try {
-    // 2. Resize & encode to WebP (with the user's crop offset, if any)
+    // 2. Resize & encode to WebP (with the user's crop region, if any)
     const img = await loadImageFromFile(file);
-    const webpBlob = await resizeAndEncodeAvatar(img, cropOffset);
+    const webpBlob = await resizeAndEncodeAvatar(img, crop);
     // The image's blob URL is no longer needed after encoding.
     revokeAvatarImage(img);
 
