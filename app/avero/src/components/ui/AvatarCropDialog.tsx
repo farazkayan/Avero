@@ -157,6 +157,13 @@ export default function AvatarCropDialog({
       role="dialog"
       aria-modal="true"
       aria-labelledby="avatar-crop-title"
+      // The crop dialog is rendered inside AvatarUpload's outer <div>, which
+      // carries an onClick that opens the OS file picker. Without stopping
+      // propagation here, any click inside this modal (including a plain
+      // no-drag click on the crop circle, which only binds pointer events)
+      // would bubble up and re-trigger file selection. We isolate the modal's
+      // click stream from the upload trigger entirely.
+      onClick={(event) => event.stopPropagation()}
     >
       {/* Backdrop */}
       <button

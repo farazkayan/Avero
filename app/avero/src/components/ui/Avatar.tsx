@@ -33,9 +33,14 @@ export default function Avatar({ size = 32 }: { size?: number }) {
 
     let cancelled = false;
 
-    getAvatarDownloadUrl(avatarUrl).then((url) => {
+    // getAvatarDownloadUrl now returns a discriminated-union result (mirroring
+    // getMediaDownloadUrl) and consults a session-scoped cache, so a repeat
+    // mount/render reuses the cached presigned URL instead of re-invoking the
+    // Edge Function — the fix for the avatar loading slower than Memory
+    // thumbnails.
+    getAvatarDownloadUrl(avatarUrl).then((result) => {
       if (!cancelled) {
-        setDownloadUrl(url);
+        setDownloadUrl(result.ok ? result.url : null);
       }
     });
 

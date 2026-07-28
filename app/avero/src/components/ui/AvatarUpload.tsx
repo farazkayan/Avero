@@ -18,6 +18,7 @@ import {
   uploadAvatar,
   getAvatarDownloadUrl,
   loadAvatarImage,
+  revokeAvatarImage,
 } from "../../lib/avatar";
 import { AvatarFallback } from "./AvatarFallback";
 import AvatarCropDialog from "./AvatarCropDialog";
@@ -63,9 +64,9 @@ export function AvatarUpload({ name, size = 32 }: AvatarUploadProps) {
 
     let cancelled = false;
 
-    getAvatarDownloadUrl(avatarUrl).then((url) => {
+    getAvatarDownloadUrl(avatarUrl).then((result) => {
       if (!cancelled) {
-        setDownloadUrl(url);
+        setDownloadUrl(result.ok ? result.url : null);
       }
     });
 
@@ -92,8 +93,8 @@ export function AvatarUpload({ name, size = 32 }: AvatarUploadProps) {
   const handleCropConfirm = async (offset: { x: number; y: number }) => {
     if (!pendingFile) return;
     setIsUploading(true);
-    setCropImage(null);
-
+    // Keep cropImage alive during upload so the dialog stays visible (loading
+    // state); revoke + clear once the upload resolves.
     const result = await uploadAvatar(pendingFile, offset);
 
     if (result.ok) {
@@ -103,12 +104,15 @@ export function AvatarUpload({ name, size = 32 }: AvatarUploadProps) {
       setError(result.error);
     }
 
+    revokeAvatarImage(cropImage);
+    setCropImage(null);
     setPendingFile(null);
     setIsUploading(false);
   };
 
   // User cancelled the crop — nothing uploads (non-destructive).
   const handleCropCancel = () => {
+    revokeAvatarImage(cropImage);
     setCropImage(null);
     setPendingFile(null);
   };
