@@ -14,8 +14,12 @@
     "maxAgeSeconds": 3600
   },
   {
-    "corsRuleName": "s3UploadFromLocalDev",
-    "allowedOrigins": ["http://localhost:5173"],
+    "corsRuleName": "s3UploadFromWebApp",
+    "allowedOrigins": [
+      "http://localhost:5173",
+      "https://withavero.pages.dev",
+      "https://*.avero.pages.dev"
+    ],
     "allowedOperations": ["s3_put", "s3_head", "s3_get"],
     "allowedHeaders": ["*"],
     "exposeHeaders": ["ETag"],

@@ -640,6 +640,37 @@ Create in this order:
 1. Create the `media` bucket (private)
 2. Set path convention: `spaces/{space_id}/memories/{memory_id}/{media_id}.{ext}`
 3. Create Storage policies mirroring database RLS
+4. **Configure B2 bucket CORS rules** (see [`app/avero/cors.json`](../app/avero/cors.json)).
+
+   The frontend uploads media/avatars by requesting a short-lived presigned
+   PUT URL from the `media-storage` Edge Function, then issuing the PUT
+   **directly to the B2 S3 endpoint from the browser**. That PUT is a
+   cross-origin request, so B2's bucket CORS rules — not the Edge
+   Function's CORS headers — govern it. The bucket must allow `s3_put`
+   from every origin the deployed app is served from, or the browser
+   blocks the upload with a CORS preflight failure (uploads work on
+   localhost but fail on the production domain).
+
+   Apply the rules in [`app/avero/cors.json`](../app/avero/cors.json) to
+   the bucket via the B2 dashboard (Bucket → CORS rules → edit) or the
+   `b2 update-bucket` CLI. The current rules:
+
+   | Rule | Allowed origins | Operations | Purpose |
+   |------|-----------------|------------|---------|
+   | `downloadFromAnyOrigin` | `*` | `b2_download_file_by_id`, `b2_download_file_by_name` | Native B2 downloads (any origin) |
+   | `s3DownloadFromAnyOrigin` | `*` | `s3_head`, `s3_get` | S3 GET downloads (any origin) |
+   | `s3UploadFromWebApp` | `http://localhost:5173`, `https://withavero.pages.dev`, `https://*.avero.pages.dev` | `s3_put`, `s3_head`, `s3_get` | S3 PUT uploads from the web app (dev + prod + Cloudflare Pages previews) |
+
+   **Change history:** the upload rule was originally named
+   `s3UploadFromLocalDev` and allowed only `http://localhost:5173`, which
+   caused image/video and avatar uploads to fail on `withavero.pages.dev`
+   with a CORS error (localhost worked). It was renamed to
+   `s3UploadFromWebApp` and extended with `https://withavero.pages.dev`
+   (production) and `https://*.avero.pages.dev` (Cloudflare Pages
+   preview deployments) so uploads succeed on every deployment origin.
+   Allowed methods (`s3_put`, `s3_head`, `s3_get`), allowed headers
+   (`*`), exposed headers (`ETag`), and `maxAgeSeconds` (3600) are
+   unchanged.
 
 ## Step 7 — Row Level Security
 
