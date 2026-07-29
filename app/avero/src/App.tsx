@@ -12,6 +12,7 @@ import MemoryDetailPage from "./pages/MemoryDetailPage";
 import EditMemoryPage from "./pages/EditMemoryPage";
 import SpaceDetailPage from "./pages/SpaceDetailPage";
 import SpaceSettingsPage from "./pages/SpaceSettingsPage";
+import SpaceStatsPage from "./pages/SpaceStatsPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import PublicOnlyRoute from "./components/auth/PublicOnlyRoute";
@@ -65,6 +66,7 @@ export default function App() {
           path="spaces/:spaceId/settings"
           element={<SpaceSettingsPage />}
         />
+        <Route path="spaces/:spaceId/stats" element={<SpaceStatsPage />} />
         <Route path={SETTINGS_PATH} element={<SettingsPage />} />
         <Route
           path="spaces/:spaceId/memories/new"

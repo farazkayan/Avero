@@ -53,6 +53,14 @@ export function spaceDetailPath(spaceId: string): string {
 export const SPACE_SETTINGS_PATH = "/spaces/:spaceId/settings";
 
 /**
+ * Space Stats route template (SPEC A.4 — a secondary view reached from within
+ * a Space, alongside Settings, not a new top-level nav item).
+ *
+ * Use {@link spaceStatsPath} to build a concrete path for a given space id.
+ */
+export const SPACE_STATS_PATH = "/spaces/:spaceId/stats";
+
+/**
  * Builds a concrete Space settings path from a space id.
  *
  * The route constant above carries the `:spaceId` parameter placeholder; this
@@ -60,6 +68,16 @@ export const SPACE_SETTINGS_PATH = "/spaces/:spaceId/settings";
  */
 export function spaceSettingsPath(spaceId: string): string {
   return `/spaces/${spaceId}/settings`;
+}
+
+/**
+ * Builds a concrete Space Stats path from a space id.
+ *
+ * The route constant above carries the `:spaceId` parameter placeholder; this
+ * helper substitutes it so callers never hand-concatenate the path.
+ */
+export function spaceStatsPath(spaceId: string): string {
+  return `/spaces/${spaceId}/stats`;
 }
 
 /**

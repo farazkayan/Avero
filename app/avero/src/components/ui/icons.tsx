@@ -333,3 +333,227 @@ export function GearIcon({ className = "" }: IconProps) {
       </svg>
     );
   }
+
+  /**
+   * A simple bar-chart glyph used for the Space Stats link on the Memories
+   * timeline header (SPEC A.4 — Stats is a secondary view reached from within
+   * a Space). Matches the outline style of the other icons (Design System §9).
+   */
+  export function ChartIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M4 20V4" />
+        <path d="M4 20h16" />
+        <path d="M8 16v-4M13 16V8M18 16v-6" />
+      </svg>
+    );
+  }
+
+  // ===========================================================================
+  // Achievement icons (SPEC A.2)
+  // ---------------------------------------------------------------------------
+  // Outline glyphs used by the Space Stats achievements grid. Each matches the
+  // Design System §9 outline style (1.5 stroke, rounded joins) so the set
+  // reads as one family. The `icon` string stored in the `achievements` catalog
+  // is mapped to a rendered glyph by {@link AchievementIcon} below.
+  // ===========================================================================
+
+  /** A stacked-layers glyph — "Ten Stories" / "Fifty Stories". */
+  export function StackIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 3l9 5-9 5-9-5 9-5z" />
+        <path d="M3 13l9 5 9-5" />
+        <path d="M3 17l9 5 9-5" />
+      </svg>
+    );
+  }
+
+  /** A calendar glyph — "One Month In" / "A Year of Memories". */
+  export function CalendarIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="3" y="4.5" width="18" height="16.5" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M8 2.5v4M16 2.5v4" />
+      </svg>
+    );
+  }
+
+  /** A leaf glyph — "Every Season". */
+  export function LeafIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M5 21c0-9 7-16 16-16 0 9-7 16-16 16z" />
+        <path d="M5 21c4-4 7-7 11-11" />
+      </svg>
+    );
+  }
+
+  /** A people glyph — "Everyone's Story". */
+  export function PeopleIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="9" cy="8" r="3" />
+        <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+        <path d="M16 5.5a3 3 0 0 1 0 5" />
+        <path d="M17 14c2.8.5 5 3 5 6" />
+      </svg>
+    );
+  }
+
+  /** A chat-bubble glyph — "Lots to Say". */
+  export function ChatIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z" />
+      </svg>
+    );
+  }
+
+  /** A tag glyph — "Well Organized". */
+  export function TagIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M3 11.5V4h7.5L21 14.5 14.5 21 3 11.5z" />
+        <circle cx="7.5" cy="7.5" r="1.4" />
+      </svg>
+    );
+  }
+
+  /** A film glyph — "Moving Pictures". */
+  export function FilmIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4" />
+      </svg>
+    );
+  }
+
+  /**
+   * Maps an achievement catalog `icon` identifier to its rendered glyph.
+   * Used by the Stats achievements grid so the catalog (seeded in SQL) stays
+   * the single source of truth for which icon each achievement shows, while
+   * the actual SVG lives here in the icon system (Design System §9).
+   *
+   * Falls back to {@link SparkleIcon} for any unknown identifier so a future
+   * catalog addition never renders a blank card.
+   */
+  export function AchievementIcon({
+    name,
+    className = "",
+  }: { name: string; className?: string }) {
+    switch (name) {
+      case "sparkle":
+        return <SparkleIcon className={className} />;
+      case "stack":
+        return <StackIcon className={className} />;
+      case "image":
+        return <PhotoIcon className={className} />;
+      case "calendar":
+        return <CalendarIcon className={className} />;
+      case "leaf":
+        return <LeafIcon className={className} />;
+      case "people":
+        return <PeopleIcon className={className} />;
+      case "chat":
+        return <ChatIcon className={className} />;
+      case "heart":
+        return <HeartIcon className={className} />;
+      case "tag":
+        return <TagIcon className={className} />;
+      case "film":
+        return <FilmIcon className={className} />;
+      default:
+        return <SparkleIcon className={className} />;
+    }
+  }

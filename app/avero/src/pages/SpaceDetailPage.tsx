@@ -5,7 +5,7 @@ import GhostLink from "../components/ui/GhostLink";
 import Spinner from "../components/ui/Spinner";
 import EmptyState from "../components/ui/EmptyState";
 import SearchInput from "../components/ui/SearchInput";
-import { SparkleIcon, GearIcon, SearchIcon } from "../components/ui/icons";
+import { SparkleIcon, GearIcon, SearchIcon, ChartIcon } from "../components/ui/icons";
 import MemoryTimelineCard from "../components/memories/MemoryTimelineCard";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -21,6 +21,7 @@ import {
   AUTHENTICATED_HOME_PATH,
   memoryCreatePath,
   spaceSettingsPath,
+  spaceStatsPath,
 } from "../constants/routes";
 import type { Memory } from "../types/memory";
 import type { Media } from "../types/media";
@@ -422,13 +423,22 @@ export default function SpaceDetailPage() {
                 )}
               </div>
               {spaceId && (
-                <Link
-                  to={spaceSettingsPath(spaceId)}
-                  aria-label="Space settings"
-                  className="inline-flex shrink-0 items-center justify-center rounded-md p-2 text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-                >
-                  <GearIcon />
-                </Link>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Link
+                    to={spaceStatsPath(spaceId)}
+                    aria-label="Space stats"
+                    className="inline-flex items-center justify-center rounded-md p-2 text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
+                  >
+                    <ChartIcon />
+                  </Link>
+                  <Link
+                    to={spaceSettingsPath(spaceId)}
+                    aria-label="Space settings"
+                    className="inline-flex items-center justify-center rounded-md p-2 text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
+                  >
+                    <GearIcon />
+                  </Link>
+                </div>
               )}
             </div>
           </section>
