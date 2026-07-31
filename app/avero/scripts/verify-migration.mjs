@@ -4,18 +4,30 @@
  * Confirms thumbnail_grid_path and thumbnail_detail_path exist on REMOTE database.
  *
  * Usage:
- *   supabase db push --linked
- *   node scripts/verify-migration.mjs
+ *   npx supabase db push --linked
+ *   node app/avero/scripts/verify-migration.mjs
  */
 
 import { createClient } from "@supabase/supabase-js";
 import "dotenv/config";
 
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Load .env from app/avero directory
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const PROJECT_ROOT = resolve(__dirname, "..", "..");
+import { config } from "dotenv";
+config({ path: resolve(PROJECT_ROOT, ".env") });
+
+// Use VITE_-prefixed vars (what the .env actually has)
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; // This one is not VITE_ prefixed
 
 if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-  console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment");
+  console.error("❌ Missing SUPABASE_URL/VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment");
+  console.error("   SUPABASE_URL:", SUPABASE_URL ? "✓" : "✗");
+  console.error("   SUPABASE_SERVICE_ROLE_KEY:", SERVICE_ROLE_KEY ? "✓" : "✗");
   process.exit(1);
 }
 
@@ -51,7 +63,7 @@ async function verify() {
 
   if (missing.length > 0) {
     console.log(`\n❌ MISSING COLUMNS: ${missing.join(", ")}`);
-    console.log("Migration did NOT land on remote. Check `supabase db push --linked` output.");
+    console.log("Migration did NOT land on remote. Check `npx supabase db push --linked` output.");
     process.exit(1);
   }
 
