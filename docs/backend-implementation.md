@@ -672,6 +672,39 @@ Create in this order:
    (`*`), exposed headers (`ETag`), and `maxAgeSeconds` (3600) are
    unchanged.
 
+   **AWS SDK v3 checksum default vs. B2 (gotcha):** `@aws-sdk/client-s3`
+   v3.729.0 (Dec 2024) and later changed the default to *always* calculate
+   and attach a CRC32 checksum to S3 requests (query params
+   `x-amz-checksum-crc32` and `x-amz-sdk-checksum-algorithm=CRC32`). B2 and
+   other S3-compatible providers (MinIO, DigitalOcean Spaces, etc.) don't
+   support this new checksum flow the way AWS S3 does, so the presigned
+   URL's signature mismatches and B2 rejects the PUT with a 403 that
+   surfaces in the browser as a CORS failure (B2 fails the request without
+   proper CORS headers when the underlying signed request is invalid).
+   This affects both localhost and the deployed app, and started failing
+   without any intentional dependency change because the Edge Functions
+   imported `npm:@aws-sdk/client-s3@3` unpinned, which silently drifted
+   upward to an affected version at deploy time.
+
+   The fix has two parts, both required:
+
+   1. In every `S3Client` constructor for B2
+      ([`media-storage`](../supabase/functions/media-storage/index.ts) and
+      [`media-thumbnail`](../supabase/functions/media-thumbnail/index.ts)),
+      pass `requestChecksumCalculation: "WHEN_REQUIRED"` and
+      `responseChecksumValidation: "WHEN_REQUIRED"`. This restores the
+      pre-3.729.0 default (only calculate/validate checksums when
+      explicitly required by the operation), which is compatible with B2.
+   2. Pin the import specifier to a known-working version
+      (`npm:@aws-sdk/client-s3@3.723.0`, the last release before the
+      breaking change) across all Edge Functions that import it, so a
+      future implicit version bump doesn't silently reintroduce this bug.
+
+   Verify the fix took effect (not just that the test passed for an
+   unrelated reason): inspect a successful upload's request URL in
+   DevTools and confirm the `x-amz-checksum-crc32` /
+   `x-amz-sdk-checksum-algorithm` query params are no longer present.
+
 ## Step 7 — Row Level Security
 
 1. Enable RLS on all 10 tables

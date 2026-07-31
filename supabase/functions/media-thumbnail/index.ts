@@ -64,7 +64,7 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
-} from "npm:@aws-sdk/client-s3@3";
+} from "npm:@aws-sdk/client-s3@3.723.0";
 
 // jSquash WASM image codecs — pure WASM, no native bindings, Deno-compatible.
 import { decode as decodeJpeg } from "npm:@jsquash/jpeg@1.6.0";
@@ -317,6 +317,16 @@ function createS3Client(): S3Client {
       secretAccessKey: applicationKey,
     },
     forcePathStyle: true,
+    // AWS SDK v3.729.0+ (Dec 2024) defaults to always calculating and
+    // attaching a CRC32 checksum to S3 requests. B2 (and other S3-compatible
+    // providers) don't support this checksum flow the way AWS S3 does, so the
+    // presigned URL's signature mismatches and B2 rejects the request with a
+    // 403 that surfaces in the browser as a CORS error. Restoring the
+    // pre-3.729.0 default (only calculate/validate checksums when explicitly
+    // required by the operation) keeps B2 compatibility. See
+    // docs/backend-implementation.md (storage/B2 section) for the full gotcha.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
   });
 }
 

@@ -271,10 +271,14 @@ export default function AvatarCropDialog({
             context around the crop instead of a floating circle on blank
             space. The circle itself stays at full brightness. The image is
             draggable (pan) at the current zoom; the overlay is pointer-events-
-            none so it never intercepts the drag. */}
+            none so it never intercepts the drag.
+            
+            The container has a fixed size (FRAME_SIZE) with overflow:hidden to
+            prevent the image from visually overlapping the controls below,
+            regardless of the source image's aspect ratio or zoom level. */}
         <div className="mt-5 flex justify-center">
           <div
-            className="relative touch-none select-none"
+            className="relative touch-none select-none overflow-hidden rounded-full"
             style={{ width: FRAME_SIZE, height: FRAME_SIZE }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
@@ -283,8 +287,8 @@ export default function AvatarCropDialog({
             onWheel={handleWheel}
           >
             {/* The draggable image, centered, translated by the pan and
-                scaled by zoom. It overflows the stage (no overflow-hidden)
-                so the dimmed context outside the circle is visible. */}
+                scaled by zoom. It's contained within the fixed-size circular
+                frame so it never bleeds into the controls below. */}
             <img
               src={image.src}
               alt="Avatar preview"

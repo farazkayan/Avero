@@ -50,8 +50,8 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
   ListObjectVersionsCommand,
-} from "npm:@aws-sdk/client-s3@3";
-import { getSignedUrl } from "npm:@aws-sdk/s3-request-presigner@3";
+} from "npm:@aws-sdk/client-s3@3.723.0";
+import { getSignedUrl } from "npm:@aws-sdk/s3-request-presigner@3.723.0";
 
 // ----------------------------------------------------------------------------
 // Constants
@@ -375,6 +375,16 @@ function createS3Client(): S3Client {
     },
     // Path-style addressing is recommended for B2's custom endpoints.
     forcePathStyle: true,
+    // AWS SDK v3.729.0+ (Dec 2024) defaults to always calculating and
+    // attaching a CRC32 checksum to S3 requests. B2 (and other S3-compatible
+    // providers) don't support this checksum flow the way AWS S3 does, so the
+    // presigned URL's signature mismatches and B2 rejects the request with a
+    // 403 that surfaces in the browser as a CORS error. Restoring the
+    // pre-3.729.0 default (only calculate/validate checksums when explicitly
+    // required by the operation) keeps B2 compatibility. See
+    // docs/backend-implementation.md (storage/B2 section) for the full gotcha.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
   });
 }
 
