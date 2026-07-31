@@ -15,7 +15,6 @@ import { execSync } from "child_process";
 import { writeFileSync, existsSync, mkdirSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
-import { createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";
 
 // ----------------------------------------------------------------------------
@@ -62,45 +61,10 @@ function codeBlock(lang, content) {
 }
 
 // ----------------------------------------------------------------------------
-// Supabase client for fetching a real Memory ID
+// Real Space ID and Memory ID (provided by user)
 // ----------------------------------------------------------------------------
-// Accept either naming convention: VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY
-// (what the .env actually has) or SUPABASE_URL / SUPABASE_ANON_KEY (common alternative)
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
-
-let supabase = null;
-if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
-
 const REAL_SPACE_ID = "5f91c881-82e0-4849-9c6e-9b67e5d23505";
-
-async function fetchRealMemoryId() {
-  if (!supabase) {
-    console.warn("⚠️  Supabase credentials not found in env — using placeholder Memory ID");
-    return null;
-  }
-  try {
-    const { data, error } = await supabase
-      .from("memories")
-      .select("id")
-      .eq("space_id", REAL_SPACE_ID)
-      .is("deleted_at", null)
-      .order("memory_date", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.warn(`⚠️  Failed to fetch Memory ID: ${error.message}`);
-      return null;
-    }
-    return data?.id ?? null;
-  } catch (e) {
-    console.warn(`⚠️  Failed to fetch Memory ID: ${e.message}`);
-    return null;
-  }
-}
+const REAL_MEMORY_ID = "607e7578-98e1-4504-b9e0-c07228e4e20b";
 
 // ----------------------------------------------------------------------------
 // Main
@@ -110,21 +74,17 @@ async function main() {
   console.log(`Project root: ${PROJECT_ROOT}`);
   console.log(`Report will be written to: ${REPORT_PATH}\n`);
 
-  // Fetch a real Memory ID for the MemoryDetailPage URL
-  const memoryId = await fetchRealMemoryId();
-  const memoryIdForUrl = memoryId ?? "your-memory-id"; // fallback only if DB query fails
-
   let report = "# SPEC B.0 Baseline Report\n";
   report += `Generated: ${new Date().toISOString()}\n`;
   report += `Space ID used: ${REAL_SPACE_ID}\n`;
-  report += `Memory ID used: ${memoryIdForUrl}\n`;
+  report += `Memory ID used: ${REAL_MEMORY_ID}\n`;
 
   // 1. Lighthouse CI (requires lighthouse-ci installed globally or via npx)
   report += section("1. Lighthouse CI Audit");
   console.log("Running Lighthouse on key pages...");
   const lhPages = [
     `http://localhost:5173/spaces/${REAL_SPACE_ID}`, // SpaceDetailPage
-    `http://localhost:5173/spaces/${REAL_SPACE_ID}/memories/${memoryIdForUrl}`, // MemoryDetailPage
+    `http://localhost:5173/spaces/${REAL_SPACE_ID}/memories/${REAL_MEMORY_ID}`, // MemoryDetailPage
     `http://localhost:5173/spaces/${REAL_SPACE_ID}/stats`, // SpaceStatsPage
   ];
   for (const url of lhPages) {
