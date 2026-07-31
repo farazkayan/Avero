@@ -16,6 +16,7 @@ import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+// Go up two levels from scripts/ to reach app/avero/
 const PROJECT_ROOT = resolve(__dirname, "..", "..");
 import { config } from "dotenv";
 config({ path: resolve(PROJECT_ROOT, ".env") });
