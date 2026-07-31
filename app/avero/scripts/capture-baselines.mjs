@@ -12,8 +12,8 @@
  */
 
 import { execSync } from "child_process";
-import { writeFileSync, existsSync, mkdirSync } from "fs";
-import { resolve, dirname } from "path";
+import { writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from "fs";
+import { resolve, dirname, extname } from "path";
 import { fileURLToPath } from "url";
 import { config } from "dotenv";
 
@@ -52,6 +52,25 @@ function run(cmd, cwd = PROJECT_ROOT) {
   }
 }
 
+/**
+ * Runs a command with one retry on Windows EPERM errors (common with
+ * chrome-launcher temp directory cleanup race conditions).
+ */
+function runWithRetry(cmd, cwd = PROJECT_ROOT, retries = 1) {
+  try {
+    return execSync(cmd, { cwd, encoding: "utf-8", stdio: "pipe" }).trim();
+  } catch (e) {
+    if (retries > 0 && e.message && e.message.includes("EPERM")) {
+      console.warn(`⚠️  EPERM encountered, retrying once... (${retries} retries left)`);
+      // Small delay to let file locks release
+      const start = Date.now();
+      while (Date.now() - start < 500) { /* busy wait */ }
+      return runWithRetry(cmd, cwd, retries - 1);
+    }
+    return `ERROR: ${e.message}`;
+  }
+}
+
 function section(title) {
   return `\n## ${title}\n`;
 }
@@ -65,6 +84,90 @@ function codeBlock(lang, content) {
 // ----------------------------------------------------------------------------
 const REAL_SPACE_ID = "5f91c881-82e0-4849-9c6e-9b67e5d23505";
 const REAL_MEMORY_ID = "607e7578-98e1-4504-b9e0-c07228e4e20b";
+
+// ----------------------------------------------------------------------------
+// Windows-compatible file size utilities (replaces `find` + `du`)
+// ----------------------------------------------------------------------------
+
+/**
+ * Recursively collects all files under a directory with their sizes.
+ * Returns array of { path, size, ext }.
+ */
+function collectFiles(dir, baseDir = dir) {
+  const results = [];
+  if (!existsSync(dir)) return results;
+
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = resolve(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...collectFiles(fullPath, baseDir));
+    } else if (entry.isFile()) {
+      const stats = statSync(fullPath);
+      const relPath = fullPath.slice(baseDir.length + 1); // relative to baseDir
+      results.push({
+        path: relPath,
+        size: stats.size,
+        ext: extname(entry.name).toLowerCase(),
+      });
+    }
+  }
+  return results;
+}
+
+/**
+ * Formats bytes as human-readable string (e.g., "1.2 MB").
+ */
+function formatBytes(bytes) {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
+
+/**
+ * Generates the Bundle Size Analysis section using Node's fs module
+ * (works on Windows without Unix tools).
+ */
+function generateBundleAnalysisSection() {
+  const distPath = resolve(PROJECT_ROOT, "dist");
+  if (!existsSync(distPath)) {
+    return codeBlock("bash", "dist/ directory not found (build may have failed)");
+  }
+
+  const files = collectFiles(distPath);
+  if (files.length === 0) {
+    return codeBlock("bash", "No files found in dist/");
+  }
+
+  // Group by extension for summary
+  const byExt = {};
+  for (const f of files) {
+    byExt[f.ext] = (byExt[f.ext] || 0) + f.size;
+  }
+
+  // Sort files by size descending
+  files.sort((a, b) => b.size - a.size);
+
+  let output = "### Files in dist/ (sorted by size)\n\n";
+  output += "| Size | Path |\n";
+  output += "|------|------|\n";
+  for (const f of files.slice(0, 30)) { // top 30
+    output += `| ${formatBytes(f.size).padStart(8)} | ${f.path} |\n`;
+  }
+
+  output += "\n### Total by extension\n\n";
+  output += "| Extension | Total Size |\n";
+  output += "|-----------|------------|\n";
+  for (const [ext, total] of Object.entries(byExt).sort((a, b) => b[1] - a[1])) {
+    output += `| ${ext || "(no ext)"} | ${formatBytes(total)} |\n`;
+  }
+
+  const grandTotal = files.reduce((sum, f) => sum + f.size, 0);
+  output += `\n**Grand total: ${formatBytes(grandTotal)} (${files.length} files)**\n`;
+
+  return codeBlock("markdown", output);
+}
 
 // ----------------------------------------------------------------------------
 // Main
@@ -89,21 +192,16 @@ async function main() {
   ];
   for (const url of lhPages) {
     report += `### ${url}\n`;
-    const result = run(`npx lighthouse "${url}" --output=json --quiet --chrome-flags="--headless"`);
+    // Use retry wrapper for Windows EPERM resilience
+    const result = runWithRetry(`npx lighthouse "${url}" --output=json --quiet --chrome-flags="--headless"`);
     report += codeBlock("json", result.slice(0, 5000)); // Truncate for readability
   }
 
-  // 2. Bundle Size Analysis
+  // 2. Bundle Size Analysis (Windows-compatible, no Unix tools)
   report += section("2. Bundle Size Analysis");
   console.log("Building for bundle analysis...");
   run("npm run build");
-  const distPath = resolve(PROJECT_ROOT, "dist");
-  if (existsSync(distPath)) {
-    const files = run(`find ${distPath} -name "*.js" -o -name "*.css" | head -20`);
-    report += codeBlock("bash", files);
-    const sizes = run(`du -sh ${distPath}/* | sort -hr`);
-    report += codeBlock("bash", sizes);
-  }
+  report += generateBundleAnalysisSection();
 
   // 3. Vite Bundle Analyzer (requires rollup-plugin-visualizer configured)
   report += section("3. Bundle Visualizer");
@@ -121,7 +219,8 @@ async function main() {
   // 5. Database Query Baselines (requires Supabase CLI + pg_stat_statements)
   report += section("5. Database Query Baselines");
   console.log("Querying Supabase for query stats...");
-  const dbQueries = run(`supabase db shell -c "
+  // Use npx supabase (not bare supabase) for Windows PATH compatibility
+  const dbQueries = run(`npx supabase db shell -c "
     SELECT query, calls, total_exec_time, mean_exec_time, rows
     FROM pg_stat_statements
     WHERE query LIKE '%memories%' OR query LIKE '%media%' OR query LIKE '%reactions%'
