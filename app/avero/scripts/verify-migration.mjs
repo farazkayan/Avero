@@ -9,16 +9,16 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import "dotenv/config";
 
-// Load .env from app/avero directory
+// Load .env from app/avero directory (explicit path, not cwd)
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import { config } from "dotenv";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 // Go up two levels from scripts/ to reach app/avero/
 const PROJECT_ROOT = resolve(__dirname, "..", "..");
-import { config } from "dotenv";
 config({ path: resolve(PROJECT_ROOT, ".env") });
 
 // Use VITE_-prefixed vars (what the .env actually has)
