@@ -16,7 +16,7 @@ import { writeFileSync, existsSync, mkdirSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
-import "dotenv/config";
+import { config } from "dotenv";
 
 // ----------------------------------------------------------------------------
 // Project root detection — works from ANY working directory
@@ -42,6 +42,9 @@ function findProjectRoot(startDir) {
 const PROJECT_ROOT = findProjectRoot(__dirname);
 const REPORT_PATH = resolve(PROJECT_ROOT, "..", "baseline-report.md"); // repo root
 
+// Load .env from the project root (app/avero/.env)
+config({ path: resolve(PROJECT_ROOT, ".env") });
+
 function run(cmd, cwd = PROJECT_ROOT) {
   try {
     return execSync(cmd, { cwd, encoding: "utf-8", stdio: "pipe" }).trim();
@@ -61,8 +64,10 @@ function codeBlock(lang, content) {
 // ----------------------------------------------------------------------------
 // Supabase client for fetching a real Memory ID
 // ----------------------------------------------------------------------------
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+// Accept either naming convention: VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY
+// (what the .env actually has) or SUPABASE_URL / SUPABASE_ANON_KEY (common alternative)
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
 
 let supabase = null;
 if (SUPABASE_URL && SUPABASE_ANON_KEY) {
