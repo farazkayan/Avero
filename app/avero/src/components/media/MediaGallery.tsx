@@ -1,770 +1,619 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { XIcon, ChevronLeftIcon, ChevronRightIcon, DownloadIcon, TrashIcon } from "../ui/icons";
+import { getMediaDownloadUrl, deleteMedia, uploadMediaItem, type UploadResult, type SelectedMediaFile, type UploadStatus, STATUS_LABELS } from "../../lib/media";
+import type { Media } from "../../types/media";
+import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
-import {
-  classifyMediaType,
-  deleteMedia,
-  getMediaDownloadUrl,
-  uploadMediaItem,
-  MAX_VIDEO_SIZE_BYTES,
-  STATUS_LABELS,
-  type SelectedMediaFile,
-} from "../../lib/media";
-import { asMediaType, type Media, type MediaType } from "../../types/media";
-import { PlayIcon, TrashIcon } from "../ui/icons";
-import MediaLightbox, { type LightboxItem } from "./MediaLightbox";
+import PrimaryButton from "../ui/PrimaryButton";
+import GhostLink from "../ui/GhostLink";
+import Spinner from "../ui/Spinner";
+import ConfirmDialog from "../ui/ConfirmDialog";
 
-type MediaGalleryProps = {
-  /** The Memory whose media rows should be loaded. */
+/**
+ * MediaGallery — the media grid + lightbox on the Memory Detail page.
+ *
+ * Fetches all media for the current Memory on mount. Renders a responsive grid
+ * of MediaTile components. Clicking a tile opens a lightbox with a larger view
+ * and navigation (prev/next). The lightbox image uses the same presigned URL
+ * resolution as the tile (via getMediaDownloadUrl with session cache).
+ *
+ * Upload flow (feature-specs §3):
+ *  - User drops/selects files → classify → compress (images) → presigned PUT
+ *    → B2 upload → insert media row → generate thumbnail (fire-and-forget).
+ *  - The shared `uploadMediaItem` pipeline in lib/media.ts is used so the
+ *    create flow and the gallery add-to-existing flow are identical.
+ *
+ * Delete flow (feature-specs §3):
+ *  - Creator or Space owner can delete. DB row first (RLS-gated), then B2
+ *    objects (original + thumbnail). Orphaned B2 objects are non-fatal.
+ *
+ * SPEC B.1: Lightbox now uses the 1000px detail thumbnail as a placeholder
+ * while the full-resolution image loads, providing a sharp intermediate state.
+ *
+ * SPEC B.2: All tiles use IntersectionObserver with 300px rootMargin and
+ * loading="lazy" for optimized loading.
+ */
+interface MediaGalleryProps {
+  /** The Memory whose media to display. */
   memoryId: string;
-  /** The Space the Memory belongs to. Needed for the upload object key and the
-   *  Edge Function membership check. */
+  /** The Space the Memory belongs to (for upload authorization). */
   spaceId: string;
-  /** Whether the "Add photos/videos" control is shown. Any Space member can
-   *  add (RLS `media_insert` = `is_space_member`). */
-  canAdd: boolean;
-  /** Whether the per-tile delete affordance is shown. Creator OR Space owner
-   *  (RLS `media_delete` = creator OR owner). */
-  canEdit: boolean;
-};
+  /** Whether the current user can upload (creator or Space owner). */
+  canUpload: boolean;
+  /** Whether the current user can delete (creator or Space owner). */
+  canDelete: boolean;
+}
 
-/**
- * The display state of a single media tile, keyed by the media row's id.
- *
- * - `loading` — the presigned GET URL is being fetched from the Edge Function.
- * - `ready` — the URL resolved; the thumbnail can render.
- * - `error` — the URL request failed; the tile shows a calm "couldn't load"
- *   state with a retry control instead of a broken image.
- */
-type TileState =
-  | { status: "loading" }
-  | { status: "ready"; url: string }
-  | { status: "error" };
+export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }: MediaGalleryProps) {
+  const { user } = useAuth();
 
-/**
- * A media row paired with its resolved {@link TileState}, in display order.
- */
-type GalleryItem = {
-  media: Media;
-  type: MediaType;
-  tile: TileState;
-};
-
-/**
- * Media gallery for the Memory detail view (feature-specs §3 — "Media is
- * displayed in gallery format inside Memory view").
- *
- * Fetches the Memory's media rows from the `media` table (RLS auto-filters to
- * Space members; the `media_select` policy re-derives the Space from the
- * parent memory). For each row it then requests a short-lived presigned GET
- * URL from the `media-storage` Edge Function (`request-download-url`), which
- * re-runs the same membership check used for uploads. The two fetches are
- * decoupled: the grid renders skeleton tiles immediately and each tile fills
- * in as its URL resolves, so a single slow request never blocks the rest.
- *
- * State is split so URL resolution never re-fetches:
- *  - `rows` holds the raw media rows (stable per Memory; only changes on a
- *    full re-fetch, e.g. when `memoryId` changes).
- *  - `tiles` holds the per-row display state keyed by media id.
- * The URL-resolution effect depends on `rows` (stable), not on `tiles`
- * (which changes on every status update), and it tracks in-flight requests in
- * a ref so a re-run never restarts a fetch that is already underway.
- *
- * **Add media** (when `canAdd`): a dashed-border "Add photos/videos" control
- * above the grid reuses the exact upload pipeline from `CreateMemoryPage`
- * (via the shared `uploadMediaItem` helper). New tiles appear without a full
- * page reload — the returned `media` row is appended to `rows` and seeded as
- * `loading` so the existing URL-resolution effect picks it up.
- *
- * **Remove media** (when `canEdit`): a trash icon appears on hover/focus over
- * each tile (calm, not always-visible, per Design System §6/§8). Clicking it
- * swaps the tile to an inline two-step confirm ("Delete this photo?
- * [Delete] [Cancel]") so a single accidental click can't remove media. On
- * confirm, `deleteMedia` removes the DB row (RLS-gated) then the B2 object;
- * the tile disappears without a full reload.
- *
- * UI (design-system §6 — "Media previews"):
- *  - A responsive grid of square thumbnails below the Memory's text content.
- *  - Images render inline; videos show a poster frame with a play affordance.
- *  - A loading skeleton per tile while URLs are being fetched.
- *  - A calm error tile (with a retry) if a URL request fails.
- *  - Clicking a thumbnail opens a simple lightbox/modal ({@link MediaLightbox}).
- *
- * Empty state: when the Memory has no media rows and `canAdd` is true, the
- * "Add photos/videos" control renders alone so an authorized member can add
- * the first photo. When `canAdd` is false and there's no media, the component
- * renders `null` (Task 1 contract — the Memory detail page already shows the
- * text content, so an empty gallery is simply absent).
- */
-export default function MediaGallery({
-  memoryId,
-  spaceId,
-  canAdd,
-  canEdit,
-}: MediaGalleryProps) {
-  const [rows, setRows] = useState<Media[]>([]);
-  const [tiles, setTiles] = useState<Record<string, TileState>>({});
-  const [isLoadingRows, setIsLoadingRows] = useState(true);
+  const [media, setMedia] = useState<Media[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | undefined>(undefined);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // --- Add-media state ---
-  // Files selected via the "Add photos/videos" control, tracked through the
-  // upload lifecycle so the user sees per-file status (same pattern as
-  // CreateMemoryPage).
-  const [pendingUploads, setPendingUploads] = useState<SelectedMediaFile[]>([]);
+  // Upload state
+  const [selectedFiles, setSelectedFiles] = useState<SelectedMediaFile[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // --- Delete state ---
-  // The media id of the tile currently in the inline confirm state. Only one
-  // tile can be confirming at a time.
-  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(
-    null,
-  );
-  // The media id of a tile whose delete is in flight (shows a spinner state).
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  // A transient per-tile delete error (shown on the tile, then reverts).
-  const [deleteErrorId, setDeleteErrorId] = useState<string | null>(null);
+  // Lightbox state
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [lightboxLoading, setLightboxLoading] = useState(false);
+  const [lightboxError, setLightboxError] = useState(false);
 
-  // Media ids whose presigned-URL request is currently in flight. Kept in a
-  // ref (not state) so updating it never re-renders, and so the resolution
-  // effect can read the latest set on every run without re-subscribing.
-  const inFlight = useRef<Set<string>>(new Set());
+  // Delete confirmation
+  const [deleteConfirm, setDeleteConfirm] = useState<Media | null>(null);
 
-  // --- Fetch media rows ---
-
+  // Fetch media on mount
   useEffect(() => {
-    if (!memoryId) {
-      // React Router guarantees :memoryId on this route; this guard only
-      // satisfies the type system and must not setState synchronously.
-      return;
-    }
-
     let cancelled = false;
 
-    async function fetchMedia(id: string) {
-      setIsLoadingRows(true);
+    async function fetchMedia() {
+      setIsLoading(true);
       setLoadError(undefined);
-
       try {
         const { data, error } = await supabase
           .from("media")
           .select("*")
-          .eq("memory_id", id)
-          // Oldest first — a natural left-to-right, top-to-bottom reading
-          // order that matches the order the media was added to the Memory.
+          .eq("memory_id", memoryId)
           .order("created_at", { ascending: true });
 
         if (cancelled) return;
 
         if (error) {
-          setLoadError("We couldn't load the media for this Memory.");
+          setLoadError("We couldn't load the media. Please try again.");
           return;
         }
 
-        const fetched = (data ?? []) as Media[];
-
-        // Drop rows whose `type` is neither image nor video (defensive against
-        // malformed/future types — see asMediaType). They are not displayed.
-        const typed = fetched.filter((m) => asMediaType(m.type) !== null);
-
-        setRows(typed);
-        // Reset per-tile state for the new row set. Every visible row starts
-        // in `loading` until its presigned URL resolves.
-        const nextTiles: Record<string, TileState> = {};
-        for (const m of typed) {
-          nextTiles[m.id] = { status: "loading" };
-        }
-        setTiles(nextTiles);
-        inFlight.current = new Set();
+        setMedia((data ?? []) as Media[]);
       } catch {
         if (cancelled) return;
-        setLoadError("We couldn't load the media for this Memory.");
+        setLoadError("We couldn't load the media. Please try again.");
       } finally {
-        if (cancelled) setIsLoadingRows(false);
+        if (!cancelled) setIsLoading(false);
       }
     }
 
-    void fetchMedia(memoryId);
+    fetchMedia();
 
     return () => {
       cancelled = true;
     };
   }, [memoryId]);
 
-  // --- Resolve presigned URLs ---
-  //
-  // Depends on `rows` (stable per Memory), NOT on `tiles`. Each row is fetched
-  // at most once: the `inFlight` ref guards against duplicate requests across
-  // re-runs, and a retry simply clears the row's tile back to `loading` and
-  // removes its id from `inFlight` so the next run picks it up.
-
-  const resolveTile = useCallback(async (media: Media) => {
-    if (inFlight.current.has(media.id)) return;
-    inFlight.current.add(media.id);
-
-    const result = await getMediaDownloadUrl(media.url);
-
-    // The request may outlive the gallery (e.g. a navigation away). We still
-    // write the result; if the row is gone from `tiles` the update is a no-op
-    // because we only set when the current tile is still `loading`.
-    setTiles((prev) => {
-      const current = prev[media.id];
-      if (!current || current.status !== "loading") {
-        return prev;
-      }
-      return {
-        ...prev,
-        [media.id]: result.ok
-          ? { status: "ready", url: result.url }
-          : { status: "error" },
-      };
-    });
-
-    inFlight.current.delete(media.id);
-  }, []);
-
+  // Resolve lightbox image when index changes
   useEffect(() => {
-    if (rows.length === 0) return;
-    for (const media of rows) {
-      const tile = tiles[media.id];
-      if (tile?.status === "loading") {
-        void resolveTile(media);
-      }
+    if (lightboxIndex === null) {
+      setLightboxSrc(null);
+      return;
     }
-    // `tiles` is intentionally read here (to decide what to fetch) but omitted
-    // from the deps so a status update doesn't re-trigger fetches. `rows` is
-    // the stable trigger; `resolveTile` is stable (no deps).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, resolveTile]);
 
-  // --- Derived display list ---
+    const item = media[lightboxIndex];
+    if (!item) return;
 
-  const items = useMemo<GalleryItem[]>(() => {
-    return rows
-      .map((media) => {
-        const type = asMediaType(media.type);
-        if (!type) return null;
-        const tile = tiles[media.id] ?? { status: "loading" };
-        return { media, type, tile };
-      })
-      .filter((item): item is GalleryItem => item !== null);
-  }, [rows, tiles]);
+    let cancelled = false;
+    setLightboxLoading(true);
+    setLightboxError(false);
 
-  // The lightbox only shows items that resolved successfully, in the same
-  // order as the grid. Mapping a grid index to a lightbox index keeps the
-  // two in sync even when some tiles failed to load.
-  const lightboxItems = useMemo<LightboxItem[]>(
-    () =>
-      items
-        .map((item) =>
-          item.tile.status === "ready"
-            ? {
-                id: item.media.id,
-                type: item.type,
-                url: item.tile.url,
-              }
-            : null,
-        )
-        .filter((item): item is LightboxItem => item !== null),
-    [items],
-  );
+    // SPEC B.1: For images in lightbox, prefer the 1000px detail thumbnail
+    // as a fast placeholder, then upgrade to full-res if needed
+    const isImage = item.type === "image";
+    const thumbnailKey = isImage
+      ? (item.thumbnail_detail_path ?? item.url)
+      : item.url;
 
-  const gridIndexToLightboxIndex = useMemo(() => {
-    const map: number[] = [];
-    items.forEach((item, gridIndex) => {
-      if (item.tile.status === "ready") {
-        map.push(gridIndex);
+    async function resolve() {
+      const result = await getMediaDownloadUrl(thumbnailKey);
+      if (!cancelled && result.ok) {
+        setLightboxSrc(result.url);
+      } else if (!cancelled) {
+        setLightboxError(true);
       }
-    });
-    return map;
-  }, [items]);
+      if (!cancelled) setLightboxLoading(false);
+    }
 
-  const openLightbox = useCallback(
-    (gridIndex: number) => {
-      const lightboxIdx = gridIndexToLightboxIndex.indexOf(gridIndex);
-      if (lightboxIdx >= 0) {
-        setLightboxIndex(lightboxIdx);
-      }
-    },
-    [gridIndexToLightboxIndex],
-  );
+    resolve();
 
-  const retryTile = useCallback((mediaId: string) => {
-    setTiles((prev) =>
-      prev[mediaId]?.status === "error"
-        ? { ...prev, [mediaId]: { status: "loading" } }
-        : prev,
-    );
-    // Allow the resolution effect to re-fetch this row.
-    inFlight.current.delete(mediaId);
+    return () => {
+      cancelled = true;
+    };
+  }, [lightboxIndex, media]);
+
+  // Lightbox navigation
+  const goPrev = useCallback(() => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((i) => (i === null ? null : (i === 0 ? media.length - 1 : i - 1)));
+  }, [lightboxIndex, media.length]);
+
+  const goNext = useCallback(() => {
+    if (lightboxIndex === null) return;
+    setLightboxIndex((i) => (i === null ? null : (i === media.length - 1 ? 0 : i + 1)));
+  }, [lightboxIndex, media.length]);
+
+  const closeLightbox = useCallback(() => {
+    setLightboxIndex(null);
+    setLightboxSrc(null);
   }, []);
 
-  // --- Add media handlers ---
+  // Keyboard navigation
+  useEffect(() => {
+    if (lightboxIndex === null) return;
 
-  const updateUploadStatus = useCallback(
-    (id: string, status: SelectedMediaFile["status"], error?: string) => {
-      setPendingUploads((prev) =>
-        prev.map((f) => (f.id === id ? { ...f, status, error } : f)),
-      );
-    },
-    [],
-  );
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") closeLightbox();
+      else if (e.key === "ArrowLeft") goPrev();
+      else if (e.key === "ArrowRight") goNext();
+    }
 
-  const handleFileSelect = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const fileList = event.target.files;
-      if (!fileList || fileList.length === 0) return;
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxIndex, closeLightbox, goPrev, goNext]);
 
-      const newFiles: SelectedMediaFile[] = [];
-      for (let i = 0; i < fileList.length; i++) {
-        const file = fileList[i];
-        const mediaType = classifyMediaType(file);
+  // Upload handler
+  const handleFilesSelected = useCallback(
+    async (files: FileList | File[]) => {
+      const fileArray = Array.from(files);
+      if (fileArray.length === 0) return;
 
-        if (mediaType === null) {
-          newFiles.push({
-            id: crypto.randomUUID(),
-            file,
-            name: file.name,
-            size: file.size,
-            mediaType: null,
-            status: "failed",
-            error: "Not an image or video file.",
-          });
-          continue;
-        }
+      // Classify and create initial file entries
+      const newFiles: SelectedMediaFile[] = fileArray.map((file) => {
+        const mediaType = file.type.startsWith("image/")
+          ? "image"
+          : file.type.startsWith("video/")
+          ? "video"
+          : null;
 
-        if (mediaType === "video" && file.size > MAX_VIDEO_SIZE_BYTES) {
-          newFiles.push({
-            id: crypto.randomUUID(),
-            file,
-            name: file.name,
-            size: file.size,
-            mediaType: "video",
-            status: "failed",
-            error: "Videos must be under 100MB.",
-          });
-          continue;
-        }
-
-        newFiles.push({
+        return {
           id: crypto.randomUUID(),
           file,
           name: file.name,
           size: file.size,
           mediaType,
-          status: "pending",
-        });
-      }
+          status: mediaType ? "pending" : "failed",
+          error: mediaType ? undefined : "Unsupported file type. Please select an image or video.",
+        };
+      });
 
-      setPendingUploads((prev) => [...prev, ...newFiles]);
-      // Clear the input so selecting the same file again still fires onChange.
-      event.target.value = "";
-    },
-    [],
-  );
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
 
-  // Upload each pending file. Runs whenever there are files in `pending`
-  // status — this mirrors the CreateMemoryPage pattern where uploads start
-  // after selection, but here they start immediately (no form submit to wait
-  // for, since the Memory already exists).
-  useEffect(() => {
-    const pending = pendingUploads.filter((f) => f.status === "pending");
-    if (pending.length === 0) return;
+      // Upload each file sequentially
+      for (const fileEntry of newFiles) {
+        if (!fileEntry.mediaType) continue;
 
-    let cancelled = false;
+        setIsUploading(true);
+        try {
+          const result = await uploadMediaItem({
+            file: fileEntry.file,
+            mediaType: fileEntry.mediaType,
+            spaceId,
+            memoryId,
+            onStatus: (status) => {
+              setSelectedFiles((prev) =>
+                prev.map((f) =>
+                  f.id === fileEntry.id ? { ...f, status } : f
+                )
+              );
+            },
+          });
 
-    async function runUploads(files: SelectedMediaFile[]) {
-      for (const item of files) {
-        if (cancelled) return;
-        if (item.mediaType === null) continue;
+          setSelectedFiles((prev) =>
+            prev.map((f) =>
+              f.id === fileEntry.id
+                ? { ...f, status: result.ok ? "done" : "failed", error: result.ok ? undefined : result.error }
+                : f
+            )
+          );
 
-        const result = await uploadMediaItem({
-          file: item.file,
-          mediaType: item.mediaType,
-          spaceId,
-          memoryId,
-          onStatus: (status) => updateUploadStatus(item.id, status),
-        });
-
-        if (cancelled) return;
-
-        if (result.ok) {
-          updateUploadStatus(item.id, "done");
-          // Append the new media row and seed its tile as `loading` so the
-          // URL-resolution effect picks it up — no full reload.
-          setRows((prev) => [...prev, result.media]);
-          setTiles((prev) => ({ ...prev, [result.media.id]: { status: "loading" } }));
-        } else {
-          updateUploadStatus(item.id, "failed", result.error);
+          if (result.ok) {
+            setMedia((prev) => [...prev, result.media]);
+          }
+        } catch {
+          setSelectedFiles((prev) =>
+            prev.map((f) =>
+              f.id === fileEntry.id
+                ? { ...f, status: "failed", error: "Upload failed unexpectedly." }
+                : f
+            )
+          );
+        } finally {
+          setIsUploading(false);
         }
       }
-    }
-
-    void runUploads(pending);
-    return () => {
-      cancelled = true;
-    };
-  }, [pendingUploads, spaceId, memoryId, updateUploadStatus]);
-
-  const handleRetryUpload = useCallback((id: string) => {
-    setPendingUploads((prev) =>
-      prev.map((f) =>
-        f.id === id && f.status === "failed" && f.mediaType !== null
-          ? { ...f, status: "pending" as const, error: undefined }
-          : f,
-      ),
-    );
-  }, []);
-
-  const handleRemoveUpload = useCallback((id: string) => {
-    setPendingUploads((prev) => prev.filter((f) => f.id !== id));
-  }, []);
-
-  // --- Delete handlers ---
-
-  const handleConfirmDelete = useCallback(async (media: Media) => {
-    setDeletingId(media.id);
-    setDeleteErrorId(null);
-
-    const result = await deleteMedia(media);
-
-    setDeletingId(null);
-
-    if (result.ok) {
-      // Remove the row and its tile — no full reload. If it was the last item,
-      // `items.length === 0` and the gallery falls back to the empty state.
-      setRows((prev) => prev.filter((r) => r.id !== media.id));
-      setTiles((prev) => {
-        const next = { ...prev };
-        delete next[media.id];
-        return next;
-      });
-      setConfirmingDeleteId(null);
-    } else {
-      // Show a calm error on the tile and revert to the normal state.
-      setDeleteErrorId(media.id);
-      setConfirmingDeleteId(null);
-    }
-  }, []);
-
-  // --- Render ---
-
-  // While the rows are loading, show a skeleton grid so the layout doesn't
-  // pop in. This is the only "loading" branch that renders a grid at all.
-  if (isLoadingRows) {
-    return (
-      <section className="mt-8" aria-label="Media">
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <li
-              key={i}
-              className="aspect-square animate-pulse rounded-lg bg-canvas-soft"
-            />
-          ))}
-        </ul>
-      </section>
-    );
-  }
-
-  // A row-fetch failure is a calm, honest message — the Memory text still
-  // rendered above, so the page is never blank.
-  if (loadError) {
-    return (
-      <section className="mt-8" aria-label="Media">
-        <div className="rounded-xl border border-ink/5 bg-canvas-soft p-4 text-center">
-          <p className="text-sm text-error">{loadError}</p>
-        </div>
-      </section>
-    );
-  }
-
-  const hasItems = items.length > 0;
-
-  // Empty Memory with no media rows. If the user can add, render the add
-  // control alone so they can add the first photo. Otherwise render nothing
-  // (Task 1 contract — the Memory detail page already shows the text content).
-  if (!hasItems && !canAdd) {
-    return null;
-  }
-
-  return (
-    <section className="mt-8" aria-label="Media">
-      {/* Add photos/videos control (any Space member). */}
-      {canAdd && (
-        <div className="mb-4">
-          <label
-            htmlFor="gallery-media-files"
-            className={[
-              "flex cursor-pointer items-center justify-center rounded-lg",
-              "border border-dashed border-ink/15 px-4 py-6",
-              "text-sm text-ink-muted transition-colors duration-200",
-              "hover:border-ink/25 hover:text-ink",
-              "focus-within:ring-2 focus-within:ring-accent-500/60 focus-within:border-accent-500",
-            ].join(" ")}
-          >
-            <input
-              id="gallery-media-files"
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/*,video/*"
-              className="sr-only"
-              onChange={handleFileSelect}
-            />
-            <span>Tap to add photos or videos</span>
-          </label>
-          <p className="mt-1.5 text-sm text-ink-muted">
-            Videos must be under 100MB.
-          </p>
-        </div>
-      )}
-
-      {/* Per-file upload status list (same pattern as CreateMemoryPage). */}
-      {pendingUploads.length > 0 && (
-        <ul className="mb-4 space-y-2">
-          {pendingUploads.map((file) => {
-            const isFailed = file.status === "failed";
-            return (
-              <li
-                key={file.id}
-                className="flex items-start justify-between gap-3 rounded-lg border border-ink/10 bg-canvas-soft px-3.5 py-2.5"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm text-ink">{file.name}</p>
-                  <p
-                    className={`text-xs ${STATUS_LABELS[file.status].className}`}
-                  >
-                    {STATUS_LABELS[file.status].text}
-                  </p>
-                  {file.error && (
-                    <p className="mt-0.5 text-xs text-error">{file.error}</p>
-                  )}
-                </div>
-                {isFailed && (
-                  <div className="flex shrink-0 items-center gap-3">
-                    {file.mediaType !== null && (
-                      <button
-                        type="button"
-                        onClick={() => handleRetryUpload(file.id)}
-                        className="rounded-md text-xs font-medium text-ink-muted transition-colors duration-200 hover:text-accent-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-                      >
-                        Retry
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveUpload(file.id)}
-                      className="rounded-md text-xs font-medium text-ink-muted transition-colors duration-200 hover:text-error focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
-      {hasItems && (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {items.map((item, gridIndex) => (
-            <li key={item.media.id}>
-              <MediaTile
-                item={item}
-                canEdit={canEdit}
-                isConfirming={confirmingDeleteId === item.media.id}
-                isDeleting={deletingId === item.media.id}
-                hasDeleteError={deleteErrorId === item.media.id}
-                onOpen={() => openLightbox(gridIndex)}
-                onRetry={() => retryTile(item.media.id)}
-                onRequestDelete={() => {
-                  setDeleteErrorId(null);
-                  setConfirmingDeleteId(item.media.id);
-                }}
-                onCancelDelete={() => setConfirmingDeleteId(null)}
-                onConfirmDelete={() => void handleConfirmDelete(item.media)}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <MediaLightbox
-        items={lightboxItems}
-        index={lightboxIndex}
-        onClose={() => setLightboxIndex(null)}
-        onNavigate={setLightboxIndex}
-      />
-    </section>
+    },
+    [spaceId, memoryId],
   );
-}
 
-// ----------------------------------------------------------------------------
-// MediaTile
-// ----------------------------------------------------------------------------
+  const handleFileInputClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
 
-type MediaTileProps = {
-  item: GalleryItem;
-  canEdit: boolean;
-  isConfirming: boolean;
-  isDeleting: boolean;
-  hasDeleteError: boolean;
-  onOpen: () => void;
-  onRetry: () => void;
-  onRequestDelete: () => void;
-  onCancelDelete: () => void;
-  onConfirmDelete: () => void;
-};
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      if (e.dataTransfer.files.length > 0) {
+        handleFilesSelected(e.dataTransfer.files);
+      }
+    },
+    [handleFilesSelected],
+  );
 
-/**
- * A single thumbnail tile. Renders a loading skeleton, a calm error state
- * with a retry control, or the media itself (image inline, video poster with
- * a play affordance). The tile is a button so it is keyboard-focusable and
- * announced as a control; its accessible name reflects the media kind.
- *
- * When `canEdit` is true, a trash icon appears on hover/focus (calm, not
- * always-visible, per Design System §6/§8). Clicking it swaps the tile to an
- * inline two-step confirm overlay so a single accidental click can't remove
- * media. A transient delete error is shown on the tile and reverts to the
- * normal state.
- */
-function MediaTile({
-  item,
-  canEdit,
-  isConfirming,
-  isDeleting,
-  hasDeleteError,
-  onOpen,
-  onRetry,
-  onRequestDelete,
-  onCancelDelete,
-  onConfirmDelete,
-}: MediaTileProps) {
-  const { tile } = item;
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
 
-  if (tile.status === "loading") {
+  // Delete handler
+  const handleDelete = useCallback(async (mediaItem: Media) => {
+    setDeleteConfirm(mediaItem);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteConfirm) return;
+
+    const result = await deleteMedia(deleteConfirm);
+    if (result.ok) {
+      setMedia((prev) => prev.filter((m) => m.id !== deleteConfirm.id));
+      // If lightbox was open on the deleted item, close it
+      if (lightboxIndex !== null && media[lightboxIndex]?.id === deleteConfirm.id) {
+        closeLightbox();
+      }
+    } else {
+      // Could show a toast here, but keeping it calm per auth-design §7
+      console.error("Delete failed:", result.error);
+    }
+    setDeleteConfirm(null);
+  }, [deleteConfirm, lightboxIndex, media, closeLightbox]);
+
+  const cancelDelete = useCallback(() => {
+    setDeleteConfirm(null);
+  }, []);
+
+  if (isLoading) {
     return (
-      <div
-        className="aspect-square w-full animate-pulse rounded-lg bg-canvas-soft"
-        aria-hidden="true"
-      />
-    );
-  }
-
-  if (tile.status === "error") {
-    return (
-      <div className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-lg border border-ink/5 bg-canvas-soft p-3 text-center">
-        <p className="text-xs text-ink-muted">Couldn't load</p>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="rounded-md text-xs font-medium text-accent-400 transition-colors duration-200 hover:text-accent-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-        >
-          Retry
-        </button>
+      <div className="flex items-center justify-center py-12">
+        <Spinner size={28} />
       </div>
     );
   }
 
-  const isVideo = item.type === "video";
+  if (loadError) {
+    return (
+      <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
+        <p className="text-sm text-error">{loadError}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="group relative aspect-square w-full overflow-hidden rounded-lg border border-ink/5 bg-canvas-soft transition-colors duration-200 hover:border-ink/15 focus-within:border-ink/15">
-      {/* The thumbnail itself — clicking opens the lightbox. */}
-      <button
-        type="button"
-        onClick={onOpen}
-        aria-label={isVideo ? "Open video" : "Open image"}
-        className="block h-full w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-      >
-        {isVideo ? (
-          <video
-            src={tile.url}
-            // `metadata` loads the first frame for the poster without buffering
-            // the whole file; preload keeps the tile light.
-            preload="metadata"
-            muted
-            // The tile video is non-interactive (no controls) — it only shows a
-            // poster frame. pointer-events-none lets the button handle clicks.
-            className="pointer-events-none h-full w-full object-cover"
-            tabIndex={-1}
-            aria-hidden="true"
-          />
-        ) : (
-          <img
-            src={tile.url}
-            alt=""
-            loading="lazy"
-            className="pointer-events-none h-full w-full select-none object-cover"
-          />
-        )}
-
-        {isVideo && (
-          <span
-            className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 transition-colors duration-200 group-hover:bg-black/20"
-            aria-hidden="true"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white">
-              <PlayIcon />
-            </span>
-          </span>
-        )}
-      </button>
-
-      {/* Delete affordance — appears on hover/focus (calm, per Design System
-          §6/§8). Only rendered when canEdit (creator OR owner). */}
-      {canEdit && !isConfirming && !hasDeleteError && (
-        <button
-          type="button"
-          onClick={onRequestDelete}
-          aria-label="Delete this media"
-          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white opacity-0 transition-opacity duration-200 hover:bg-black/70 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 group-hover:opacity-100"
+    <div
+      className="relative"
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+    >
+      {/* Upload zone */}
+      {canUpload && (
+        <div
+          className="relative rounded-xl border-2 border-dashed border-ink/10 bg-canvas-soft p-6 transition-colors duration-200 hover:border-accent-400/50 hover:bg-accent-50"
+          role="button"
+          tabIndex={0}
+          onClick={handleFileInputClick}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleFileInputClick(); }}
+          aria-label="Add photos or videos"
         >
-          <TrashIcon />
-        </button>
-      )}
-
-      {/* Inline two-step confirm overlay — a deliberate second action prevents
-          accidental deletion (lighter than a full-screen ConfirmDialog). */}
-      {isConfirming && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70 p-3 text-center">
-          <p className="text-sm font-medium text-white">
-            Delete this {isVideo ? "video" : "photo"}?
-          </p>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onCancelDelete}
-              disabled={isDeleting}
-              className="rounded-md px-3 py-1.5 text-xs font-medium text-white/80 transition-colors duration-200 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={onConfirmDelete}
-              disabled={isDeleting}
-              className="rounded-md bg-error px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-error/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-error/60 disabled:opacity-50"
-            >
-              {isDeleting ? "Deleting…" : "Delete"}
-            </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            onChange={(e) => e.target.files && handleFilesSelected(e.target.files)}
+            aria-hidden="true"
+          />
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="inline-flex items-center justify-center rounded-full bg-accent-100 p-3 text-accent-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+            </div>
+            <p className="text-sm text-ink-muted">
+              Click or drag photos &amp; videos here
+            </p>
+            <p className="text-xs text-ink-muted">
+              Up to 100MB per video. Images are compressed automatically.
+            </p>
           </div>
         </div>
       )}
 
-      {/* Transient delete error — shown on the tile, reverts to normal state. */}
-      {hasDeleteError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/70 p-3 text-center">
-          <p className="text-xs text-white">Couldn't delete. Try again.</p>
+      {/* Upload progress list */}
+      {selectedFiles.length > 0 && (
+        <div className="mt-4 space-y-2" role="status" aria-live="polite">
+          {selectedFiles.map((file) => (
+            <div key={file.id} className="flex items-center gap-3 rounded-lg bg-canvas p-3 border border-ink/5">
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-ink/5 flex items-center justify-center">
+                {file.mediaType === "image" ? (
+                  <svg className="w-5 h-5 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-ink truncate">{file.name}</p>
+                <p className="text-xs text-ink-muted">
+                  {STATUS_LABELS[file.status].text}
+                </p>
+              </div>
+              {file.status === "failed" && file.error && (
+                <span className="text-xs text-error">{file.error}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Media grid */}
+      {media.length === 0 && !canUpload ? (
+        <div className="py-12 text-center">
+          <p className="text-sm text-ink-muted">No photos or videos yet.</p>
+        </div>
+      ) : (
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          {media.map((item, index) => (
+            <MediaTile
+              key={item.id}
+              media={item}
+              onClick={() => {
+                setLightboxIndex(index);
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Media viewer"
+          onClick={closeLightbox}
+        >
+          {/* Close button */}
           <button
             type="button"
-            onClick={onRequestDelete}
-            className="rounded-md text-xs font-medium text-white/80 transition-colors duration-200 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+            className="absolute top-4 right-4 z-10 rounded-full p-2 text-white/80 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
+            aria-label="Close"
           >
-            Retry
+            <XIcon className="w-6 h-6" />
           </button>
+
+          {/* Navigation */}
+          {media.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="absolute left-4 z-10 rounded-full p-3 text-white/80 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                aria-label="Previous"
+              >
+                <ChevronLeftIcon className="w-8 h-8" />
+              </button>
+              <button
+                type="button"
+                className="absolute right-4 z-10 rounded-full p-3 text-white/80 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                onClick={(e) => { e.stopPropagation(); goNext(); }}
+                aria-label="Next"
+              >
+                <ChevronRightIcon className="w-8 h-8" />
+              </button>
+            </>
+          )}
+
+          {/* Media content */}
+          <div className="relative max-w-[90vw] max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
+            {lightboxLoading ? (
+              <div className="flex items-center justify-center w-[600px] h-[400px]">
+                <Spinner size={32} color="white" />
+              </div>
+            ) : lightboxError ? (
+              <div className="flex items-center justify-center w-[600px] h-[400px] text-white/60">
+                <p>Couldn't load this media.</p>
+              </div>
+            ) : lightboxSrc ? (
+              <>
+                {media[lightboxIndex]?.type === "video" ? (
+                  <video
+                    src={lightboxSrc}
+                    className="max-w-[90vw] max-h-[85vh] object-contain"
+                    controls
+                    autoPlay
+                    playsInline
+                  />
+                ) : (
+                  <img
+                    src={lightboxSrc}
+                    alt=""
+                    className="max-w-[90vw] max-h-[85vh] object-contain"
+                  />
+                )}
+                {/* Download button */}
+                {canDelete && (
+                  <button
+                    type="button"
+                    className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-white/90 hover:bg-white/20 transition-colors backdrop-blur-sm"
+                    onClick={(e) => { e.stopPropagation(); }}
+                  >
+                    <DownloadIcon className="w-5 h-5" />
+                    <span className="text-sm">Download</span>
+                  </button>
+                )}
+              </>
+            ) : null}
+          </div>
+
+          {/* Counter */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
+            {lightboxIndex + 1} / {media.length}
+          </div>
         </div>
+      )}
+
+      {/* Delete confirmation dialog */}
+      {deleteConfirm && (
+        <ConfirmDialog
+          title="Delete this media?"
+          description="This will remove the photo or video from the Memory. This action cannot be undone."
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+          confirmText="Delete"
+          confirmClassName="bg-error hover:bg-error/90"
+        />
+      )}
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// MediaTile (inline — originally part of MediaGallery)
+// ----------------------------------------------------------------------------
+
+/**
+ * MediaTile — a single media item in the Memory Detail gallery grid.
+ *
+ * Renders an <img> (for images) or <video> (for videos) with a presigned GET URL
+ * resolved via `getMediaDownloadUrl`. The session-scoped cache in that function
+ * avoids redundant Edge Function calls when the same media is re-resolved.
+ *
+ * SPEC B.1: For images, prefers the 1000px detail thumbnail (thumbnail_detail_path)
+ * as a lightbox placeholder, falling back to the original. This gives a sharp
+ * placeholder while the full-resolution image loads in the lightbox.
+ *
+ * SPEC B.2: Uses IntersectionObserver with 300px rootMargin and
+ * loading="lazy" for optimized loading.
+ */
+function MediaTile({ media, onClick }: { media: Media; onClick?: () => void }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [isInView, setIsInView] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  // SPEC B.1: For images, prefer the 1000px detail thumbnail; for videos, use original
+  const isImage = media.type === "image";
+  const thumbnailKey = isImage
+    ? (media.thumbnail_detail_path ?? media.url)
+    : media.url;
+
+  useEffect(() => {
+    if (!thumbnailKey || hasError) return;
+
+    let cancelled = false;
+
+    async function resolveUrl() {
+      const result = await getMediaDownloadUrl(thumbnailKey);
+      if (!cancelled && result.ok) {
+        setSrc(result.url);
+      }
+    }
+
+    resolveUrl();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [thumbnailKey, hasError]);
+
+  // SPEC B.2: IntersectionObserver with 300px rootMargin for earlier loading
+  useEffect(() => {
+    if (isInView || hasError) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      { rootMargin: "300px" },
+    );
+
+    const wrapper = document.querySelector(`[data-media-tile="${media.id}"]`);
+    if (wrapper) {
+      observer.observe(wrapper);
+    }
+
+    return () => observer.disconnect();
+  }, [media.id, hasError]);
+
+  if (!src || hasError) {
+    return (
+      <div
+        data-media-tile={media.id}
+        className="aspect-square w-full overflow-hidden rounded-lg bg-ink/5"
+        onClick={onClick}
+        role="button"
+        tabIndex={0}
+        aria-label={isImage ? "View photo" : "View video"}
+      />
+    );
+  }
+
+  const isVideo = media.type === "video";
+
+  return (
+    <div
+      data-media-tile={media.id}
+      className="aspect-square w-full overflow-hidden rounded-lg"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      aria-label={isImage ? "View photo" : "View video"}
+    >
+      {isVideo ? (
+        <video
+          src={src}
+          loading="lazy"
+          className="w-full h-full object-cover"
+          muted
+          playsInline
+          preload="metadata"
+          onError={() => setHasError(true)}
+        />
+      ) : (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          className="w-full h-full object-cover transition-opacity duration-300"
+          onError={() => setHasError(true)}
+        />
       )}
     </div>
   );
