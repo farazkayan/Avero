@@ -10,7 +10,6 @@ CREATE OR REPLACE FUNCTION set_media_thumbnails(
 RETURNS void
 LANGUAGE plpgsql
 SECURITY INVOKER
-SET search_path = public
 AS $$
 DECLARE
   v_space_id uuid;
@@ -57,7 +56,6 @@ CREATE OR REPLACE FUNCTION set_media_thumbnail(
 RETURNS void
 LANGUAGE plpgsql
 SECURITY INVOKER
-SET search_path = public
 AS $$
 BEGIN
   -- For backward compatibility, update only thumbnail_grid_path (legacy single thumbnail)
