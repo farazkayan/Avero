@@ -5,16 +5,42 @@
  *
  * Usage:
  *   node scripts/capture-baselines.mjs
+ *   # or from repo root:
+ *   node app/avero/scripts/capture-baselines.mjs
  *
  * Outputs: baseline-report.md in project root
  */
 
 import { execSync } from "child_process";
 import { writeFileSync, existsSync, mkdirSync } from "fs";
-import { resolve } from "path";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+import { createClient } from "@supabase/supabase-js";
+import "dotenv/config";
 
-const PROJECT_ROOT = resolve(process.cwd(), "app/avero");
-const REPORT_PATH = resolve(process.cwd(), "baseline-report.md");
+// ----------------------------------------------------------------------------
+// Project root detection — works from ANY working directory
+// ----------------------------------------------------------------------------
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Walk up from this script's location to find the app/avero directory
+// (the one containing package.json + vite.config.ts)
+function findProjectRoot(startDir) {
+  let current = startDir;
+  while (current !== dirname(current)) { // stop at filesystem root
+    if (existsSync(resolve(current, "package.json")) &&
+        existsSync(resolve(current, "vite.config.ts"))) {
+      return current;
+    }
+    current = dirname(current);
+  }
+  // Fallback: assume standard layout (script is at app/avero/scripts/...)
+  return resolve(__dirname, "..", "..");
+}
+
+const PROJECT_ROOT = findProjectRoot(__dirname);
+const REPORT_PATH = resolve(PROJECT_ROOT, "..", "baseline-report.md"); // repo root
 
 function run(cmd, cwd = PROJECT_ROOT) {
   try {
@@ -32,18 +58,69 @@ function codeBlock(lang, content) {
   return `\n\`\`\`${lang}\n${content}\n\`\`\`\n`;
 }
 
+// ----------------------------------------------------------------------------
+// Supabase client for fetching a real Memory ID
+// ----------------------------------------------------------------------------
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+let supabase = null;
+if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+const REAL_SPACE_ID = "5f91c881-82e0-4849-9c6e-9b67e5d23505";
+
+async function fetchRealMemoryId() {
+  if (!supabase) {
+    console.warn("⚠️  Supabase credentials not found in env — using placeholder Memory ID");
+    return null;
+  }
+  try {
+    const { data, error } = await supabase
+      .from("memories")
+      .select("id")
+      .eq("space_id", REAL_SPACE_ID)
+      .is("deleted_at", null)
+      .order("memory_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.warn(`⚠️  Failed to fetch Memory ID: ${error.message}`);
+      return null;
+    }
+    return data?.id ?? null;
+  } catch (e) {
+    console.warn(`⚠️  Failed to fetch Memory ID: ${e.message}`);
+    return null;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Main
+// ----------------------------------------------------------------------------
 async function main() {
   console.log("📊 Capturing SPEC B.0 baselines...\n");
+  console.log(`Project root: ${PROJECT_ROOT}`);
+  console.log(`Report will be written to: ${REPORT_PATH}\n`);
+
+  // Fetch a real Memory ID for the MemoryDetailPage URL
+  const memoryId = await fetchRealMemoryId();
+  const memoryIdForUrl = memoryId ?? "your-memory-id"; // fallback only if DB query fails
+
   let report = "# SPEC B.0 Baseline Report\n";
   report += `Generated: ${new Date().toISOString()}\n`;
+  report += `Space ID used: ${REAL_SPACE_ID}\n`;
+  report += `Memory ID used: ${memoryIdForUrl}\n`;
 
   // 1. Lighthouse CI (requires lighthouse-ci installed globally or via npx)
   report += section("1. Lighthouse CI Audit");
   console.log("Running Lighthouse on key pages...");
   const lhPages = [
-    "http://localhost:5173/spaces/your-space-id", // SpaceDetailPage (replace with real space ID)
-    "http://localhost:5173/spaces/your-space-id/memories/your-memory-id", // MemoryDetailPage
-    "http://localhost:5173/spaces/your-space-id/stats", // SpaceStatsPage
+    `http://localhost:5173/spaces/${REAL_SPACE_ID}`, // SpaceDetailPage
+    `http://localhost:5173/spaces/${REAL_SPACE_ID}/memories/${memoryIdForUrl}`, // MemoryDetailPage
+    `http://localhost:5173/spaces/${REAL_SPACE_ID}/stats`, // SpaceStatsPage
   ];
   for (const url of lhPages) {
     report += `### ${url}\n`;
@@ -71,9 +148,9 @@ async function main() {
   // 4. Network Metrics (manual - user must record HAR in DevTools)
   report += section("4. Network Metrics (Manual)");
   report += "Record HAR files in Chrome DevTools for:\n";
-  report += "- Cold load SpaceDetailPage with 50+ memories\n";
-  report += "- MemoryDetailPage with 10+ media items\n";
-  report += "- SpaceStatsPage\n";
+  report += `- Cold load SpaceDetailPage with 50+ memories (${lhPages[0]})\n`;
+  report += `- MemoryDetailPage with 10+ media items (${lhPages[1]})\n`;
+  report += `- SpaceStatsPage (${lhPages[2]})\n`;
   report += "\nPaste key metrics here manually.\n";
 
   // 5. Database Query Baselines (requires Supabase CLI + pg_stat_statements)
