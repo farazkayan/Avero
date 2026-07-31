@@ -675,6 +675,24 @@ Round out the social and personal layer of the app: richer comment interactions,
 
 
 \## Avero 0.1 Complete
+---
+
+## Phase 7 — Accounts & Identity Polish
+
+### Goal
+Make account creation faster with Google sign-in as a login option.
+
+### Features
+
+**Google OAuth login**
+* "Continue with Google" as an additional sign-in option alongside existing email auth
+* Auto-populate profile display name and avatar from the user's Google account on first sign-in (avatar copied through the existing upload/crop pipeline into B2, not linked externally)
+* Decide scope: new-signups only, or allow existing email-auth users to link a Google identity to their account
+
+### Definition of Done
+* Users can sign in/sign up with Google in one tap, with their name and photo populated automatically.
+
+---
 
 
 
@@ -682,5 +700,5 @@ Round out the social and personal layer of the app: richer comment interactions,
 
 
 
-At the end of Phase 6, Avero should provide everything needed for a small group of people to preserve and revisit their shared memories in a reliable, polished, and enjoyable way — with a personalized identity layer and richer, but still calm, social interactions.
+At the end of Phase 7, Avero should provide everything needed for a small group of people to preserve and revisit their shared memories in a reliable, polished, and enjoyable way — with a personalized identity layer and richer, but still calm, social interactions.
 

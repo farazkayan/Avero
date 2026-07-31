@@ -70,19 +70,36 @@ function jsonResponse(status: number, body: unknown): Response {
   });
 }
 
+// Normalizes any thrown value into a human-readable string. supabase-js throws
+// plain PostgrestError objects (not Error instances), so we must inspect .message
+// and stringify the whole object to surface the real DB/API error.
+function describeCause(cause: unknown): string | null {
+  if (cause === undefined || cause === null) return null;
+  if (cause instanceof Error) return cause.message;
+  if (typeof cause === "string") return cause;
+  if (typeof cause === "object" && "message" in cause) {
+    const msg = (cause as { message?: unknown }).message;
+    if (typeof msg === "string" && msg.length > 0) return msg;
+  }
+  try {
+    return JSON.stringify(cause);
+  } catch {
+    return String(cause);
+  }
+}
+
 function jsonError(status: number, message: string, cause?: unknown): Response {
-  if (cause !== undefined) {
-    const detail =
-      cause instanceof Error ? cause.message : typeof cause === "string"
-        ? cause
-        : JSON.stringify(cause);
+  const detail = describeCause(cause);
+  if (detail !== null) {
     console.error(`[recompute-space-stats] ${status} ${message}: ${detail}`);
   } else {
     console.error(`[recompute-space-stats] ${status} ${message}`);
   }
   const payload: { error: string; details?: string } = { error: message };
-  if (cause instanceof Error) payload.details = cause.message;
-  else if (typeof cause === "string") payload.details = cause;
+  // Always surface the real cause in the response body so it shows up in
+  // net._http_response.content for diagnosis (the body is only seen by the
+  // service-role cron caller, never by end users).
+  if (detail !== null) payload.details = detail;
   return jsonResponse(status, payload);
 }
 
@@ -222,20 +239,26 @@ async function computeStats(
   const totalVideos = mediaList.filter((m) => m.type === "video").length;
 
   // --- Comments across visible memories ---
+  // NOTE: the `memories` relation MUST appear in the select (as an inner
+  // embed) for PostgREST to resolve the `memories.space_id` /
+  // `memories.deleted_at` filters. A head:true count with `select("id")` and
+  // a relation filter returns PGRST108 ("An embedded relationship must be
+  // specified in order to use the relationship filter") — which was the
+  // cause of the function's HTTP 500. Including `memories!inner(...)` in the
+  // select makes the filter resolvable; head:true still suppresses the body
+  // and the count is read from the content-range header.
   const { count: totalComments, error: commentErr } = await client
     .from("comments")
-    .select("id", { count: "exact", head: true })
+    .select("id, memories!inner(space_id, deleted_at)", { count: "exact", head: true })
     .eq("memories.space_id", spaceId)
     .is("memories.deleted_at", null);
-  // The above join filter requires the memories relation; if the count query
-  // shape isn't supported, fall back below. We use a relation filter which
-  // PostgREST supports via the `memories` foreign key on comments.memory_id.
   if (commentErr) throw commentErr;
 
   // --- Reactions across visible memories ---
+  // Same relation-in-select requirement as the comments count above.
   const { count: totalReactions, error: reactErr } = await client
     .from("reactions")
-    .select("id", { count: "exact", head: true })
+    .select("id, memories!inner(space_id, deleted_at)", { count: "exact", head: true })
     .eq("memories.space_id", spaceId)
     .is("memories.deleted_at", null);
   if (reactErr) throw reactErr;

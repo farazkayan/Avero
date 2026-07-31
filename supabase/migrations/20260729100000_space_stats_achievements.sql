@@ -499,22 +499,37 @@ ON CONFLICT (space_id) DO NOTHING;
 -- ----------------------------------------------------------------------------
 -- Calls the recompute-space-stats Edge Function for each queued Space. The
 -- Edge Function is invoked via pg_net's net.http_post against the project's
--- Edge Functions endpoint, authenticated with the service-role key.
+-- Edge Functions endpoint, authenticated with the service-role secret key.
 --
--- Configuration: two database-level settings must be defined for the job to
--- reach the function. Set them once (e.g. in the Supabase SQL editor or a
--- one-off migration), using the project's real values:
+-- IMPORTANT — why the URL and key are HARDCODED here (do not "fix" this):
+--   The original approach stored these in database-level GUCs
+--   (ALTER DATABASE postgres SET app.edge_functions_url / app.service_role_key)
+--   and read them with current_setting('app.*', true). That does NOT work on
+--   Supabase managed Postgres: setting custom GUCs returns
+--   "permission denied to set parameter". So the URL and the service-role
+--   secret key are intentionally inlined into the job's SQL body. This is the
+--   confirmed-working approach — persisting it here means a fresh `supabase db
+--   push` recreates a WORKING job, not a broken one. If the service-role key
+--   is ever rotated, this job must be updated to match (and the Edge Function
+--   reads the same key from its SUPABASE_SERVICE_ROLE_KEY env var, which is
+--   managed by the Supabase platform).
 --
---   ALTER DATABASE postgres SET app.edge_functions_url =
---     'https://<project-ref>.functions.supabase.co';
---   ALTER DATABASE postgres SET app.service_role_key =
---     '<service-role-key-from-dashboard>';
+-- Auth key: this project's Edge Function compares the bearer token against
+-- Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"), which on THIS project holds the
+-- new-style secret key (sb_secret_...), NOT the legacy JWT (eyJ...). The
+-- legacy JWT is rejected with 403. So the cron job must send the sb_secret_
+-- key — which is what is hardcoded below.
 --
--- (cron jobs run with the database's GUC defaults, so ALTER DATABASE is the
--- correct scope.) If these are not set the job's POSTs target an empty URL
--- and silently no-op; the queue keeps its rows until the next successful
--- tick. The function is idempotent, so a missed POST is harmless — the next
--- relevant write re-enqueues the Space.
+-- Guaranteed-execution SQL pattern (the subtle bug this avoids):
+--   net.http_post is invoked inside a CTE aliased `posted`. Postgres is
+--   permitted to skip evaluating a CTE that is never referenced by the final
+--   statement. An earlier version had the final DELETE read FROM an earlier
+--   `queued` CTE instead of FROM `posted`, so the http_post CTE was never
+--   referenced and silently never fired — the job reported "succeeded" while
+--   no HTTP request was ever made. The DELETE here reads FROM posted, which
+--   forces the posted CTE (and therefore net.http_post) to evaluate. This
+--   also guarantees we only delete queue rows that were genuinely included in
+--   a posted request (delete-only-after-a-real-post), never blindly.
 --
 -- The job runs as the `postgres` superuser (cron.schedule requires it), which
 -- bypasses RLS — appropriate for an internal maintenance task.
@@ -522,28 +537,39 @@ ON CONFLICT (space_id) DO NOTHING;
 -- Schedule: '* * * * *' (every minute). The debounce goal is "not on every
 -- write" — minute granularity already coalesces a burst of writes into a
 -- single recompute. 5-field cron is supported by every pg_cron version.
+--
+-- Idempotency: we UNSCHEDULE any existing job of the same name first, so
+-- re-running this migration (or a fresh db push) never creates duplicate
+-- jobs. (Duplicate stale jobs have repeatedly masked the real job's behavior
+-- during debugging — this guard prevents that class of regression.)
+SELECT cron.unschedule('recompute-space-stats-job');
+
 SELECT cron.schedule(
-    'recompute-space-stats',
+    'recompute-space-stats-job',
     '* * * * *',
     $$
     WITH queued AS (
         SELECT space_id FROM stats_recompute_queue
+    ),
+    posted AS (
+        SELECT
+            q.space_id,
+            net.http_post(
+                url     := 'https://lvsgaqykefkvsbnkglpg.functions.supabase.co/recompute-space-stats',
+                headers := jsonb_build_object(
+                    'Content-Type',  'application/json',
+                    'Authorization', 'Bearer sb_secret_cNblx_Jlmq00i0XJpjEqBA_kK4JY-RX'
+                ),
+                body    := jsonb_build_object('space_id', q.space_id)
+            ) AS request_id
+        FROM queued q
     )
-    SELECT net.http_post(
-        url     := current_setting('app.edge_functions_url', true)
-                   || '/recompute-space-stats',
-        headers := jsonb_build_object(
-            'Content-Type',  'application/json',
-            'Authorization', 'Bearer ' || current_setting('app.service_role_key', true)
-        ),
-        body    := jsonb_build_object('space_id', q.space_id)
-    )
-    FROM queued q;
-    -- Delete processed rows after the POSTs are issued. net.http_post is
-    -- async (returns immediately), so we delete on the same tick; the
-    -- function is idempotent and re-enqueues on the next relevant write if a
-    -- POST is lost. This keeps the queue from growing unboundedly.
+    -- Delete only the queue rows that were included in a posted request.
+    -- Reading FROM posted (not FROM queued) forces the posted CTE to evaluate,
+    -- guaranteeing net.http_post actually fires. net.http_post is async
+    -- (returns immediately), so we delete on the same tick; the function is
+    -- idempotent and re-enqueues on the next relevant write if a POST is lost.
     DELETE FROM stats_recompute_queue
-    WHERE space_id IN (SELECT space_id FROM queued);
+    WHERE space_id IN (SELECT space_id FROM posted);
     $$
 );
