@@ -1,11 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { XIcon, ChevronLeftIcon, ChevronRightIcon, DownloadIcon, TrashIcon } from "../ui/icons";
-import { getMediaDownloadUrl, deleteMedia, uploadMediaItem, type UploadResult, type SelectedMediaFile, type UploadStatus, STATUS_LABELS } from "../../lib/media";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CloseIcon, ChevronLeftIcon, ChevronRightIcon } from "../ui/icons";
+import { getMediaDownloadUrl, deleteMedia, uploadMediaItem, type SelectedMediaFile, STATUS_LABELS } from "../../lib/media";
 import type { Media } from "../../types/media";
-import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
-import PrimaryButton from "../ui/PrimaryButton";
-import GhostLink from "../ui/GhostLink";
 import Spinner from "../ui/Spinner";
 import ConfirmDialog from "../ui/ConfirmDialog";
 
@@ -45,15 +42,12 @@ interface MediaGalleryProps {
 }
 
 export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }: MediaGalleryProps) {
-  const { user } = useAuth();
-
   const [media, setMedia] = useState<Media[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | undefined>(undefined);
 
   // Upload state
   const [selectedFiles, setSelectedFiles] = useState<SelectedMediaFile[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Lightbox state
@@ -105,7 +99,6 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
   // Resolve lightbox image when index changes
   useEffect(() => {
     if (lightboxIndex === null) {
-      setLightboxSrc(null);
       return;
     }
 
@@ -113,8 +106,6 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
     if (!item) return;
 
     let cancelled = false;
-    setLightboxLoading(true);
-    setLightboxError(false);
 
     // SPEC B.1: For images in lightbox, prefer the 1000px detail thumbnail
     // as a fast placeholder, then upgrade to full-res if needed
@@ -124,6 +115,10 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
       : item.url;
 
     async function resolve() {
+      setLightboxLoading(true);
+      setLightboxError(false);
+      setLightboxSrc(null);
+
       const result = await getMediaDownloadUrl(thumbnailKey);
       if (!cancelled && result.ok) {
         setLightboxSrc(result.url);
@@ -197,48 +192,53 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
 
       setSelectedFiles((prev) => [...prev, ...newFiles]);
 
-      // Upload each file sequentially
-      for (const fileEntry of newFiles) {
-        if (!fileEntry.mediaType) continue;
+      // Upload with controlled concurrency (max 2 at a time) to avoid
+      // overwhelming the main thread and browser connection pool.
+      // This prevents net::ERR_CONNECTION_* failures caused by main-thread
+      // blocking during sequential image compression.
+      const CONCURRENCY_LIMIT = 2;
+      const filesToUpload = newFiles.filter((f) => f.mediaType);
+      for (let i = 0; i < filesToUpload.length; i += CONCURRENCY_LIMIT) {
+        const batch = filesToUpload.slice(i, i + CONCURRENCY_LIMIT);
+        await Promise.all(
+          batch.map(async (fileEntry) => {
+            try {
+              const result = await uploadMediaItem({
+                file: fileEntry.file,
+                mediaType: fileEntry.mediaType!,
+                spaceId,
+                memoryId,
+                onStatus: (status) => {
+                  setSelectedFiles((prev) =>
+                    prev.map((f) =>
+                      f.id === fileEntry.id ? { ...f, status } : f
+                    )
+                  );
+                },
+              });
 
-        setIsUploading(true);
-        try {
-          const result = await uploadMediaItem({
-            file: fileEntry.file,
-            mediaType: fileEntry.mediaType,
-            spaceId,
-            memoryId,
-            onStatus: (status) => {
               setSelectedFiles((prev) =>
                 prev.map((f) =>
-                  f.id === fileEntry.id ? { ...f, status } : f
+                  f.id === fileEntry.id
+                    ? { ...f, status: result.ok ? "done" : "failed", error: result.ok ? undefined : result.error }
+                    : f
                 )
               );
-            },
-          });
 
-          setSelectedFiles((prev) =>
-            prev.map((f) =>
-              f.id === fileEntry.id
-                ? { ...f, status: result.ok ? "done" : "failed", error: result.ok ? undefined : result.error }
-                : f
-            )
-          );
-
-          if (result.ok) {
-            setMedia((prev) => [...prev, result.media]);
-          }
-        } catch {
-          setSelectedFiles((prev) =>
-            prev.map((f) =>
-              f.id === fileEntry.id
-                ? { ...f, status: "failed", error: "Upload failed unexpectedly." }
-                : f
-            )
-          );
-        } finally {
-          setIsUploading(false);
-        }
+              if (result.ok) {
+                setMedia((prev) => [...prev, result.media]);
+              }
+            } catch {
+              setSelectedFiles((prev) =>
+                prev.map((f) =>
+                  f.id === fileEntry.id
+                    ? { ...f, status: "failed", error: "Upload failed unexpectedly." }
+                    : f
+                )
+              );
+            }
+          })
+        );
       }
     },
     [spaceId, memoryId],
@@ -263,10 +263,6 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
   }, []);
 
   // Delete handler
-  const handleDelete = useCallback(async (mediaItem: Media) => {
-    setDeleteConfirm(mediaItem);
-  }, []);
-
   const confirmDelete = useCallback(async () => {
     if (!deleteConfirm) return;
 
@@ -410,7 +406,7 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
             onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
             aria-label="Close"
           >
-            <XIcon className="w-6 h-6" />
+            <CloseIcon className="w-6 h-6" />
           </button>
 
           {/* Navigation */}
@@ -439,7 +435,7 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
           <div className="relative max-w-[90vw] max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
             {lightboxLoading ? (
               <div className="flex items-center justify-center w-[600px] h-[400px]">
-                <Spinner size={32} color="white" />
+                <Spinner size={32} className="text-white" />
               </div>
             ) : lightboxError ? (
               <div className="flex items-center justify-center w-[600px] h-[400px] text-white/60">
@@ -469,7 +465,9 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
                     className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-white/90 hover:bg-white/20 transition-colors backdrop-blur-sm"
                     onClick={(e) => { e.stopPropagation(); }}
                   >
-                    <DownloadIcon className="w-5 h-5" />
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
                     <span className="text-sm">Download</span>
                   </button>
                 )}
@@ -489,10 +487,9 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
         <ConfirmDialog
           title="Delete this media?"
           description="This will remove the photo or video from the Memory. This action cannot be undone."
+          confirmLabel="Delete"
           onConfirm={confirmDelete}
           onCancel={cancelDelete}
-          confirmText="Delete"
-          confirmClassName="bg-error hover:bg-error/90"
         />
       )}
     </div>
@@ -570,7 +567,7 @@ function MediaTile({ media, onClick }: { media: Media; onClick?: () => void }) {
     }
 
     return () => observer.disconnect();
-  }, [media.id, hasError]);
+  }, [media.id, hasError, isInView]);
 
   if (!src || hasError) {
     return (
@@ -599,7 +596,6 @@ function MediaTile({ media, onClick }: { media: Media; onClick?: () => void }) {
       {isVideo ? (
         <video
           src={src}
-          loading="lazy"
           className="w-full h-full object-cover"
           muted
           playsInline

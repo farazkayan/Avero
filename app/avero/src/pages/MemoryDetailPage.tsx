@@ -398,13 +398,13 @@ export default function MemoryDetailPage() {
           {/* Media gallery — photos & videos attached to this Memory
               (feature-specs §3). Any Space member can add media; the per-tile
               delete affordance is gated to the creator or a Space owner
-              (`canEdit`). Renders the add control alone when the Memory has no
+              (`canDelete`). Renders the add control alone when the Memory has no
               media (for members), or nothing for non-add contexts. */}
           <MediaGallery
             memoryId={memory.id}
             spaceId={spaceId!}
-            canAdd={true}
-            canEdit={canEdit}
+            canUpload={true}
+            canDelete={canEdit}
           />
 
           {/* Reactions — quick emotional validation of this Memory

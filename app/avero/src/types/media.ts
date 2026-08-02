@@ -48,8 +48,29 @@ export type Media = {
    * request a presigned GET for this key instead of the original — it's a
    * small WebP (~15-40KB) rather than a full-resolution image. The Memory
    * Detail gallery/lightbox continues using the original regardless.
+   *
+   * @deprecated Use `thumbnail_grid_path` or `thumbnail_detail_path` instead.
+   * Kept for backward compatibility with existing consumers.
    */
   thumbnail_path: string | null;
+  /**
+   * The durable B2 object key for the grid thumbnail variant (~400px max edge,
+   * WebP), or `null` when no thumbnail exists.
+   *
+   * Used by timeline cards, dashboard cards, and the MediaGallery grid tiles
+   * (SPEC B.2). This is the small WebP (~15-40KB) optimized for thumbnail
+   * display sizes.
+   */
+  thumbnail_grid_path: string | null;
+  /**
+   * The durable B2 object key for the detail thumbnail variant (~1000px max
+   * edge, WebP), or `null` when no thumbnail exists.
+   *
+   * Used by the MediaGallery lightbox as a fast placeholder while the
+   * full-resolution image loads (SPEC B.1). Provides a sharp intermediate
+   * state at ~100-200KB instead of the full-resolution original.
+   */
+  thumbnail_detail_path: string | null;
   type: string;
   created_at: string;
 };

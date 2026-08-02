@@ -498,6 +498,17 @@ export type UploadResult =
  *
  * @returns the inserted `media` row on success, or a calm error message.
  */
+/**
+ * Yields to the main thread to prevent blocking during CPU-intensive work.
+ * Uses scheduler.yield() when available (modern browsers), falls back to setTimeout.
+ */
+function yieldToMainThread(): Promise<void> {
+  if ("scheduler" in window && "yield" in (window as any).scheduler) {
+    return (window as any).scheduler.yield();
+  }
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 export async function uploadMediaItem(
   params: UploadMediaItemParams,
 ): Promise<UploadResult> {
@@ -510,6 +521,9 @@ export async function uploadMediaItem(
     if (mediaType === "image") {
       onStatus?.("compressing");
       const img = await loadImageFromFile(file);
+      // Yield after image decode to let the main thread breathe
+      await yieldToMainThread();
+
       let width = img.naturalWidth;
       let height = img.naturalHeight;
       if (width > MAX_IMAGE_EDGE_PX || height > MAX_IMAGE_EDGE_PX) {
@@ -523,6 +537,9 @@ export async function uploadMediaItem(
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas 2D context unavailable.");
       ctx.drawImage(img, 0, 0, width, height);
+      // Yield after drawImage (synchronous, CPU-intensive) to prevent blocking
+      await yieldToMainThread();
+
       const blob = await canvasToBlob(canvas, "image/jpeg", 0.8);
       if (!blob) throw new Error("Image compression failed.");
       uploadBlob = blob;

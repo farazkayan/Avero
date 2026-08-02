@@ -414,8 +414,16 @@ export default function CreateMemoryPage() {
       }
 
       const pendingFiles = selectedFiles.filter((f) => f.status === "pending");
-      for (const file of pendingFiles) {
-        await uploadOneFile(file, spaceId, newMemoryId);
+      // Upload with controlled concurrency (max 2 at a time) to avoid
+      // overwhelming the main thread and browser connection pool.
+      // This prevents net::ERR_CONNECTION_* failures caused by main-thread
+      // blocking during sequential image compression.
+      const CONCURRENCY_LIMIT = 2;
+      for (let i = 0; i < pendingFiles.length; i += CONCURRENCY_LIMIT) {
+        const batch = pendingFiles.slice(i, i + CONCURRENCY_LIMIT);
+        await Promise.all(
+          batch.map((file) => uploadOneFile(file, spaceId, newMemoryId))
+        );
       }
     } catch {
       // Network failures and other unexpected thrown errors resolve to the
