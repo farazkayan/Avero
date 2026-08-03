@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router";
+import { Suspense, lazy } from "react";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -8,21 +9,24 @@ import AcceptInvitePage from "./pages/AcceptInvitePage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import SpacesDashboardPage from "./pages/SpacesDashboardPage";
 import CreateSpacePage from "./pages/CreateSpacePage";
-import CreateMemoryPage from "./pages/CreateMemoryPage";
 import MemoryDetailPage from "./pages/MemoryDetailPage";
 import EditMemoryPage from "./pages/EditMemoryPage";
 import SpaceDetailPage from "./pages/SpaceDetailPage";
 import SpaceSettingsPage from "./pages/SpaceSettingsPage";
-import SpaceStatsPage from "./pages/SpaceStatsPage";
-import SettingsPage from "./pages/SettingsPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import PublicOnlyRoute from "./components/auth/PublicOnlyRoute";
+import RouteLoadingFallback from "./components/ui/RouteLoadingFallback";
 import {
   AUTHENTICATED_HOME_PATH,
   SETTINGS_PATH,
   SIGN_IN_PATH,
   AUTH_CALLBACK_PATH,
 } from "./constants/routes";
+
+// Lazy-loaded routes (not needed on initial load)
+const CreateMemoryPage = lazy(() => import("./pages/CreateMemoryPage"));
+const SpaceStatsPage = lazy(() => import("./pages/SpaceStatsPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 
 /**
  * Application routes.
@@ -69,11 +73,29 @@ export default function App() {
           path="spaces/:spaceId/settings"
           element={<SpaceSettingsPage />}
         />
-        <Route path="spaces/:spaceId/stats" element={<SpaceStatsPage />} />
-        <Route path={SETTINGS_PATH} element={<SettingsPage />} />
+        <Route
+          path="spaces/:spaceId/stats"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <SpaceStatsPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path={SETTINGS_PATH}
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <SettingsPage />
+            </Suspense>
+          }
+        />
         <Route
           path="spaces/:spaceId/memories/new"
-          element={<CreateMemoryPage />}
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <CreateMemoryPage />
+            </Suspense>
+          }
         />
         <Route
           path="spaces/:spaceId/memories/:memoryId"
