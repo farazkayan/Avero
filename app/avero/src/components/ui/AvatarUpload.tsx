@@ -156,6 +156,7 @@ export function AvatarUpload({ name, size = 32 }: AvatarUploadProps) {
           alt={`${name}'s avatar`}
           className="rounded-full object-cover ring-2 ring-accent-600/50"
           style={{ width: size, height: size }}
+          loading="lazy"
         />
       ) : hasAvatar && isLoadingAvatar ? (
         <div

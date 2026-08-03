@@ -173,3 +173,6 @@ export const VERIFY_EMAIL_PATH = "/verify-email";
 
 /** Password reset route. */
 export const RESET_PASSWORD_PATH = "/reset-password";
+
+/** OAuth callback route (Google, etc.). */
+export const AUTH_CALLBACK_PATH = "/auth/callback";

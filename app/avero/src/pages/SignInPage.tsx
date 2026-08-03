@@ -6,6 +6,8 @@ import TextField from "../components/ui/TextField";
 import PasswordField from "../components/ui/PasswordField";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import GhostLink from "../components/ui/GhostLink";
+import Spinner from "../components/ui/Spinner";
+import { GoogleIcon } from "../components/ui/icons";
 import { supabase } from "../lib/supabase";
 
 /**
@@ -24,6 +26,32 @@ export default function SignInPage() {
   );
   const [formError, setFormError] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  async function handleGoogleSignIn() {
+    if (isGoogleLoading) return;
+    setIsGoogleLoading(true);
+    setFormError(undefined);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        setFormError(mapSignInError(error));
+      }
+      // On success, the browser redirects to Google's consent screen.
+      // After consent, Supabase redirects back to the app via the callback route.
+    } catch {
+      setFormError("Something went wrong on our end. Please try again.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  }
 
   function validateEmail(value: string): string | undefined {
     if (value.trim().length === 0) {
@@ -102,6 +130,37 @@ export default function SignInPage() {
           supportingLine="Sign in to return to your Spaces."
           className="mb-8"
         />
+
+        {/* Google OAuth button */}
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={isGoogleLoading || isSubmitting}
+          className={[
+            "inline-flex w-full items-center justify-center gap-2 rounded-lg",
+            "px-4 py-2.5 text-base font-medium text-ink",
+            "bg-white border border-ink/10 transition-colors duration-200",
+            "hover:bg-ink/5 active:bg-ink/10",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
+            (isGoogleLoading || isSubmitting)
+              ? "cursor-not-allowed opacity-60"
+              : "",
+          ].join(" ")}
+        >
+          {isGoogleLoading && <Spinner size={18} />}
+          <GoogleIcon className="flex-shrink-0" />
+          <span>Continue with Google</span>
+        </button>
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-ink/10" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-canvas text-ink-muted">Or continue with email</span>
+          </div>
+        </div>
 
         <form
           className="space-y-5"

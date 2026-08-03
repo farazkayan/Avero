@@ -11,7 +11,8 @@
  */
 
 (function measureDOM() {
-  const cards = document.querySelectorAll('[data-memory-card]');
+  // MemoryTimelineCard renders as <li> with a child div.hover-lift
+  const cards = document.querySelectorAll('li > div.hover-lift');
   const totalNodes = document.querySelectorAll('*').length;
   const cardNodes = Array.from(cards).reduce((sum, card) => sum + card.querySelectorAll('*').length, 0);
   const images = document.querySelectorAll('img').length;

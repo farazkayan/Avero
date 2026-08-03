@@ -236,6 +236,7 @@ function ThumbnailStack({ media }: { media: Media[] }) {
         state={frontState}
         isStacked={Boolean(back)}
         hasThumbnail={Boolean(front.thumbnail_path)}
+        media={front}
       />
     </div>
   );
@@ -258,20 +259,51 @@ function ThumbnailFace({
   state,
   isStacked,
   hasThumbnail,
+  media,
 }: {
   type: "image" | "video" | null;
   state: ThumbState;
   isStacked: boolean;
   hasThumbnail: boolean;
+  media: Media;
 }) {
-  // A loading skeleton — a subtle pulse on the square so the layout doesn't
-  // pop in. Matches the MediaGallery skeleton treatment.
+  // SPEC B.2: LQIP — use grid thumbnail (300px WebP, ~15-40KB) as blur placeholder
+  // Only fetch blur placeholder when loading and grid thumbnail exists
+  const blurSrc = media.thumbnail_grid_path
+    ? media.thumbnail_grid_path
+    : media.url;
+  const [blurUrl, setBlurUrl] = useState<string | null>(null);
+  // SPEC B.2: LQIP cross-fade — keep blurred placeholder as base, fade in sharp image
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    if (state.status !== "loading") return;
+    let cancelled = false;
+    getMediaDownloadUrl(blurSrc).then((result) => {
+      if (!cancelled && result.ok) {
+        setBlurUrl(result.url);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [blurSrc, state.status]);
+
+  // A loading skeleton with LQIP blur-up placeholder — show blurred grid
+  // thumbnail as background while full thumbnail loads, then cross-fade.
   if (state.status === "loading") {
     return (
       <div
-        className="absolute inset-0 animate-pulse rounded-lg bg-canvas-raised"
+        className="absolute inset-0 overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised"
+        style={{
+          backgroundImage: blurUrl ? `url(${blurUrl})` : undefined,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "blur(20px)",
+          transform: "scale(1.1)", // Hide blur edges
+        }}
         aria-hidden="true"
-      />
+      >
+        <div className="absolute inset-0 animate-pulse bg-canvas-raised/50" />
+      </div>
     );
   }
 
@@ -305,12 +337,34 @@ function ThumbnailFace({
         isStacked ? "z-10" : "",
       ].join(" ")}
     >
+      {/* LQIP base layer: blurred grid thumbnail */}
+      {media.thumbnail_grid_path && (
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url(${state.url})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "blur(20px)",
+            transform: "scale(1.1)",
+            opacity: imageLoaded ? 0 : 1,
+            transition: "opacity 300ms ease-out",
+          }}
+          aria-hidden="true"
+        />
+      )}
+      {/* Sharp image layer: fades in over blurred base */}
       {renderAsImage ? (
         <img
           src={state.url}
           alt=""
           loading="lazy"
           className="pointer-events-none h-full w-full select-none object-cover"
+          style={{
+            opacity: imageLoaded ? 1 : 0,
+            transition: "opacity 300ms ease-out",
+          }}
+          onLoad={() => setImageLoaded(true)}
         />
       ) : (
         <video
@@ -325,6 +379,7 @@ function ThumbnailFace({
           className="pointer-events-none h-full w-full object-cover"
           tabIndex={-1}
           aria-hidden="true"
+          onLoadedData={() => setImageLoaded(true)}
         />
       )}
     </div>

@@ -300,6 +300,7 @@ export default function AvatarCropDialog({
                 transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px)`,
                 transformOrigin: "center",
               }}
+              loading="lazy"
             />
             {/* Dimmed overflow overlay: a full-stage dark layer with a
                 circular cutout (full brightness) at the frame. Built as four

@@ -518,12 +518,26 @@ function MediaTile({ media, onClick }: { media: Media; onClick?: () => void }) {
   const [src, setSrc] = useState<string | null>(null);
   const [isInView, setIsInView] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // SPEC B.1: For images, prefer the 1000px detail thumbnail; for videos, use original
   const isImage = media.type === "image";
   const thumbnailKey = isImage
     ? (media.thumbnail_detail_path ?? media.url)
     : media.url;
+
+  // SPEC B.2: LQIP — grid thumbnail (300px WebP) as blur placeholder
+  const [blurUrl, setBlurUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isImage || !media.thumbnail_grid_path) return;
+    let cancelled = false;
+    getMediaDownloadUrl(media.thumbnail_grid_path).then((result) => {
+      if (!cancelled && result.ok) {
+        setBlurUrl(result.url);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [media.thumbnail_grid_path, isImage]);
 
   useEffect(() => {
     if (!thumbnailKey || hasError) return;
@@ -587,12 +601,29 @@ function MediaTile({ media, onClick }: { media: Media; onClick?: () => void }) {
   return (
     <div
       data-media-tile={media.id}
-      className="aspect-square w-full overflow-hidden rounded-lg"
+      className="aspect-square w-full overflow-hidden rounded-lg relative"
       onClick={onClick}
       role="button"
       tabIndex={0}
       aria-label={isImage ? "View photo" : "View video"}
     >
+      {/* SPEC B.2: LQIP base layer — blurred grid thumbnail */}
+      {isImage && blurUrl && (
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url(${blurUrl})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "blur(20px)",
+            transform: "scale(1.1)",
+            opacity: imageLoaded ? 0 : 1,
+            transition: "opacity 300ms ease-out",
+          }}
+          aria-hidden="true"
+        />
+      )}
+      {/* Sharp image/video layer — fades in over blurred base */}
       {isVideo ? (
         <video
           src={src}
@@ -601,14 +632,20 @@ function MediaTile({ media, onClick }: { media: Media; onClick?: () => void }) {
           playsInline
           preload="metadata"
           onError={() => setHasError(true)}
+          onLoadedData={() => setImageLoaded(true)}
         />
       ) : (
         <img
           src={src}
           alt=""
           loading="lazy"
-          className="w-full h-full object-cover transition-opacity duration-300"
+          className="w-full h-full object-cover"
+          style={{
+            opacity: imageLoaded ? 1 : 0,
+            transition: "opacity 300ms ease-out",
+          }}
           onError={() => setHasError(true)}
+          onLoad={() => setImageLoaded(true)}
         />
       )}
     </div>

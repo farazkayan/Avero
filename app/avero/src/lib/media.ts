@@ -503,8 +503,10 @@ export type UploadResult =
  * Uses scheduler.yield() when available (modern browsers), falls back to setTimeout.
  */
 function yieldToMainThread(): Promise<void> {
-  if ("scheduler" in window && "yield" in (window as any).scheduler) {
-    return (window as any).scheduler.yield();
+  // Type-safe check for scheduler.yield() API
+  const win = window as Window & { scheduler?: { yield?: () => Promise<void> } };
+  if ("scheduler" in window && win.scheduler?.yield) {
+    return win.scheduler.yield();
   }
   return new Promise((resolve) => setTimeout(resolve, 0));
 }

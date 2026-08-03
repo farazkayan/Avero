@@ -5,6 +5,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AcceptInvitePage from "./pages/AcceptInvitePage";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
 import SpacesDashboardPage from "./pages/SpacesDashboardPage";
 import CreateSpacePage from "./pages/CreateSpacePage";
 import CreateMemoryPage from "./pages/CreateMemoryPage";
@@ -20,6 +21,7 @@ import {
   AUTHENTICATED_HOME_PATH,
   SETTINGS_PATH,
   SIGN_IN_PATH,
+  AUTH_CALLBACK_PATH,
 } from "./constants/routes";
 
 /**
@@ -56,6 +58,7 @@ export default function App() {
       <Route path="verify-email" element={<VerifyEmailPage />} />
       <Route path="reset-password" element={<ResetPasswordPage />} />
       <Route path="invite/:token" element={<AcceptInvitePage />} />
+      <Route path={AUTH_CALLBACK_PATH} element={<AuthCallbackPage />} />
 
       {/* Protected authenticated area */}
       <Route element={<ProtectedRoute />}>
