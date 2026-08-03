@@ -221,7 +221,7 @@ export default function SignUpPage() {
           disabled={isGoogleLoading || isSubmitting}
           className={[
             "inline-flex w-full items-center justify-center gap-2 rounded-lg",
-            "px-4 py-2.5 text-base font-medium text-ink",
+            "px-4 py-2.5 text-base font-medium text-[#3c4043]",
             "bg-white border border-ink/10 transition-colors duration-200",
             "hover:bg-ink/5 active:bg-ink/10",
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
@@ -241,7 +241,7 @@ export default function SignUpPage() {
             <div className="w-full border-t border-ink/10" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-canvas text-ink-muted">Or continue with email</span>
+            <span className="px-2 bg-canvas-soft text-ink-muted">Or continue with email</span>
           </div>
         </div>
 

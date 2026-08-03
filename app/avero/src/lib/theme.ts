@@ -24,7 +24,7 @@ export type ThemePreference = "dark" | "light";
 export const THEME_STORAGE_KEY = "avero:theme-preference";
 
 /** The default theme when no preference is stored yet (design-system §2). */
-export const DEFAULT_THEME: ThemePreference = "dark";
+export const DEFAULT_THEME: ThemePreference = "light";
 
 /**
  * Reads the persisted theme preference, falling back to {@link DEFAULT_THEME}
