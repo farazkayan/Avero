@@ -4,18 +4,20 @@
 // Server-side thumbnail generation for uploaded images ("media web optimizer"
 // — see plans/media-web-optimizer.md).
 //
-// When a photo is uploaded, the client calls this function to generate a small
-// WebP thumbnail variant (400px max long edge, quality 78) stored as a separate
-// B2 object. Thumbnail displays (timeline cards, dashboard cards) then pull
-// this small file instead of the full-resolution original.
+// When a photo is uploaded, the client calls this function to generate TWO
+// WebP thumbnail variants stored as separate B2 objects:
+//   - Grid: 300px max edge, quality 75 — for timeline cards, dashboard cards
+//   - Detail: 1000px max edge, quality 80 — for lightbox placeholder, gallery
+// Thumbnail displays then pull these small files instead of the full-resolution
+// original.
 //
 // IMAGE PROCESSING (Deno / WASM):
 //   This runs on the Deno runtime. The go-to Node image library (sharp) uses
 //   native libvips bindings and does NOT work in Deno. Instead, this function
 //   uses jSquash — pure WebAssembly image codecs (no native bindings):
 //     - @jsquash/jpeg, @jsquash/png, @jsquash/webp — decode the original
-//     - @jsquash/resize — Lanczos3 downscale to 400px max edge
-//     - @jsquash/webp — encode the thumbnail as WebP (quality 78)
+//     - @jsquash/resize — Lanczos3 downscale
+//     - @jsquash/webp — encode the thumbnails as WebP
 //
 //   WebP was chosen over AVIF because AVIF's WASM encoder is too slow (risks
 //   Edge Function CPU timeouts). WebP is fast, has 97% browser support, and
@@ -32,8 +34,8 @@
 //   This function is called AFTER the upload is complete and the media row
 //   exists. If thumbnail generation fails for any reason (WASM error, B2 fetch
 //   failure, encoding failure), the original media is untouched and the media
-//   row's thumbnail_path stays NULL. The client catches the failure silently
-//   — the upload is already "done" from the user's perspective. The thumbnail
+//   row's thumbnail columns stay NULL. The client catches the failure silently
+//   — the upload is already "done" from the user's perspective. The thumbnails
 //   can be regenerated later. This matches the existing "Upload failure must
 //   not create partial state" principle, applied to the derived asset.
 //
@@ -48,8 +50,9 @@
 // B2 credentials (same secrets as media-storage):
 //   B2_KEY_ID, B2_APPLICATION_KEY, B2_BUCKET_NAME, B2_ENDPOINT
 //
-// Object key convention (thumbnail):
-//   {space_id}/{memory_id}/{uuid}_thumb.webp
+// Object key convention (thumbnails):
+//   {space_id}/{memory_id}/{uuid}_thumb_grid.webp
+//   {space_id}/{memory_id}/{uuid}_thumb_detail.webp
 //   The first path segment is always the space_id (same as the original),
 //   so the download/delete actions in media-storage can re-derive and
 //   re-authorize the space from the thumbnail key alone.
@@ -81,17 +84,16 @@ import resize from "npm:@jsquash/resize@2.1.1";
 const ACTION_GENERATE = "generate-thumbnail" as const;
 
 /**
- * Maximum long edge (width or height) for the generated thumbnail.
- *
- * 400px gives ~6.25x the 64px display size — crisp on 2x/3x retina displays
- * with headroom for minor thumbnail size increases. A 400px WebP at quality 78
- * is typically 15-40KB — a 10-50x reduction from a 2000px JPEG original.
+ * Thumbnail variant specifications.
+ * Grid: 300px max edge, WebP q75 — for timeline cards, dashboard cards
+ * Detail: 1000px max edge, WebP q80 — for lightbox placeholder, gallery
  */
-const THUMBNAIL_MAX_EDGE_PX = 400;
+const THUMBNAIL_VARIANTS = [
+  { name: "grid", maxEdge: 300, quality: 75 },
+  { name: "detail", maxEdge: 1000, quality: 80 },
+] as const;
 
-/** WebP encoding quality (0-100). 78 is visually indistinguishable from the
- *  original at thumbnail size while producing small files. */
-const THUMBNAIL_WEBP_QUALITY = 78;
+type ThumbnailVariantName = (typeof THUMBNAIL_VARIANTS)[number]["name"];
 
 /** Validates a lowercase-or-uppercase UUID v4 string. */
 const UUID_RE =
@@ -335,23 +337,23 @@ function createS3Client(): S3Client {
 // ----------------------------------------------------------------------------
 
 /**
- * Derives the thumbnail object key from the original key.
+ * Derives the thumbnail object key for a specific variant from the original key.
  *
  * Given `{space_id}/{memory_id}/{uuid}.{ext}`, returns
- * `{space_id}/{memory_id}/{uuid}_thumb.webp`.
+ * `{space_id}/{memory_id}/{uuid}_thumb_{variant}.webp`.
  *
  * The thumbnail lives in the same B2 "folder" as the original, so the
  * space_id is still the first segment (preserves the re-authorization pattern
  * in media-storage's download/delete actions). The extension is always .webp
  * regardless of the original format.
  */
-function deriveThumbnailKey(originalKey: string): string {
+function deriveThumbnailKey(originalKey: string, variant: ThumbnailVariantName): string {
   const lastSlash = originalKey.lastIndexOf("/");
   if (lastSlash < 0) return originalKey;
   const filename = originalKey.slice(lastSlash + 1);
   const dotIndex = filename.lastIndexOf(".");
   const stem = dotIndex > 0 ? filename.slice(0, dotIndex) : filename;
-  return `${originalKey.slice(0, lastSlash + 1)}${stem}_thumb.webp`;
+  return `${originalKey.slice(0, lastSlash + 1)}${stem}_thumb_${variant}.webp`;
 }
 
 // ----------------------------------------------------------------------------
@@ -387,19 +389,20 @@ async function decodeImage(
 /**
  * Calculates the target dimensions for the thumbnail, preserving aspect ratio.
  *
- * If the original is already smaller than THUMBNAIL_MAX_EDGE_PX on both
+ * If the original is already smaller than maxEdge on both
  * dimensions, the original dimensions are kept (no upscaling — upscaling
  * would waste bytes without improving quality).
  */
 function calculateTargetDimensions(
   originalWidth: number,
   originalHeight: number,
+  maxEdge: number,
 ): { width: number; height: number } {
   const maxDim = Math.max(originalWidth, originalHeight);
-  if (maxDim <= THUMBNAIL_MAX_EDGE_PX) {
+  if (maxDim <= maxEdge) {
     return { width: originalWidth, height: originalHeight };
   }
-  const scale = THUMBNAIL_MAX_EDGE_PX / maxDim;
+  const scale = maxEdge / maxDim;
   return {
     width: Math.round(originalWidth * scale),
     height: Math.round(originalHeight * scale),
@@ -414,12 +417,17 @@ function calculateTargetDimensions(
 async function generateImageThumbnail(
   imageBuffer: ArrayBuffer,
   contentType: string,
+  variant: (typeof THUMBNAIL_VARIANTS)[number],
 ): Promise<Uint8Array> {
   // 1. Decode the original image into ImageData (RGBA).
   const imageData = await decodeImage(imageBuffer, contentType);
 
   // 2. Calculate the target dimensions (preserving aspect ratio, no upscaling).
-  const target = calculateTargetDimensions(imageData.width, imageData.height);
+  const target = calculateTargetDimensions(
+    imageData.width,
+    imageData.height,
+    variant.maxEdge,
+  );
 
   // 3. Resize using Lanczos3 (high-quality downscale, same as Squoosh).
   const resized = await resize(imageData, {
@@ -431,9 +439,9 @@ async function generateImageThumbnail(
     linearRGB: true,
   });
 
-  // 4. Encode as WebP at quality 78.
+  // 4. Encode as WebP at the variant's quality.
   const webpBuffer = await encodeWebp(resized, {
-    quality: THUMBNAIL_WEBP_QUALITY,
+    quality: variant.quality,
   });
 
   return new Uint8Array(webpBuffer);
@@ -497,7 +505,6 @@ async function handleGenerateThumbnail(
 
   const client = createS3Client();
   const bucket = getBucketName();
-  const thumbnailKey = deriveThumbnailKey(file_key);
 
   try {
     // 1. Fetch the original object from B2 (direct S3 GetObject, not presigned).
@@ -511,45 +518,53 @@ async function handleGenerateThumbnail(
     // The S3 SDK returns a stream; convert it to an ArrayBuffer.
     const originalBuffer = await getResponse.Body.transformToByteArray();
 
-    // 2. Generate the thumbnail via the jSquash WASM pipeline.
-    const thumbnailBytes = await generateImageThumbnail(
-      originalBuffer,
-      content_type,
-    );
+    // 2. Generate both thumbnail variants via the jSquash WASM pipeline.
+    const thumbnailKeys: Record<ThumbnailVariantName, string> = {
+      grid: deriveThumbnailKey(file_key, "grid"),
+      detail: deriveThumbnailKey(file_key, "detail"),
+    };
 
-    // 3. Upload the thumbnail to B2 (direct S3 PutObject, not presigned).
-    const putCommand = new PutObjectCommand({
-      Bucket: bucket,
-      Key: thumbnailKey,
-      ContentType: "image/webp",
-      Body: thumbnailBytes,
-    });
-    await client.send(putCommand);
+    const thumbnailBytes: Record<ThumbnailVariantName, Uint8Array> = {
+      grid: await generateImageThumbnail(originalBuffer, content_type, THUMBNAIL_VARIANTS[0]),
+      detail: await generateImageThumbnail(originalBuffer, content_type, THUMBNAIL_VARIANTS[1]),
+    };
 
-    // 4. Update the media row's thumbnail_path via the SECURITY DEFINER RPC.
+    // 3. Upload both thumbnails to B2 (direct S3 PutObject, not presigned).
+    for (const variant of THUMBNAIL_VARIANTS) {
+      const putCommand = new PutObjectCommand({
+        Bucket: bucket,
+        Key: thumbnailKeys[variant.name],
+        ContentType: "image/webp",
+        Body: thumbnailBytes[variant.name],
+      });
+      await client.send(putCommand);
+    }
+
+    // 4. Update the media row's thumbnail columns via the SECURITY DEFINER RPC.
     //    This uses the caller's JWT-scoped client, so the RPC's is_space_member
     //    check runs against the caller's identity.
-    const { error: rpcError } = await supabase.rpc("set_media_thumbnail", {
+    const { error: rpcError } = await supabase.rpc("set_media_thumbnails", {
       p_media_id: media_id,
-      p_thumbnail_path: thumbnailKey,
+      p_thumbnail_grid_path: thumbnailKeys.grid,
+      p_thumbnail_detail_path: thumbnailKeys.detail,
     });
 
     if (rpcError) {
-      // The thumbnail was uploaded to B2 but the DB row wasn't updated. This
-      // leaves an orphaned B2 object (non-fatal — it's a small WebP file that
-      // a future cleanup pass can sweep). The media row's thumbnail_path stays
+      // The thumbnails were uploaded to B2 but the DB row wasn't updated. This
+      // leaves orphaned B2 objects (non-fatal — they're small WebP files that
+      // a future cleanup pass can sweep). The media row's thumbnail columns stay
       // NULL, so the client falls back to the original. Log and return a
-      // non-fatal error so the client knows the thumbnail wasn't registered.
+      // non-fatal error so the client knows the thumbnails weren't registered.
       console.error(
-        `[media-thumbnail] B2 upload succeeded but set_media_thumbnail RPC failed: ${rpcError.message}`,
+        `[media-thumbnail] B2 upload succeeded but set_media_thumbnails RPC failed: ${rpcError.message}`,
       );
-      return jsonError(500, "Thumbnail uploaded but could not be registered.", rpcError);
+      return jsonError(500, "Thumbnails uploaded but could not be registered.", rpcError);
     }
 
-    return jsonResponse(200, { thumbnail_key: thumbnailKey });
+    return jsonResponse(200, { thumbnail_keys: thumbnailKeys });
   } catch (err) {
     // Any failure (B2 fetch, WASM decode/resize/encode, B2 put) is caught
-    // here. The original media is untouched and thumbnail_path stays NULL.
+    // here. The original media is untouched and thumbnail columns stay NULL.
     // The client treats this as non-fatal — the upload already succeeded.
     if (err instanceof ConfigurationError) {
       return jsonError(500, err.message, err);
