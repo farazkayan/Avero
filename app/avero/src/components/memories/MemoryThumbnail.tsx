@@ -151,9 +151,8 @@ function ThumbnailStack({ media }: { media: Media[] }) {
     // backward compatibility, then to the original for old media or when
     // thumbnail generation failed. The grid thumbnail is a ~15-40KB WebP — a
     // 10-50x reduction from a full-resolution original for a ~64px square.
-    const result = await getMediaDownloadUrl(
-      row.thumbnail_grid_path ?? row.thumbnail_path ?? row.url
-    );
+    const fileKey = row.thumbnail_grid_path ?? row.thumbnail_path ?? row.url;
+    const result = await getMediaDownloadUrl(fileKey);
 
     setStates((prev) => {
       const current = prev[row.id];
