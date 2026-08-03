@@ -146,11 +146,14 @@ function ThumbnailStack({ media }: { media: Media[] }) {
     if (inFlight.current.has(row.id)) return;
     inFlight.current.add(row.id);
 
-    // Prefer the thumbnail variant when available (media web optimizer). Falls
-    // back to the original for old media or when thumbnail generation failed
-    // (thumbnail_path is NULL). The thumbnail is a ~15-40KB WebP — a 10-50x
-    // reduction from a full-resolution original for a ~64px square.
-    const result = await getMediaDownloadUrl(row.thumbnail_path ?? row.url);
+    // Prefer the grid thumbnail variant (thumbnail_grid_path) when available
+    // (media web optimizer). Falls back to the deprecated thumbnail_path for
+    // backward compatibility, then to the original for old media or when
+    // thumbnail generation failed. The grid thumbnail is a ~15-40KB WebP — a
+    // 10-50x reduction from a full-resolution original for a ~64px square.
+    const result = await getMediaDownloadUrl(
+      row.thumbnail_grid_path ?? row.thumbnail_path ?? row.url
+    );
 
     setStates((prev) => {
       const current = prev[row.id];
@@ -235,7 +238,7 @@ function ThumbnailStack({ media }: { media: Media[] }) {
         type={frontType}
         state={frontState}
         isStacked={Boolean(back)}
-        hasThumbnail={Boolean(front.thumbnail_path)}
+        hasThumbnail={Boolean(front.thumbnail_grid_path ?? front.thumbnail_path)}
         media={front}
       />
     </div>
@@ -414,7 +417,7 @@ function PeekingEdge({ media, state }: { media: Media; state?: ThumbState }) {
       {/* When a thumbnail variant exists, always render an <img> — the
           thumbnail is a WebP image even for videos. Falls back to <video>
           for videos without a thumbnail (old media or failed generation). */}
-      {type === "video" && !media.thumbnail_path ? (
+      {type === "video" && !media.thumbnail_grid_path && !media.thumbnail_path ? (
         <video
           src={state.url}
           preload="metadata"
@@ -423,7 +426,7 @@ function PeekingEdge({ media, state }: { media: Media; state?: ThumbState }) {
           tabIndex={-1}
           aria-hidden="true"
         />
-      ) : type === "image" || media.thumbnail_path ? (
+      ) : type === "image" || media.thumbnail_grid_path || media.thumbnail_path ? (
         <img
           src={state.url}
           alt=""
