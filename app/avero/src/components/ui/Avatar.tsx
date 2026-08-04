@@ -8,7 +8,7 @@ import { AvatarFallback } from "./AvatarFallback";
  * Shows the user's uploaded avatar if available, otherwise falls back to initials.
  */
 export default function Avatar({ size = 32 }: { size?: number }) {
-  const { user, avatarUrl } = useAuth();
+  const { user, avatarUrl, avatarVersion } = useAuth();
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [prevAvatarUrl, setPrevAvatarUrl] = useState(avatarUrl);
 
@@ -47,7 +47,7 @@ export default function Avatar({ size = 32 }: { size?: number }) {
     return () => {
       cancelled = true;
     };
-  }, [avatarUrl]);
+  }, [avatarUrl, avatarVersion]);
 
   // Get display name from user metadata or email
   const getDisplayName = (): string => {

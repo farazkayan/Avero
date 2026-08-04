@@ -31,7 +31,7 @@ interface AvatarUploadProps {
 }
 
 export function AvatarUpload({ name, size = 32 }: AvatarUploadProps) {
-  const { avatarUrl, refreshAvatar } = useAuth();
+  const { avatarUrl, refreshAvatar, avatarVersion } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
@@ -73,7 +73,7 @@ export function AvatarUpload({ name, size = 32 }: AvatarUploadProps) {
     return () => {
       cancelled = true;
     };
-  }, [avatarUrl]);
+  }, [avatarUrl, avatarVersion]);
 
   // Phase C: validate + load the image, then open the crop dialog. The
   // actual upload happens on confirm (with the user's pan offset). Validation

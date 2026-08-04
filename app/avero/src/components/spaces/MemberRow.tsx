@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
 import type { SpaceMember, SpaceRole } from "../../types/space";
 import { getAvatarDownloadUrl } from "../../lib/avatar";
 import { AvatarFallback } from "../ui/AvatarFallback";
@@ -28,11 +29,12 @@ export default function MemberRow({
   isCurrentUser = false,
 }: MemberRowProps) {
   const displayName = member.profiles?.name ?? "Unknown member";
+  const { avatarVersion } = useAuth();
 
   return (
     <li className="flex items-center justify-between gap-4 py-3">
       <div className="flex min-w-0 items-center gap-3">
-        <Avatar name={displayName} avatarUrl={member.profiles?.avatar_url} />
+        <Avatar name={displayName} avatarUrl={member.profiles?.avatar_url} avatarVersion={avatarVersion} />
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-ink">
             {displayName}
@@ -70,9 +72,11 @@ const MEMBER_AVATAR_SIZE = 36; // h-9 w-9
 function Avatar({
   name,
   avatarUrl,
+  avatarVersion,
 }: {
   name: string;
   avatarUrl: string | null | undefined;
+  avatarVersion: number;
 }) {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [prevAvatarUrl, setPrevAvatarUrl] = useState(avatarUrl);
@@ -107,7 +111,7 @@ function Avatar({
     return () => {
       cancelled = true;
     };
-  }, [avatarUrl]);
+  }, [avatarUrl, avatarVersion]);
 
   if (isLoading) {
     return (

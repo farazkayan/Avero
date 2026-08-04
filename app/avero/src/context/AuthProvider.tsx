@@ -7,6 +7,7 @@ import type { AuthContextValue } from "./AuthContext";
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarVersion, setAvatarVersion] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchAvatar = useCallback(async (userId: string) => {
@@ -25,6 +26,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshAvatar = useCallback(async () => {
     if (user) {
       await fetchAvatar(user.id);
+      // Increment version so all avatar display components re-fetch
+      setAvatarVersion((v) => v + 1);
     }
   }, [user, fetchAvatar]);
 
@@ -84,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [fetchAvatar]);
 
-  const value: AuthContextValue = { user, avatarUrl, isLoading, refreshAvatar };
+  const value: AuthContextValue = { user, avatarUrl, avatarVersion, isLoading, refreshAvatar };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
