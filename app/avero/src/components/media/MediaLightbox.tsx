@@ -150,7 +150,7 @@ export default function MediaLightbox({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute -top-1 right-0 -translate-y-full rounded-full glass-panel p-2 text-white hover:bg-white/5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
+          className="absolute -top-1 right-0 -translate-y-full rounded-full glass-panel p-2 text-ink hover:bg-white/5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
         >
           <CloseIcon />
         </button>
@@ -161,7 +161,7 @@ export default function MediaLightbox({
             type="button"
             onClick={goPrev}
             aria-label="Previous"
-            className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 rounded-full glass-panel p-2 text-white hover:bg-white/5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
+            className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 rounded-full glass-panel p-2 text-ink hover:bg-white/5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
           >
             <ChevronLeftIcon />
           </button>
@@ -191,7 +191,7 @@ export default function MediaLightbox({
             type="button"
             onClick={goNext}
             aria-label="Next"
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full rounded-full glass-panel p-2 text-white hover:bg-white/5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full rounded-full glass-panel p-2 text-ink hover:bg-white/5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
           >
             <ChevronRightIcon />
           </button>
