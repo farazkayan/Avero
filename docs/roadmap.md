@@ -1,680 +1,182 @@
-\\# Avero Development Roadmap
+# Avero Development Roadmap
 
+**Version:** 1.0
 
+**Status:** 🟡 In Progress
 
-
-
-
-
-\\\*\\\*Version:\\\*\\\* 1.0
-
-
-
-
-
-
-
-\\\*\\\*Status:\\\*\\\* 🟡 In Progress
-
-
-
-
-
-
-
-
-
-
-
-\# 📍 Project Progress
-
-
-
-
-
-
+# 📍 Project Progress
 
 🟢 Blueprint
-
-
-
 🟢 Roadmap
-
-
-
 🟢 Design System
-
-
-
 🟢 Database
-
-
-
 🟢 Feature Specs
-
-
-
 🟢 Supabase Setup
+🟢 Frontend Setup
+🟢 Tailwind Setup
+🟢 Avero 0.1
 
+## Meaning
 
+* 🟢 Completed
+* 🟡 In Progress
+* ⚪ Not Started
 
-🟡 Frontend Setup (RUNNING)
+---
 
+## Phase 1 — Foundation
 
-
-⚪ Tailwind Setup (NEXT)
-
-
-
-⚪ Avero 0.1⚪ Avero 0.1
-
-
-
-
-
-
-
-\\## Meaning
-
-
-
-
-
-
-
-\\\* 🟢 Completed
-
-
-
-\\\* 🟡 In Progress
-
-
-
-\\\* ⚪ Not Started
-
-
-
-
-
-
-
-\\---
-
-
-
-
-
-
-
-\\## Phase 1 — Foundation
-
-
-
-
-
-
-
-\\### Goal
-
-
-
-
-
-
-
+### Goal
 Establish the project's technical foundation and development environment.
 
-
-
-
-
-
-
-\\### Features
-
-
-
-
-
-
-
-\\\* Initialize the project
-
-
-
-\\\* Configure the tech stack
-
-
-
-\\\* Set up Supabase
-
-
-
-\\\* Configure authentication
-
-
-
-\\\* Establish folder structure
-
-
-
-\\\* Create the design system foundation
-
-
-
-
-
-
-
-\\### Definition of Done
-
-
-
-
-
-
-
-\\\* The project runs locally.
-
-
-
-\\\* Users can create accounts.
-
-
-
-\\\* Users can sign in and sign out.
-
-
-
-\\\* Authentication persists across sessions.
-
-
-
-\\\* Supabase is connected successfully.
-
-
-
-\\\* The project structure is finalized.
-
-
-
-
-
-
-
-\\---
-
-
-
-
-
-
-
-\\## Phase 2 — Spaces
-
-
-
-
-
-
-
-\\### Goal
-
-
-
-
-
-
-
+### Features
+* Initialize the project
+* Configure the tech stack
+* Set up Supabase
+* Configure authentication
+* Establish folder structure
+* Create the design system foundation
+
+### Definition of Done
+* The project runs locally.
+* Users can create accounts.
+* Users can sign in and sign out.
+* Authentication persists across sessions.
+* Supabase is connected successfully.
+* The project structure is finalized.
+
+---
+
+## Phase 2 — Spaces
+
+### Goal
 Allow users to create and join shared Spaces.
 
-
-
-
-
-
-
-\\### Features
-
-
-
-
-
-
-
-\\\* Create Space
-
-
-
-\\\* Invite members
-
-
-
-\\\* Join Space
-
-
-
-\\\* Space management
-
-
-
-
-
-
-
-\\### Definition of Done
-
-
-
-
-
-
-
-\\\* Users can own Spaces.
-
-
-
-\\\* Invitations work.
-
-
-
-\\\* Members can join.
-
-
-
-\\\* Space permissions function correctly.
-
-
-
-
-
-
-
-\\---
-
-
-
-
-
-
-
-\\## Phase 3 — Memories
-
-
-
-
-
-
-
-\\### Goal
-
-
-
-
-
-
-
+### Features
+* Create Space
+* Invite members
+* Join Space
+* Space management
+
+### Definition of Done
+* Users can own Spaces.
+* Invitations work.
+* Members can join.
+* Space permissions function correctly.
+
+---
+
+## Phase 3 — Memories
+
+### Goal
 Allow members to preserve shared experiences.
 
-
-
-
-
-
-
-\\### Features
-
-
-
-
-
-
-
-\\\* Capture Memory
-
-
-
-\\\* Edit Memory
-
-
-
-\\\* Delete Memory
-
-
-
-\\\* Memory details
-
-
-
-\\\* Media uploads
-
-
-
-
-
-
-
-\\### Definition of Done
-
-
-
-
-
-
-
-\\\* Members can create Memories.
-
-
-
-\\\* Photos and videos upload successfully.
-
-
-
-\\\* Memories can be edited.
-
-
-
-\\\* Memories can be deleted safely.
-
-
-
-
-
-
-
-\\---
-
-
-
-
-
-
-
-\\## Phase 4 — Experience
-
-
-
-
-
-
-
-\\### Goal
-
-
-
-
-
-
-
+### Features
+* Capture Memory
+* Edit Memory
+* Delete Memory
+* Memory details
+* Media uploads
+
+### Definition of Done
+* Members can create Memories.
+* Photos and videos upload successfully.
+* Memories can be edited.
+* Memories can be deleted safely.
+
+---
+
+## Phase 4 — Experience
+
+### Goal
 Make Memories enjoyable to revisit and organize.
 
-
-
-
-
-
-
-\\### Features
-
-
-
-
-
-
-
-\\\* Timeline
-
-
-
-\\\* Tags
-
-
-
-\\\* Search
-
-
-
-\\\* Comments
-
-
-
-\\\* Reactions
-
-
-
-
-
-
-
-\\### Definition of Done
-
-
-
-
-
-
-
-\\\* Timeline displays correctly.
-
-
-
-\\\* Search returns accurate results.
-
-
-
-\\\* Tags organize Memories.
-
-
-
-\\\* Comments work reliably.
-
-
-
-\\\* Reactions function as intended.
-
-
-
-
-
-
-
-\\---
-
-
-
-
-
-
-
-\\## Phase 5 — Polish
-
-
-
-
-
-
-
-\\### Goal
-
-
-
-
-
-
-
+### Features
+* Timeline
+* Tags
+* Search
+* Comments
+* Reactions
+
+### Definition of Done
+* Timeline displays correctly.
+* Search returns accurate results.
+* Tags organize Memories.
+* Comments work reliably.
+* Reactions function as intended.
+
+---
+
+## Phase 5 — Polish
+
+### Goal
 Prepare Avero for everyday use.
 
-
-
-
-
-
-
-\\### Features
-
-
-
-
-
-
-
-\\\* Responsive design
-
-
-
-\\\* Loading states
-
-
-
-\\\* Empty states
-
-
-
-\\\* Error handling
-
-
-
-\\\* Performance improvements
-
-
-
-\\\* Accessibility improvements
-
-
-
-\\\* Final testing
-
-
-
-\\\* Bug fixing
-
-
-
-
-
-
-
-\\### Definition of Done
-
-
-
-
-
-
-
-\\\* No critical bugs remain.
-
-
-
-\\\* Mobile and desktop experiences are polished.
-
-
-
-\\\* Performance is smooth.
-
-
-
-\\\* The application feels ready for daily use.
-
-
-
-
-
-
-
-\\---
-
-
-
-
-
-
-
-\\---
-
-
-
-\## Phase 6 — Social \& Personalization
-
-
-
-\### Goal
-
-
-
+### Features
+* Responsive design
+* Loading states
+* Empty states
+* Error handling
+* Performance improvements
+* Accessibility improvements
+* Final testing
+* Bug fixing
+
+### Definition of Done
+* No critical bugs remain.
+* Mobile and desktop experiences are polished.
+* Performance is smooth.
+* The application feels ready for daily use.
+
+---
+
+## Phase 6 — Social & Personalization
+
+### Goal
 Round out the social and personal layer of the app: richer comment interactions, user identity (avatar), account settings, and a light theme option.
 
+### Features
 
+**Comments enhancements**
+* Sort option in Comments (e.g. newest / oldest)
+* Replace the delete icon with a three-dot (⋮) menu on each comment:
+  * Own comment → Edit, Delete
+  * Others' comment → Report
+* Comment editing (new capability — comments were previously add/delete only)
+* Reactions on individual comments (in addition to existing Memory-level reactions)
+* Emoji picker on the comment input (not just plain text entry)
 
-\### Features
+**Identity & account**
+* Profile picture (avatar) upload — `avatar_url` already exists on the Users table (`database.md` §3), this wires it up end-to-end
+* Settings page — manage account details, avatar, and (new) theme preference
 
+**Theming**
+* White / light theme option, toggleable in Settings — the current Design System (§2) is dark-only; this adds a second supported theme without abandoning dark as the default
 
+### Definition of Done
+* Comments can be sorted, edited, deleted, and reported.
+* Comments support their own reactions and emoji entry.
+* Users can upload/change a profile picture.
+* A Settings page exists for account + theme preferences.
+* Light theme is fully supported across existing screens, not just new ones.
 
-\*\*Comments enhancements\*\*
+### Explicitly Out of Scope (unchanged from Blueprint)
+* Public Spaces
+* Public profiles
+* Any feature that turns Avero into a public/social-media-style platform — Avero remains private-Space-only, per `blueprint.md`'s "Who Avero Is Not Built For."
 
-\* Sort option in Comments (e.g. newest / oldest)
+---
 
-\* Replace the delete icon with a three-dot (⋮) menu on each comment:
+## Avero 0.1 Complete
 
-&#x20; \* Own comment → Edit, Delete
+At the end of Phase 6, Avero should provide everything needed for a small group of people to preserve and revisit their shared memories in a reliable, polished, and enjoyable way — with a personalized identity layer and richer, but still calm, social interactions.
 
-&#x20; \* Others' comment → Report
+Also delivered as part of / alongside 0.1 hardening:
+* Space Statistics & Achievements (retrospective, non-manipulative — see `blueprint.md` §10, §8)
+* Major performance & media optimization pass (image compression, dual thumbnails, lazy loading, code splitting, DB query audit)
+* Full-quality media download (available to all Space members)
+* Cloudflare Worker media proxy for free B2 egress (Bandwidth Alliance), with HMAC-signed, time-limited access tokens
 
-\* Comment editing (new capability — comments were previously add/delete only)
-
-\* Reactions on individual comments (in addition to existing Memory-level reactions)
-
-\* Emoji picker on the comment input (not just plain text entry)
-
-
-
-\*\*Identity \& account\*\*
-
-\* Profile picture (avatar) upload — `avatar\_url` already exists on the Users table (`database.md` §3), this wires it up end-to-end
-
-\* Settings page — manage account details, avatar, and (new) theme preference
-
-
-
-\*\*Theming\*\*
-
-\* White / light theme option, toggleable in Settings — the current Design System (§2) is dark-only; this adds a second supported theme without abandoning dark as the default
-
-
-
-\### Definition of Done
-
-
-
-\* Comments can be sorted, edited, deleted, and reported.
-
-\* Comments support their own reactions and emoji entry.
-
-\* Users can upload/change a profile picture.
-
-\* A Settings page exists for account + theme preferences.
-
-\* Light theme is fully supported across existing screens, not just new ones.
-
-
-
-\### Explicitly Out of Scope (unchanged from Blueprint)
-
-
-
-\* Public Spaces
-
-\* Public profiles
-
-\* Any feature that turns Avero into a public/social-media-style platform — Avero remains private-Space-only, per `blueprint.md`'s "Who Avero Is Not Built For."
-
-
-
-\---
-
-
-
-\## Avero 0.1 Complete
 ---
 
 ## Phase 7 — Accounts & Identity Polish
@@ -687,13 +189,14 @@ Make account creation faster with Google sign-in as a login option.
 **Google OAuth login**
 * "Continue with Google" as an additional sign-in option alongside existing email auth
 * Auto-populate profile display name and avatar from the user's Google account on first sign-in (avatar copied through the existing upload/crop pipeline into B2, not linked externally)
-* Decide scope: new-signups only, or allow existing email-auth users to link a Google identity to their account
+* New-signups/new-logins only for this pass — account linking (existing email-auth user linking a Google identity) is out of scope
 
 ### Definition of Done
 * Users can sign in/sign up with Google in one tap, with their name and photo populated automatically.
 
+**Apple Sign-In:** considered and explicitly rejected — not planned, ever (not just deferred).
 
----
+**Facebook Login:** considered and deliberately excluded — conflicts with Blueprint's explicit "not a social media platform" positioning and has declining trust/usage for non-social apps.
 
 ---
 
@@ -729,37 +232,49 @@ Let users select real locations when creating a Memory, and view a Space's Memor
 
 ---
 
----
-
-## Phase 9 — Timeline Graph & Echoes
+## Phase 9 — Echoes
 
 ### Goal
-Make revisiting the past feel like a pleasant discovery, never a pull to re-engage. Two features, both passive — visible only when the app is actually opened, never pushed.
+Make revisiting the past feel like a pleasant discovery, never a pull to re-engage — a passive, Google Photos-style "memories carousel" at the top of the Timeline.
 
 ### Features
 
-**Timeline density graph**
-* [Clarify scope: extend the existing Stats page density chart (Spec A.4) to also live in the Timeline view itself, or build a distinct visualization — decide before spec'ing]
-* Shows Memory count over time at a glance, within the Timeline itself
-
 **Echoes ("On this day")**
-* A small, calm card at the top of the Timeline, shown only when at least one past Memory shares today's month/day in a previous year ("4 years ago today")
-* **Hard rule, non-negotiable per Blueprint: passive only.** No push notification, no email, no badge/red-dot indicator anywhere. If the user doesn't open the app on that day, they simply never see it — no missed-it feeling engineered.
-* Dismissible/collapsible, doesn't block or delay reaching the actual Timeline
-* If multiple past Memories match today's date across different years, show all of them calmly (a small stack/carousel), not just one
+* A small horizontal carousel of cards at the top of the Timeline (Google Photos "memories carousel" style)
+* Each card represents one qualifying time interval where a real Memory exists matching today's date — pure date-math, no AI:
+  * "1 week ago"
+  * "1 month ago"
+  * "1 year ago"
+  * "N years ago" (calculated dynamically for any matching year back, not a fixed list)
+  * "1 decade ago" (10 years)
+  * General rule: for any Memory whose `memory_date` falls exactly on today's date in a previous week/month/year, generate a card for that interval
+* A card only appears if a real Memory actually exists for that specific interval — no placeholder/empty cards, no forced intervals. Some days show zero cards, some show several.
+* Card shows the Memory's thumbnail + the simple label ("1 year ago") — no AI-generated text, just the honest interval + a glimpse of the photo
+* **Hard rule, non-negotiable per Blueprint: passive only.** No push notification, no email, no badge/red-dot. If the user doesn't open the app that day, they simply never see it — no missed-it feeling engineered.
+* Tapping a card opens that Memory
+* If nothing qualifies today, the carousel simply doesn't render — no empty state needed
 
 ### Definition of Done
-* Timeline graph gives an at-a-glance view of Memory density over time.
 * Echoes surface naturally on matching dates, entirely opt-in-by-nature (passive discovery), with zero push/notification mechanism attached.
 
 ---
+
+## Backlog (queued, not yet built)
+
+* Memory Timeline sort control (Newest / Oldest / Recently added)
+* Avatar refresh bug — new avatar doesn't display until manual page refresh
+* Media download attribution/UI polish follow-ups (as needed)
+
 ---
 
+## Explicitly Excluded (permanent, not deferred)
 
+Per Blueprint's "Who Avero Is Not Built For" and product decisions made during development:
 
-
-
-
-
-At the end of Phase 7, Avero should provide everything needed for a small group of people to preserve and revisit their shared memories in a reliable, polished, and enjoyable way — with a personalized identity layer and richer, but still calm, social interactions.
-
+* Public Spaces
+* Public profiles
+* Messaging
+* AI features of any kind — permanently excluded, not just postponed
+* Apple Sign-In — permanently excluded
+* Facebook Login — permanently excluded
+* Any feature that turns Avero into a public/social-media-style platform

@@ -4,6 +4,7 @@ import GhostLink from "../components/ui/GhostLink";
 import Spinner from "../components/ui/Spinner";
 import EmptyState from "../components/ui/EmptyState";
 import SearchInput from "../components/ui/SearchInput";
+import SortControl, { type SortOption } from "../components/ui/SortControl";
 import { SparkleIcon, GearIcon, SearchIcon, ChartIcon } from "../components/ui/icons";
 import MemoryTimelineCard from "../components/memories/MemoryTimelineCard";
 import { useAuth } from "../context/AuthContext";
@@ -76,6 +77,26 @@ export default function SpaceDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [loadError, setLoadError] = useState<string | undefined>(undefined);
 
+  // Sort control state — persisted via localStorage so the user's preference
+  // survives across visits (key: `avero:timeline:sort`). Default is "newest"
+  // (memory_date DESC) per feature-specs §2.
+  const [sortOption, setSortOption] = useState<SortOption>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("avero:timeline:sort");
+      if (stored === "newest" || stored === "oldest" || stored === "recently-added") {
+        return stored;
+      }
+    }
+    return "newest";
+  });
+
+  const handleSortChange = useCallback((value: SortOption) => {
+    setSortOption(value);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("avero:timeline:sort", value);
+    }
+  }, []);
+
   // Reactions for the timeline cards, batch-fetched in a single query across
   // all loaded Memory ids (feature-specs §5) to avoid N+1 round trips. Keyed by
   // memoryId; the page is the single source of truth, and each card's
@@ -122,25 +143,40 @@ export default function SpaceDetailPage() {
       setSearchQuery("");
 
       try {
+        // Determine the order clause based on the selected sort option
+        const getOrderClause = (option: SortOption) => {
+          switch (option) {
+            case "oldest":
+              return { column: "memory_date", ascending: true };
+            case "recently-added":
+              return { column: "created_at", ascending: false };
+            case "newest":
+            default:
+              return { column: "memory_date", ascending: false };
+          }
+        };
+
+        const orderClause = getOrderClause(sortOption);
+
         const [spaceResponse, memoriesResponse] = await Promise.all([
           supabase
             .from("spaces")
             .select("*")
             .eq("id", id)
             .maybeSingle(),
-          // Memories for this Space, ordered by memory_date DESC (feature-
-          // specs §2). RLS auto-filters to members only and excludes
-          // soft-deleted rows (deleted_at IS NULL), so no explicit filter
-          // is needed here. The memory_tags -> tags join embeds each
-          // Memory's tag names so search (feature-specs §7) can match on
-          // tags without a second round trip; the join is also RLS-gated
-          // (memory_tags_select / tags_select enforce is_space_member), so
-          // a non-member still receives no rows — search cannot bypass RLS.
+          // Memories for this Space, ordered by the selected sort option.
+          // Default is memory_date DESC (feature-specs §2). RLS auto-filters
+          // to members only and excludes soft-deleted rows (deleted_at IS NULL),
+          // so no explicit filter is needed here. The memory_tags -> tags join
+          // embeds each Memory's tag names so search (feature-specs §7) can
+          // match on tags without a second round trip; the join is also
+          // RLS-gated (memory_tags_select / tags_select enforce is_space_member),
+          // so a non-member still receives no rows — search cannot bypass RLS.
           supabase
             .from("memories")
             .select("*, memory_tags(tag_id, tags(id, name))")
             .eq("space_id", id)
-            .order("memory_date", { ascending: false }),
+            .order(orderClause.column, { ascending: orderClause.ascending }),
         ]);
 
         if (cancelled) {
@@ -199,7 +235,7 @@ export default function SpaceDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [spaceId]);
+  }, [spaceId, sortOption]);
 
   // --- Batch-fetch reactions for all loaded Memories (feature-specs §5) -----
   // A single query across every Memory id avoids the N+1 problem (one round
@@ -470,16 +506,24 @@ export default function SpaceDetailPage() {
               </EmptyState>
             ) : (
               <>
-                {/* Search — filters the timeline by title, tags, and
-                    description (feature-specs §7). Client-side over the
+                {/* Sort control + Search — filters the timeline by title, tags,
+                    and description (feature-specs §7). Client-side over the
                     already-loaded list, so it's instant and calm. */}
-                <SearchInput
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder="Search memories…"
-                  ariaLabel="Search memories"
-                  className="mb-6"
-                />
+                <div className="flex flex-col sm:flex-row sm:items-end gap-3 mb-6">
+                  <SortControl
+                    value={sortOption}
+                    onChange={handleSortChange}
+                    ariaLabel="Sort memories"
+                    className="w-full sm:w-auto"
+                  />
+                  <SearchInput
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder="Search memories…"
+                    ariaLabel="Search memories"
+                    className="w-full sm:w-[320px]"
+                  />
+                </div>
 
                 {filteredMemories.length === 0 ? (
                   <EmptyState

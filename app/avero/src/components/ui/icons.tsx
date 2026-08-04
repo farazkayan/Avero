@@ -209,6 +209,29 @@ export function GearIcon({ className = "" }: IconProps) {
   }
   
   /**
+   * A downward chevron used for select/dropdown controls (e.g., SortControl).
+   * Matches the outline style of the other icons (Design System §9).
+   */
+  export function ChevronDownIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M6 9l6 6 6-6" />
+      </svg>
+    );
+  }
+  
+  /**
    * A download glyph used for the per-tile download affordance in the media
    * gallery. Matches the outline style of the other icons (Design System §9).
    */
