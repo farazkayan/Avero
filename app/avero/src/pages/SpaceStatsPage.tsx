@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import AppShell from "../components/AppShell";
 import GhostLink from "../components/ui/GhostLink";
 import Spinner from "../components/ui/Spinner";
 import EmptyState from "../components/ui/EmptyState";
@@ -148,7 +147,7 @@ export default function SpaceStatsPage() {
   }
 
   return (
-    <AppShell>
+    <>
       <div className="mx-auto max-w-3xl px-6 py-10">
         {/* Back link */}
         <div className="mb-6">
@@ -297,7 +296,7 @@ export default function SpaceStatsPage() {
           </>
         ) : null}
       </div>
-    </AppShell>
+    </>
   );
 }
 

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import AppShell from "../components/AppShell";
 import TextField from "../components/ui/TextField";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import GhostLink from "../components/ui/GhostLink";
@@ -143,7 +142,7 @@ export default function CreateSpacePage() {
   }
 
   return (
-    <AppShell>
+    <>
       <div className="mx-auto w-full max-w-[420px]">
         <div className="mb-8">
           <h1 className="text-2xl font-bold leading-tight text-ink sm:text-3xl">
@@ -209,7 +208,7 @@ export default function CreateSpacePage() {
           <GhostLink to={AUTHENTICATED_HOME_PATH}>Back to Spaces</GhostLink>
         </p>
       </div>
-    </AppShell>
+    </>
   );
 }
 

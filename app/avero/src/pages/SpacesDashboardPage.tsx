@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import AppShell from "../components/AppShell";
 import EmptyState from "../components/ui/EmptyState";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import Spinner from "../components/ui/Spinner";
@@ -149,7 +148,7 @@ export default function SpacesDashboardPage() {
   }, [memberships]);
 
   return (
-    <AppShell>
+    <>
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold leading-tight text-ink sm:text-3xl">
           Your Spaces
@@ -198,6 +197,6 @@ export default function SpacesDashboardPage() {
           ))}
         </ul>
       )}
-    </AppShell>
+    </>
   );
 }

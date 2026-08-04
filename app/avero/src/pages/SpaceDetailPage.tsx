@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import AppShell from "../components/AppShell";
 import GhostLink from "../components/ui/GhostLink";
 import Spinner from "../components/ui/Spinner";
 import EmptyState from "../components/ui/EmptyState";
@@ -378,7 +377,7 @@ export default function SpaceDetailPage() {
   );
 
   return (
-    <AppShell>
+    <>
       <div className="mb-6">
         <GhostLink to={AUTHENTICATED_HOME_PATH}>Back to Spaces</GhostLink>
       </div>
@@ -505,8 +504,8 @@ export default function SpaceDetailPage() {
                             slot + reaction control now live in
                             {@link MemoryTimelineCard}. The page owns the batch
                             state (reactions + thumbnails maps) and passes
-                            per-card props. The card is a <div> (not a <Link>)
-                            so the reaction pill <button> isn't nested inside an
+                            per-card props. The card is a <div> (not a <Link>) so
+                            the reaction pill <button> isn't nested inside an
                             anchor; the title is the navigation link. */}
                         <MemoryTimelineCard
                           memory={memory}
@@ -528,7 +527,7 @@ export default function SpaceDetailPage() {
           </section>
         </>
       ) : null}
-    </AppShell>
+    </>
   );
 }
 

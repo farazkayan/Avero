@@ -7,15 +7,10 @@ import VerifyEmailPage from "./pages/VerifyEmailPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AcceptInvitePage from "./pages/AcceptInvitePage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
-import SpacesDashboardPage from "./pages/SpacesDashboardPage";
-import CreateSpacePage from "./pages/CreateSpacePage";
-import MemoryDetailPage from "./pages/MemoryDetailPage";
-import EditMemoryPage from "./pages/EditMemoryPage";
-import SpaceDetailPage from "./pages/SpaceDetailPage";
-import SpaceSettingsPage from "./pages/SpaceSettingsPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import PublicOnlyRoute from "./components/auth/PublicOnlyRoute";
 import RouteLoadingFallback from "./components/ui/RouteLoadingFallback";
+import AuthenticatedLayout from "./components/AuthenticatedLayout";
 import {
   AUTHENTICATED_HOME_PATH,
   SETTINGS_PATH,
@@ -27,6 +22,14 @@ import {
 const CreateMemoryPage = lazy(() => import("./pages/CreateMemoryPage"));
 const SpaceStatsPage = lazy(() => import("./pages/SpaceStatsPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+
+// Lazy-loaded authenticated pages (wrapped in AuthenticatedLayout which lazy-loads AppShell)
+const SpacesDashboardPage = lazy(() => import("./pages/SpacesDashboardPage"));
+const CreateSpacePage = lazy(() => import("./pages/CreateSpacePage"));
+const MemoryDetailPage = lazy(() => import("./pages/MemoryDetailPage"));
+const EditMemoryPage = lazy(() => import("./pages/EditMemoryPage"));
+const SpaceDetailPage = lazy(() => import("./pages/SpaceDetailPage"));
+const SpaceSettingsPage = lazy(() => import("./pages/SpaceSettingsPage"));
 
 /**
  * Application routes.
@@ -66,18 +69,53 @@ export default function App() {
 
       {/* Protected authenticated area */}
       <Route element={<ProtectedRoute />}>
-        <Route path="spaces" element={<SpacesDashboardPage />} />
-        <Route path="spaces/new" element={<CreateSpacePage />} />
-        <Route path="spaces/:spaceId" element={<SpaceDetailPage />} />
+        <Route
+          path="spaces"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <AuthenticatedLayout>
+                <SpacesDashboardPage />
+              </AuthenticatedLayout>
+            </Suspense>
+          }
+        />
+        <Route
+          path="spaces/new"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <AuthenticatedLayout>
+                <CreateSpacePage />
+              </AuthenticatedLayout>
+            </Suspense>
+          }
+        />
+        <Route
+          path="spaces/:spaceId"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <AuthenticatedLayout>
+                <SpaceDetailPage />
+              </AuthenticatedLayout>
+            </Suspense>
+          }
+        />
         <Route
           path="spaces/:spaceId/settings"
-          element={<SpaceSettingsPage />}
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <AuthenticatedLayout>
+                <SpaceSettingsPage />
+              </AuthenticatedLayout>
+            </Suspense>
+          }
         />
         <Route
           path="spaces/:spaceId/stats"
           element={
             <Suspense fallback={<RouteLoadingFallback />}>
-              <SpaceStatsPage />
+              <AuthenticatedLayout>
+                <SpaceStatsPage />
+              </AuthenticatedLayout>
             </Suspense>
           }
         />
@@ -85,7 +123,9 @@ export default function App() {
           path={SETTINGS_PATH}
           element={
             <Suspense fallback={<RouteLoadingFallback />}>
-              <SettingsPage />
+              <AuthenticatedLayout>
+                <SettingsPage />
+              </AuthenticatedLayout>
             </Suspense>
           }
         />
@@ -93,17 +133,31 @@ export default function App() {
           path="spaces/:spaceId/memories/new"
           element={
             <Suspense fallback={<RouteLoadingFallback />}>
-              <CreateMemoryPage />
+              <AuthenticatedLayout>
+                <CreateMemoryPage />
+              </AuthenticatedLayout>
             </Suspense>
           }
         />
         <Route
           path="spaces/:spaceId/memories/:memoryId"
-          element={<MemoryDetailPage />}
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <AuthenticatedLayout>
+                <MemoryDetailPage />
+              </AuthenticatedLayout>
+            </Suspense>
+          }
         />
         <Route
           path="spaces/:spaceId/memories/:memoryId/edit"
-          element={<EditMemoryPage />}
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <AuthenticatedLayout>
+                <EditMemoryPage />
+              </AuthenticatedLayout>
+            </Suspense>
+          }
         />
       </Route>
 

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import AppShell from "../components/AppShell";
 import TextField from "../components/ui/TextField";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import GhostLink from "../components/ui/GhostLink";
@@ -542,7 +541,7 @@ export default function SpaceSettingsPage() {
   }
 
   return (
-    <AppShell>
+    <>
       <div className="mb-6">
         <GhostLink to={spaceId ? spaceDetailPath(spaceId) : AUTHENTICATED_HOME_PATH}>
           Back to Space
@@ -891,7 +890,7 @@ export default function SpaceSettingsPage() {
           )}
         </ConfirmDialog>
       )}
-    </AppShell>
+    </>
   );
 }
 

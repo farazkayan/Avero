@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import AppShell from "../components/AppShell";
 import GhostLink from "../components/ui/GhostLink";
 import Spinner from "../components/ui/Spinner";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
@@ -278,7 +277,7 @@ export default function MemoryDetailPage() {
   }
 
   return (
-    <AppShell>
+    <>
       <div className="mb-6">
         {spaceId ? (
           <GhostLink to={spaceDetailPath(spaceId)}>Back to Space</GhostLink>
@@ -468,7 +467,7 @@ export default function MemoryDetailPage() {
           )}
         </ConfirmDialog>
       )}
-    </AppShell>
+    </>
   );
 }
 

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import AppShell from "../components/AppShell";
 import TextField from "../components/ui/TextField";
 import TagInput from "../components/ui/TagInput";
 import PrimaryButton from "../components/ui/PrimaryButton";
@@ -435,7 +434,7 @@ export default function CreateMemoryPage() {
   }
 
   return (
-    <AppShell>
+    <>
       <div className="mx-auto w-full max-w-[420px]">
         <div className="mb-8">
           <h1 className="text-2xl font-bold leading-tight text-ink sm:text-3xl">
@@ -695,7 +694,7 @@ export default function CreateMemoryPage() {
           )}
         </p>
       </div>
-    </AppShell>
+    </>
   );
 }
 

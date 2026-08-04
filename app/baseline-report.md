@@ -1,5 +1,5 @@
 # SPEC B.0 Baseline Report
-Generated: 2026-07-31T11:16:42.633Z
+Generated: 2026-08-03T11:09:49.804Z
 Space ID used: 5f91c881-82e0-4849-9c6e-9b67e5d23505
 Memory ID used: 607e7578-98e1-4504-b9e0-c07228e4e20b
 
@@ -8,22 +8,15 @@ Memory ID used: 607e7578-98e1-4504-b9e0-c07228e4e20b
 
 ```json
 ERROR: Command failed: npx lighthouse "http://localhost:5173/spaces/5f91c881-82e0-4849-9c6e-9b67e5d23505" --output=json --quiet --chrome-flags="--headless"
-Runtime error encountered: EPERM, Permission denied: \\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.44031227 '\\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.44031227'
-Error: EPERM, Permission denied: \\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.44031227 '\\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.44031227'
-    at rmSync (node:fs:1236:18)
-    at Launcher.destroyTmp (file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/chrome-launcher/dist/chrome-launcher.js:367:9)
-    at Launcher.kill (file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/chrome-launcher/dist/chrome-launcher.js:349:14)
-    at Object.kill (file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/chrome-launcher/dist/chrome-launcher.js:39:18)
-    at runLighthouse (file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/lighthouse/cli/run.js:217:21)
-    at async file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/lighthouse/cli/index.js:10:1
+Runtime error encountered: Chrome prevented page load with an interstitial. Make sure you are testing the correct URL and that the server is properly responding to all requests.
 
 ```
 ### http://localhost:5173/spaces/5f91c881-82e0-4849-9c6e-9b67e5d23505/memories/607e7578-98e1-4504-b9e0-c07228e4e20b
 
 ```json
 ERROR: Command failed: npx lighthouse "http://localhost:5173/spaces/5f91c881-82e0-4849-9c6e-9b67e5d23505/memories/607e7578-98e1-4504-b9e0-c07228e4e20b" --output=json --quiet --chrome-flags="--headless"
-Runtime error encountered: EPERM, Permission denied: \\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.59022495 '\\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.59022495'
-Error: EPERM, Permission denied: \\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.59022495 '\\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.59022495'
+Runtime error encountered: EPERM, Permission denied: \\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.47745053 '\\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.47745053'
+Error: EPERM, Permission denied: \\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.47745053 '\\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.47745053'
     at rmSync (node:fs:1236:18)
     at Launcher.destroyTmp (file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/chrome-launcher/dist/chrome-launcher.js:367:9)
     at Launcher.kill (file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/chrome-launcher/dist/chrome-launcher.js:349:14)
@@ -36,14 +29,24 @@ Error: EPERM, Permission denied: \\?\C:\Users\faraz\AppData\Local\Temp\lighthous
 
 ```json
 ERROR: Command failed: npx lighthouse "http://localhost:5173/spaces/5f91c881-82e0-4849-9c6e-9b67e5d23505/stats" --output=json --quiet --chrome-flags="--headless"
-Runtime error encountered: EPERM, Permission denied: \\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.39911307 '\\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.39911307'
-Error: EPERM, Permission denied: \\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.39911307 '\\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.39911307'
+node:fs:1236
+  return binding.rmSync(getValidatedPath(path), opts.maxRetries, opts.recursive, opts.retryDelay);
+                 ^
+
+Error: EPERM, Permission denied: \\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.17187895 '\\?\C:\Users\faraz\AppData\Local\Temp\lighthouse.17187895'
     at rmSync (node:fs:1236:18)
     at Launcher.destroyTmp (file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/chrome-launcher/dist/chrome-launcher.js:367:9)
     at Launcher.kill (file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/chrome-launcher/dist/chrome-launcher.js:349:14)
     at Object.kill (file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/chrome-launcher/dist/chrome-launcher.js:39:18)
-    at runLighthouse (file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/lighthouse/cli/run.js:217:21)
-    at async file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/lighthouse/cli/index.js:10:1
+    at runLighthouse (file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/lighthouse/cli/run.js:235:21)
+    at async file:///C:/Users/faraz/AppData/Local/npm-cache/_npx/0f94ee7615faf582/node_modules/lighthouse/cli/index.js:10:1 {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\faraz\\AppData\\Local\\Temp\\lighthouse.17187895',
+  syscall: 'rm'
+}
+
+Node.js v24.12.0
 
 ```
 
@@ -54,24 +57,28 @@ Error: EPERM, Permission denied: \\?\C:\Users\faraz\AppData\Local\Temp\lighthous
 
 | Size | Path |
 |------|------|
-| 596.1 KB | assets\index-zELzPzU9.js |
-|  29.9 KB | assets\index-fqqvtgvT.css |
+| 306.9 KB | assets\index-Dw0F4OD6.js |
+| 271.5 KB | assets\AppShell-CJbBGOxo.js |
+|  30.6 KB | assets\index-CXq93h9Q.css |
+|    11 KB | assets\SpaceStatsPage-1KWMr1r0.js |
 |   9.3 KB | favicon.svg |
+|   8.5 KB | assets\CreateMemoryPage-CPn5xdHl.js |
 |   4.9 KB | icons.svg |
+|   4.5 KB | assets\SettingsPage-DkYkKmL1.js |
 |   4.2 KB | favicon.ico |
-|    454 B | index.html |
+|    533 B | index.html |
 
 ### Total by extension
 
 | Extension | Total Size |
 |-----------|------------|
-| .js | 596.1 KB |
-| .css | 29.9 KB |
+| .js | 602.4 KB |
+| .css | 30.6 KB |
 | .svg | 14.2 KB |
 | .ico | 4.2 KB |
-| .html | 454 B |
+| .html | 533 B |
 
-**Grand total: 644.8 KB (6 files)**
+**Grand total: 651.9 KB (10 files)**
 
 ```
 
@@ -95,7 +102,6 @@ ERROR: Command failed: npx supabase db shell -c "
     ORDER BY total_exec_time DESC
     LIMIT 20;
   "
-npm warn exec The following package was not found and will be installed: supabase@2.111.0
 DESCRIPTION
   Manage Postgres databases.
 

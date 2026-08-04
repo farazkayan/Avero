@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import AppShell from "../components/AppShell";
 import TextField from "../components/ui/TextField";
 import TagInput from "../components/ui/TagInput";
 import PrimaryButton from "../components/ui/PrimaryButton";
@@ -470,7 +469,7 @@ export default function EditMemoryPage() {
   }
 
   return (
-    <AppShell>
+    <>
       <div className="mb-6">
         {spaceId && memoryId ? (
           <GhostLink to={memoryDetailPath(spaceId, memoryId)}>
@@ -663,7 +662,7 @@ export default function EditMemoryPage() {
           </form>
         </div>
       ) : null}
-    </AppShell>
+    </>
   );
 }
 

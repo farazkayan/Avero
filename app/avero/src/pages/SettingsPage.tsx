@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import AppShell from "../components/AppShell";
 import TextField from "../components/ui/TextField";
 import GhostLink from "../components/ui/GhostLink";
 import { AvatarUpload } from "../components/ui/AvatarUpload";
@@ -172,7 +171,7 @@ export default function SettingsPage() {
   const email = user?.email ?? "";
 
   return (
-    <AppShell>
+    <>
       <div className="mb-6">
         <GhostLink to={AUTHENTICATED_HOME_PATH}>Back to Spaces</GhostLink>
       </div>
@@ -310,7 +309,7 @@ export default function SettingsPage() {
           </button>
         </div>
       </section>
-    </AppShell>
+    </>
   );
 }
 
