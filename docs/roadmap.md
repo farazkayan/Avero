@@ -692,6 +692,42 @@ Make account creation faster with Google sign-in as a login option.
 ### Definition of Done
 * Users can sign in/sign up with Google in one tap, with their name and photo populated automatically.
 
+
+---
+
+---
+
+## Phase 8 — Maps & Location
+
+### Goal
+Let users select real locations when creating a Memory, and view a Space's Memories plotted on a map — using free infrastructure (LocationIQ + OpenStreetMap/Leaflet), not Google Maps, given no paid API budget currently.
+
+### Features
+
+**Location picker (Create/Edit Memory)**
+* Replace the free-text Location field with a search-as-you-type picker backed by LocationIQ's Autocomplete API (free tier: 5,000 requests/day, no credit card required, built specifically for type-ahead search — better fit than raw Nominatim)
+* Selecting a result stores real coordinates (lat/lng) alongside the existing text, not just a string
+* Debounce search input to stay well within free tier limits
+
+**Space map view**
+* New "Map" view within a Space (alongside Timeline/Stats), using `react-leaflet` to render OpenStreetMap tiles (free, no API key needed for tile display)
+* Pin for every Memory that has coordinates (from the location picker above — Memories without a set location simply don't appear on the map, no error state needed)
+* Tapping a pin opens that Memory
+
+**Attribution**
+* LocationIQ's free tier requires a small attribution credit in the app (standard for free map stacks — OpenStreetMap tiles also require their own small attribution, typically shown as a map corner credit)
+
+**Database**
+* `memories` table needs real `latitude`/`longitude` columns (currently `location` is just an optional string per `database.md` §6) — this is a schema change, not just a frontend addition
+* Existing Memories with only a text location and no coordinates simply won't have a map pin until re-edited — no forced backfill/geocoding of old free-text locations required for this pass
+
+### Definition of Done
+* Creating a Memory lets you search and select a real place via LocationIQ autocomplete, storing real coordinates.
+* A Space's Map view shows pins for every geocoded Memory, tapping opens it.
+* Required attribution correctly displayed for both LocationIQ and OpenStreetMap.
+* No Google Maps dependency, no API costs at current usage levels.
+
+---
 ---
 
 

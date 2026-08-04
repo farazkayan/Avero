@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CloseIcon, ChevronLeftIcon, ChevronRightIcon } from "../ui/icons";
+import { CloseIcon, ChevronLeftIcon, ChevronRightIcon, DownloadIcon, TrashIcon } from "../ui/icons";
 import { getMediaDownloadUrl, deleteMedia, uploadMediaItem, type SelectedMediaFile, STATUS_LABELS } from "../../lib/media";
 import type { Media } from "../../types/media";
 import { supabase } from "../../lib/supabase";
@@ -284,6 +284,63 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
     setDeleteConfirm(null);
   }, []);
 
+  // Download handler — fetches presigned URL for original file and triggers browser download
+  const handleDownload = useCallback(async (mediaItem: Media) => {
+    // Use the original file key (media.url / storage_path) for full-resolution download
+    const fileKey = mediaItem.storage_path || mediaItem.url;
+    if (!fileKey) return;
+
+    const result = await getMediaDownloadUrl(fileKey);
+    if (!result.ok) {
+      console.error("Failed to get download URL:", result.error);
+      return;
+    }
+
+    const downloadUrl = result.url;
+
+    // Extract a sensible filename from the B2 object key
+    // Key format: {space_id}/{memory_id}/{uuid}.{ext}
+    const keyParts = fileKey.split("/");
+    const originalFilename = keyParts[keyParts.length - 1] || "download";
+    // The UUID filename isn't user-friendly, but we can at least preserve the extension
+    const extension = originalFilename.includes(".")
+      ? originalFilename.slice(originalFilename.lastIndexOf("."))
+      : mediaItem.type === "video"
+      ? ".mp4"
+      : ".jpg";
+
+    // Generate a user-friendly filename: "Avero-{memory_id}-{timestamp}{extension}"
+    // Since we don't have the original filename stored, we use a reasonable pattern
+    const timestamp = new Date(mediaItem.created_at).toISOString().slice(0, 10).replace(/-/g, "");
+    const friendlyName = `Avero-${mediaItem.memory_id.slice(0, 8)}-${timestamp}${extension}`;
+
+    // Use fetch-then-blob approach for cross-origin compatibility
+    // B2 presigned URLs may not honor the download attribute reliably
+    try {
+      const response = await fetch(downloadUrl);
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = friendlyName;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the blob URL after a short delay to allow the download to start
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch (err) {
+      console.error("Download failed:", err);
+      // Fallback: open in new tab (browser will handle save-as)
+      window.open(downloadUrl, "_blank", "noopener,noreferrer");
+    }
+  }, []);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -385,6 +442,9 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
               onClick={() => {
                 setLightboxIndex(index);
               }}
+              onDownload={handleDownload}
+              onDelete={(mediaItem) => setDeleteConfirm(mediaItem)}
+              canDelete={canDelete}
             />
           ))}
         </div>
@@ -458,18 +518,38 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
                     className="max-w-[90vw] max-h-[85vh] object-contain"
                   />
                 )}
-                {/* Download button */}
-                {canDelete && (
-                  <button
-                    type="button"
-                    className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-white/90 hover:bg-white/20 transition-colors backdrop-blur-sm"
-                    onClick={(e) => { e.stopPropagation(); }}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    <span className="text-sm">Download</span>
-                  </button>
+                {/* Action buttons in lightbox */}
+                {lightboxSrc && (
+                  <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2">
+                    {/* Download button — available to all Space members who can view the Memory */}
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-white/90 hover:bg-white/20 transition-colors backdrop-blur-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const currentMedia = media[lightboxIndex];
+                        if (currentMedia) handleDownload(currentMedia);
+                      }}
+                    >
+                      <DownloadIcon className="w-5 h-5" />
+                      <span className="text-sm">Download</span>
+                    </button>
+                    {/* Delete button — only for creator or Space owner */}
+                    {canDelete && (
+                      <button
+                        type="button"
+                        className="rounded-full p-2 bg-white/10 text-white/90 hover:bg-white/20 transition-colors backdrop-blur-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const currentMedia = media[lightboxIndex];
+                          if (currentMedia) setDeleteConfirm(currentMedia);
+                        }}
+                        aria-label="Delete"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
                 )}
               </>
             ) : null}
@@ -514,7 +594,13 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
  * SPEC B.2: Uses IntersectionObserver with 300px rootMargin and
  * loading="lazy" for optimized loading.
  */
-function MediaTile({ media, onClick }: { media: Media; onClick?: () => void }) {
+function MediaTile({
+  media,
+  onClick,
+  onDownload,
+  onDelete,
+  canDelete,
+}: { media: Media; onClick?: () => void; onDownload?: (media: Media) => void; onDelete?: (media: Media) => void; canDelete?: boolean }) {
   const [src, setSrc] = useState<string | null>(null);
   const [isInView, setIsInView] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -601,7 +687,7 @@ function MediaTile({ media, onClick }: { media: Media; onClick?: () => void }) {
   return (
     <div
       data-media-tile={media.id}
-      className="aspect-square w-full overflow-hidden rounded-lg relative"
+      className="aspect-square w-full overflow-hidden rounded-lg relative group"
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -648,6 +734,37 @@ function MediaTile({ media, onClick }: { media: Media; onClick?: () => void }) {
           onLoad={() => setImageLoaded(true)}
         />
       )}
+      {/* Action buttons — appear on hover */}
+      <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        {/* Download button — available to all Space members */}
+        {onDownload && (
+          <button
+            type="button"
+            className="rounded-full p-2 bg-white/90 text-ink hover:bg-white transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload(media);
+            }}
+            aria-label="Download"
+          >
+            <DownloadIcon className="w-5 h-5" />
+          </button>
+        )}
+        {/* Delete button — only for creator or Space owner */}
+        {canDelete && onDelete && (
+          <button
+            type="button"
+            className="rounded-full p-2 bg-white/90 text-ink hover:bg-white transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-error"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(media);
+            }}
+            aria-label="Delete"
+          >
+            <TrashIcon className="w-5 h-5" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
