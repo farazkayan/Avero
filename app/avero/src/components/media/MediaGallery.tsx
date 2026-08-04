@@ -524,7 +524,7 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
                     {/* Download button — available to all Space members who can view the Memory */}
                     <button
                       type="button"
-                      className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-white/90 hover:bg-white/20 transition-colors backdrop-blur-sm"
+                      className="flex items-center gap-2 rounded-lg glass-panel px-3 py-2 text-white hover:bg-white/5 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         const currentMedia = media[lightboxIndex];
@@ -538,7 +538,7 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
                     {canDelete && (
                       <button
                         type="button"
-                        className="rounded-full p-2 bg-white/10 text-white/90 hover:bg-white/20 transition-colors backdrop-blur-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-error"
+                        className="rounded-full p-2 glass-panel text-white hover:bg-white/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-error"
                         onClick={(e) => {
                           e.stopPropagation();
                           const currentMedia = media[lightboxIndex];
@@ -740,7 +740,7 @@ function MediaTile({
         {onDownload && (
           <button
             type="button"
-            className="rounded-full p-2 bg-white/90 text-ink hover:bg-white transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+            className="rounded-full p-2 glass-panel text-white hover:bg-white/5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
             onClick={(e) => {
               e.stopPropagation();
               onDownload(media);
@@ -754,7 +754,7 @@ function MediaTile({
         {canDelete && onDelete && (
           <button
             type="button"
-            className="rounded-full p-2 bg-white/90 text-ink hover:bg-white transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-error"
+            className="rounded-full p-2 glass-panel text-white hover:bg-white/5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-error"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(media);
