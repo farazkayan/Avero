@@ -59,13 +59,65 @@ import { getSignedUrl } from "npm:@aws-sdk/s3-request-presigner@3.723.0";
 
 /** Presigned PUT URL lifetime: 15 minutes. */
 const UPLOAD_URL_TTL_SECONDS = 15 * 60;
-/** Presigned GET URL lifetime: 1 hour. */
+/** Presigned GET URL lifetime: 1 hour (kept for reference; Worker token TTL matches this). */
 const DOWNLOAD_URL_TTL_SECONDS = 60 * 60;
 
 const ACTION_UPLOAD = "request-upload-url" as const;
 const ACTION_DOWNLOAD = "request-download-url" as const;
 const ACTION_DELETE = "request-delete-url" as const;
 const ACTION_AVATAR_UPLOAD = "request-avatar-upload-url" as const;
+
+/** Cloudflare Worker domain for media proxy (e.g., https://avero-media-proxy.workers.dev). */
+function getMediaWorkerDomain(): string {
+  const domain = Deno.env.get("MEDIA_WORKER_DOMAIN");
+  if (!domain) {
+    throw new Error("MEDIA_WORKER_DOMAIN secret is not configured.");
+  }
+  return domain.replace(/\/$/, ""); // strip trailing slash
+}
+
+/** HMAC signing key for Worker URL tokens (shared secret with Worker). */
+function getWorkerTokenSigningKey(): string {
+  const key = Deno.env.get("MEDIA_WORKER_TOKEN_KEY");
+  if (!key) {
+    throw new Error("MEDIA_WORKER_TOKEN_KEY secret is not configured.");
+  }
+  return key;
+}
+
+/**
+ * Generates a short-lived signed token for Worker URL access.
+ * Token format: base64url(expires_at).base64url(hmac_sha256(expires_at + "." + file_key))
+ * Expires in DOWNLOAD_URL_TTL_SECONDS (1 hour) to match the previous presigned URL TTL.
+ */
+async function generateWorkerToken(fileKey: string): Promise<string> {
+  const expiresAt = Math.floor(Date.now() / 1000) + DOWNLOAD_URL_TTL_SECONDS;
+  const expiresAtB64 = base64urlEncode(new TextEncoder().encode(String(expiresAt)));
+  
+  const signingKey = getWorkerTokenSigningKey();
+  const keyData = new TextEncoder().encode(signingKey);
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  
+  const message = new TextEncoder().encode(`${expiresAt}.${fileKey}`);
+  const signature = await crypto.subtle.sign("HMAC", cryptoKey, message);
+  const signatureB64 = base64urlEncode(new Uint8Array(signature));
+  
+  return `${expiresAtB64}.${signatureB64}`;
+}
+
+/** Base64URL encode (no padding, URL-safe). */
+function base64urlEncode(bytes: Uint8Array): string {
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+}
 
 /** Validates a lowercase-or-uppercase UUID v4 string. */
 const UUID_RE =
@@ -570,26 +622,18 @@ async function handleDownloadUrl(
     return jsonError(500, "Failed to verify space membership.", err);
   }
 
-  // Generate the presigned GET URL (1 hour expiry)
+  // Generate Worker URL with signed token (replaces presigned GET URL)
+  // Authorization already verified above; Worker verifies token expiry.
   try {
-    const client = createS3Client();
-    const bucket = getBucketName();
-    const command = new GetObjectCommand({
-      Bucket: bucket,
-      Key: file_key,
-    });
-    const downloadUrl = await getSignedUrl(client, command, {
-      expiresIn: DOWNLOAD_URL_TTL_SECONDS,
-    });
+    const workerDomain = getMediaWorkerDomain();
+    const token = await generateWorkerToken(file_key);
+    const downloadUrl = `${workerDomain}/${file_key}?token=${token}`;
     return jsonResponse(200, { download_url: downloadUrl });
   } catch (err) {
-    // A ConfigurationError is a server misconfiguration (e.g. malformed
-    // B2_ENDPOINT), not an upstream B2 failure — surface it as 500 with the
-    // specific message so it is diagnosable rather than masked as a 502.
     if (err instanceof ConfigurationError) {
       return jsonError(500, err.message, err);
     }
-    return jsonError(502, "Failed to generate download URL.", err);
+    return jsonError(500, "Failed to generate download URL.", err);
   }
 }
 
@@ -619,23 +663,18 @@ async function handleAvatarDownloadUrl(
     return jsonError(403, "You can only access your own avatar.");
   }
 
-  // Generate the presigned GET URL (1 hour expiry)
+  // Generate Worker URL with signed token (replaces presigned GET URL)
+  // Authorization already verified above; Worker verifies token expiry.
   try {
-    const client = createS3Client();
-    const bucket = getBucketName();
-    const command = new GetObjectCommand({
-      Bucket: bucket,
-      Key: fileKey,
-    });
-    const downloadUrl = await getSignedUrl(client, command, {
-      expiresIn: DOWNLOAD_URL_TTL_SECONDS,
-    });
+    const workerDomain = getMediaWorkerDomain();
+    const token = await generateWorkerToken(fileKey);
+    const downloadUrl = `${workerDomain}/${fileKey}?token=${token}`;
     return jsonResponse(200, { download_url: downloadUrl });
   } catch (err) {
     if (err instanceof ConfigurationError) {
       return jsonError(500, err.message, err);
     }
-    return jsonError(502, "Failed to generate avatar download URL.", err);
+    return jsonError(500, "Failed to generate avatar download URL.", err);
   }
 }
 

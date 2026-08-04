@@ -728,6 +728,31 @@ Let users select real locations when creating a Memory, and view a Space's Memor
 * No Google Maps dependency, no API costs at current usage levels.
 
 ---
+
+---
+
+## Phase 9 — Timeline Graph & Echoes
+
+### Goal
+Make revisiting the past feel like a pleasant discovery, never a pull to re-engage. Two features, both passive — visible only when the app is actually opened, never pushed.
+
+### Features
+
+**Timeline density graph**
+* [Clarify scope: extend the existing Stats page density chart (Spec A.4) to also live in the Timeline view itself, or build a distinct visualization — decide before spec'ing]
+* Shows Memory count over time at a glance, within the Timeline itself
+
+**Echoes ("On this day")**
+* A small, calm card at the top of the Timeline, shown only when at least one past Memory shares today's month/day in a previous year ("4 years ago today")
+* **Hard rule, non-negotiable per Blueprint: passive only.** No push notification, no email, no badge/red-dot indicator anywhere. If the user doesn't open the app on that day, they simply never see it — no missed-it feeling engineered.
+* Dismissible/collapsible, doesn't block or delay reaching the actual Timeline
+* If multiple past Memories match today's date across different years, show all of them calmly (a small stack/carousel), not just one
+
+### Definition of Done
+* Timeline graph gives an at-a-glance view of Memory density over time.
+* Echoes surface naturally on matching dates, entirely opt-in-by-nature (passive discovery), with zero push/notification mechanism attached.
+
+---
 ---
 
 
