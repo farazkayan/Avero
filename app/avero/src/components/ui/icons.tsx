@@ -139,10 +139,35 @@ export function GearIcon({ className = "" }: IconProps) {
   }
   
   /**
-   * A close (×) glyph used for the lightbox dismiss control. Matches the outline
-   * style of the other icons (Design System §9).
+   * A map pin/marker glyph used for the Space Map link in the Space header
+   * and in the LocationAutocomplete dropdown. Matches the outline style of
+   * the other icons (Design System §9).
    */
-  export function CloseIcon({ className = "" }: IconProps) {
+  export function MapPinIcon({ className = "" }: IconProps) {
+    return (
+      <svg
+        className={className}
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+        <circle cx="12" cy="10" r="3" />
+      </svg>
+    );
+  }
+
+  /**
+   * A close (×) glyph used for the lightbox dismiss control and LocationAutocomplete
+   * clear button. Matches the outline style of the other icons (Design System §9).
+   */
+  export function XIcon({ className = "" }: IconProps) {
     return (
       <svg
         className={className}
@@ -161,6 +186,11 @@ export function GearIcon({ className = "" }: IconProps) {
       </svg>
     );
   }
+
+  /**
+   * Alias for XIcon — used by components that expect a "CloseIcon" name.
+   */
+  export const CloseIcon = XIcon;
   
   /**
    * A left chevron used for the lightbox "previous" control. Matches the outline

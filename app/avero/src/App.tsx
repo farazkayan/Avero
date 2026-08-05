@@ -21,6 +21,7 @@ import {
 // Lazy-loaded routes (not needed on initial load)
 const CreateMemoryPage = lazy(() => import("./pages/CreateMemoryPage"));
 const SpaceStatsPage = lazy(() => import("./pages/SpaceStatsPage"));
+const SpaceMapPage = lazy(() => import("./pages/SpaceMapPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 
 // Lazy-loaded authenticated pages (wrapped in AuthenticatedLayout which lazy-loads AppShell)
@@ -115,6 +116,16 @@ export default function App() {
             <Suspense fallback={<RouteLoadingFallback />}>
               <AuthenticatedLayout>
                 <SpaceStatsPage />
+              </AuthenticatedLayout>
+            </Suspense>
+          }
+        />
+        <Route
+          path="spaces/:spaceId/map"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <AuthenticatedLayout>
+                <SpaceMapPage />
               </AuthenticatedLayout>
             </Suspense>
           }

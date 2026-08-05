@@ -4,6 +4,7 @@ import TextField from "../components/ui/TextField";
 import TagInput from "../components/ui/TagInput";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import GhostLink from "../components/ui/GhostLink";
+import { LocationAutocomplete } from "../components/ui/LocationAutocomplete";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { spaceDetailPath } from "../constants/routes";
@@ -117,6 +118,8 @@ export default function CreateMemoryPage() {
   const [memoryType, setMemoryType] = useState<MemoryType | "">("");
   const [memoryDate, setMemoryDate] = useState<string>(todayLocalDate());
   const [location, setLocation] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
 
   // --- Tags state (feature-specs §6) ---
   // A simple list of tag names the user has added. Synced to the
@@ -217,10 +220,6 @@ export default function CreateMemoryPage() {
 
   function handleMemoryDateBlur() {
     setMemoryDateError(validateMemoryDate(memoryDate));
-  }
-
-  function handleLocationBlur() {
-    setLocationError(validateLocation(location));
   }
 
   // --- Media handlers ---
@@ -386,6 +385,8 @@ export default function CreateMemoryPage() {
           memory_type: memoryType,
           memory_date: memoryDate,
           location: location.trim() || null,
+          latitude,
+          longitude,
         })
         .select()
         .single();
@@ -542,20 +543,22 @@ export default function CreateMemoryPage() {
             onBlur={handleMemoryDateBlur}
           />
 
-          <TextField
+          <LocationAutocomplete
             id="location"
             name="location"
-            type="text"
             label="Location"
             helperText="Optional"
-            autoComplete="off"
             placeholder="Where did it happen?"
             maxLength={MAX_LOCATION_LENGTH}
             value={location}
+            onChange={setLocation}
+            onSelect={({ text, latitude: lat, longitude: lon }) => {
+              setLocation(text);
+              setLatitude(lat);
+              setLongitude(lon);
+            }}
             disabled={isSubmitting || memoryCreated}
             error={locationError}
-            onChange={(event) => setLocation(event.target.value)}
-            onBlur={handleLocationBlur}
           />
 
           {/* Tags — simple multi-tag input (feature-specs §6). Type + Enter or

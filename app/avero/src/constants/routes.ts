@@ -81,6 +81,24 @@ export function spaceStatsPath(spaceId: string): string {
 }
 
 /**
+ * Space Map route template (Phase 8 — Maps & Location).
+ *
+ * A secondary view reached from within a Space, alongside Stats and Settings.
+ * Use {@link spaceMapPath} to build a concrete path for a given space id.
+ */
+export const SPACE_MAP_PATH = "/spaces/:spaceId/map";
+
+/**
+ * Builds a concrete Space Map path from a space id.
+ *
+ * The route constant above carries the `:spaceId` parameter placeholder; this
+ * helper substitutes it so callers never hand-concatenate the path.
+ */
+export function spaceMapPath(spaceId: string): string {
+  return `/spaces/${spaceId}/map`;
+}
+
+/**
  * Create-memory route template (feature-specs §2, roadmap Phase 3 Step 1).
  *
  * Use {@link memoryCreatePath} to build a concrete path for a given space id.

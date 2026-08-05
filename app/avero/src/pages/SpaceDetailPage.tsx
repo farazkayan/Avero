@@ -5,7 +5,7 @@ import Spinner from "../components/ui/Spinner";
 import EmptyState from "../components/ui/EmptyState";
 import SearchInput from "../components/ui/SearchInput";
 import SortControl, { type SortOption } from "../components/ui/SortControl";
-import { SparkleIcon, GearIcon, SearchIcon, ChartIcon } from "../components/ui/icons";
+import { SparkleIcon, GearIcon, SearchIcon, ChartIcon, MapPinIcon } from "../components/ui/icons";
 import MemoryTimelineCard from "../components/memories/MemoryTimelineCard";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -22,6 +22,7 @@ import {
   memoryCreatePath,
   spaceSettingsPath,
   spaceStatsPath,
+  spaceMapPath,
 } from "../constants/routes";
 import type { Memory } from "../types/memory";
 import type { Media } from "../types/media";
@@ -459,6 +460,13 @@ export default function SpaceDetailPage() {
               </div>
               {spaceId && (
                 <div className="flex shrink-0 items-center gap-1">
+                  <Link
+                    to={spaceMapPath(spaceId)}
+                    aria-label="Space map"
+                    className="inline-flex items-center justify-center rounded-md p-2 text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
+                  >
+                    <MapPinIcon />
+                  </Link>
                   <Link
                     to={spaceStatsPath(spaceId)}
                     aria-label="Space stats"

@@ -5,6 +5,7 @@ import TagInput from "../components/ui/TagInput";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import GhostLink from "../components/ui/GhostLink";
 import Spinner from "../components/ui/Spinner";
+import { LocationAutocomplete } from "../components/ui/LocationAutocomplete";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import {
@@ -120,6 +121,8 @@ export default function EditMemoryPage() {
   const [memoryType, setMemoryType] = useState<MemoryType | "">("");
   const [memoryDate, setMemoryDate] = useState<string>("");
   const [location, setLocation] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
 
   // Tags state (feature-specs §6). Pre-filled from the Memory's existing tags
   // once the Memory loads, then synced via the sync_memory_tags RPC on save.
@@ -209,6 +212,8 @@ export default function EditMemoryPage() {
         );
         setMemoryDate(loaded.memory_date ?? "");
         setLocation(loaded.location ?? "");
+        setLatitude(loaded.latitude ?? null);
+        setLongitude(loaded.longitude ?? null);
 
         // Pre-fill the tags from the Memory's existing tag links. A fetch
         // failure here is non-fatal — the edit form still works, just without
@@ -382,10 +387,6 @@ export default function EditMemoryPage() {
     setMemoryDateError(validateMemoryDate(memoryDate));
   }
 
-  function handleLocationBlur() {
-    setLocationError(validateLocation(location));
-  }
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -433,6 +434,8 @@ export default function EditMemoryPage() {
           memory_type: memoryType,
           memory_date: memoryDate,
           location: location.trim() || null,
+          latitude,
+          longitude,
         })
         .eq("id", memoryId);
 
@@ -618,20 +621,22 @@ export default function EditMemoryPage() {
               onBlur={handleMemoryDateBlur}
             />
 
-            <TextField
+            <LocationAutocomplete
               id="location"
               name="location"
-              type="text"
               label="Location"
               helperText="Optional"
-              autoComplete="off"
               placeholder="Where did it happen?"
               maxLength={MAX_LOCATION_LENGTH}
               value={location}
+              onChange={setLocation}
+              onSelect={({ text, latitude: lat, longitude: lon }) => {
+                setLocation(text);
+                setLatitude(lat);
+                setLongitude(lon);
+              }}
               disabled={isSubmitting}
               error={locationError}
-              onChange={(event) => setLocation(event.target.value)}
-              onBlur={handleLocationBlur}
             />
 
             {/* Tags — simple multi-tag input (feature-specs §6). Pre-filled

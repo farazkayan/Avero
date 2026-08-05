@@ -38,6 +38,8 @@ export type Memory = {
   description: string | null;
   memory_type: string | null;
   location: string | null;
+  latitude: number | null;
+  longitude: number | null;
   memory_date: string;
   deleted_at: string | null;
   created_at: string;
