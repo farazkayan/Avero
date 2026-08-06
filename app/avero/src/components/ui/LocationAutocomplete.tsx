@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { SearchIcon, MapPinIcon, XIcon } from "./icons";
-import type { LocationIQSearchResult, GeocodedLocation } from "../../types/location";
+import type { BarikoiAutocompleteResult, BarikoiAutocompleteResponse, LocationIQSearchResult, GeocodedLocation } from "../../types/location";
 
 interface LocationAutocompleteProps {
   value: string;
@@ -19,22 +19,21 @@ interface LocationAutocompleteProps {
 const DEBOUNCE_MS = 350;
 const MIN_QUERY_LENGTH = 2;
 const AUTOCOMPLETE_LIMIT = 5;
-// Bangladesh approximate bounding box: [minLon, minLat, maxLon, maxLat]
-// Covers roughly 88°E to 92.7°E, 20.6°N to 26.6°N
-const BANGLADESH_VIEWBOX = "88,20.6,92.7,26.6";
+const BARIKOI_API_BASE = "https://barikoi.xyz/v2/api/search/autocomplete/place";
 const LOCATIONIQ_API_URL = "https://api.locationiq.com/v1/search";
+const BANGLADESH_VIEWBOX = "88,20.6,92.7,26.6";
 
 /**
- * LocationAutocomplete - Search-as-you-type location input using LocationIQ Search/Geocoding API.
+ * LocationAutocomplete - Search-as-you-type location input using Barikoi V2 Autocomplete API.
  *
  * Features:
- * - Debounced requests (350ms) to respect 5,000/day free tier
+ * - Debounced requests (350ms) to respect rate limits
  * - Minimum 2 characters before firing request
  * - Keyboard navigation (arrows, Enter, Escape)
  * - Click outside to close
  * - Free-text fallback: if user types but never selects, onChange fires with text only,
  *   onSelect never called → lat/long remain null
- * - Soft bias toward Bangladesh via viewbox + bounded=0 (prioritizes local results without excluding international)
+ * - Hybrid fallback: Barikoi primary → LocationIQ fallback for zero results (international queries)
  * - Follows Design System input styling conventions
  */
 export function LocationAutocomplete({
@@ -50,7 +49,7 @@ export function LocationAutocomplete({
   id = "location-autocomplete",
   name = "location",
 }: LocationAutocompleteProps) {
-  const [suggestions, setSuggestions] = useState<LocationIQSearchResult[]>([]);
+  const [suggestions, setSuggestions] = useState<BarikoiAutocompleteResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -61,7 +60,9 @@ export function LocationAutocomplete({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const apiKey = import.meta.env.VITE_LOCATIONIQ_API_KEY;
+  const barikoiApiKey = import.meta.env.VITE_BARIKOI_API_KEY;
+  const locationIqApiKey = import.meta.env.VITE_LOCATIONIQ_API_KEY;
+  const useFallback = import.meta.env.VITE_USE_BARIKOI_FALLBACK === "true";
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -99,9 +100,61 @@ export function LocationAutocomplete({
     setSuggestions([]);
   }, []);
 
-  const fetchSuggestions = useCallback(
+  // LocationIQ fallback fetch (for international queries) - declared first so fetchBarikoiSuggestions can reference it
+  const fetchLocationIQFallback = useCallback(
     async (query: string) => {
-      if (!apiKey) {
+      if (!locationIqApiKey) return;
+
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
+
+      try {
+        const params = new URLSearchParams({
+          key: locationIqApiKey,
+          q: query,
+          limit: String(AUTOCOMPLETE_LIMIT),
+          format: "json",
+          viewbox: BANGLADESH_VIEWBOX,
+          bounded: "0",
+        });
+
+        const response = await fetch(`${LOCATIONIQ_API_URL}?${params}`, {
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error("Rate limit exceeded. Please wait a moment.");
+          }
+          throw new Error("Search failed. Please try again.");
+        }
+
+        const data = (await response.json()) as LocationIQSearchResult[];
+        setSuggestions(data as unknown as BarikoiAutocompleteResult[]); // Type cast for unified rendering
+        setIsOpen(data.length > 0);
+        setHighlightedIndex(-1);
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          return;
+        }
+        // Don't overwrite Barikoi error if fallback also fails
+        if (!apiError) {
+          setApiError(err instanceof Error ? err.message : "Search failed. Please try again.");
+        }
+        setSuggestions([]);
+        setIsOpen(false);
+      }
+    },
+    [locationIqApiKey, apiError]
+  );
+
+  // Barikoi V2 primary fetch
+  const fetchBarikoiSuggestions = useCallback(
+    async (query: string) => {
+      if (!barikoiApiKey) {
         setApiError("Location search is not configured. Please contact support.");
         return;
       }
@@ -116,16 +169,11 @@ export function LocationAutocomplete({
 
       try {
         const params = new URLSearchParams({
-          key: apiKey,
+          api_key: barikoiApiKey,
           q: query,
-          limit: String(AUTOCOMPLETE_LIMIT),
-          format: "json",
-          viewbox: BANGLADESH_VIEWBOX,
-          bounded: "0", // Soft bias: prioritize results in viewbox but don't exclude others
-          // tag: "place", // Optional: filter to places only
         });
 
-        const response = await fetch(`${LOCATIONIQ_API_URL}?${params}`, {
+        const response = await fetch(`${BARIKOI_API_BASE}?${params}`, {
           signal: abortControllerRef.current.signal,
         });
 
@@ -134,15 +182,22 @@ export function LocationAutocomplete({
             throw new Error("Invalid API key. Please check configuration.");
           }
           if (response.status === 429) {
-            throw new Error("Rate limit exceeded. Please wait a moment.");
+            throw new Error("Too many requests. Please wait a moment.");
           }
           throw new Error("Search failed. Please try again.");
         }
 
-        const data = (await response.json()) as LocationIQSearchResult[];
-        setSuggestions(data);
-        setIsOpen(data.length > 0);
+        const data = (await response.json()) as BarikoiAutocompleteResponse;
+        const places = data.places?.slice(0, AUTOCOMPLETE_LIMIT) ?? [];
+        
+        setSuggestions(places);
+        setIsOpen(places.length > 0);
         setHighlightedIndex(-1);
+
+        // HYBRID FALLBACK: If zero results and fallback enabled, try LocationIQ
+        if (places.length === 0 && useFallback && locationIqApiKey) {
+          await fetchLocationIQFallback(query);
+        }
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
           return; // Ignore aborted requests
@@ -154,7 +209,7 @@ export function LocationAutocomplete({
         setIsLoading(false);
       }
     },
-    [apiKey]
+    [barikoiApiKey, locationIqApiKey, useFallback, fetchLocationIQFallback]
   );
 
   const handleInputChange = useCallback(
@@ -162,12 +217,10 @@ export function LocationAutocomplete({
       const newValue = event.target.value;
       onChange(newValue);
 
-      // Clear any existing debounce timer
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
 
-      // Don't search if query is too short
       if (newValue.trim().length < MIN_QUERY_LENGTH) {
         setSuggestions([]);
         setIsOpen(false);
@@ -175,12 +228,11 @@ export function LocationAutocomplete({
         return;
       }
 
-      // Debounce the API call
       debounceTimerRef.current = setTimeout(() => {
-        fetchSuggestions(newValue.trim());
+        fetchBarikoiSuggestions(newValue.trim());
       }, DEBOUNCE_MS);
     },
-    [onChange, fetchSuggestions]
+    [onChange, fetchBarikoiSuggestions]
   );
 
   const handleInputFocus = useCallback(() => {
@@ -216,12 +268,12 @@ export function LocationAutocomplete({
           if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
             const selected = suggestions[highlightedIndex];
             const geocoded: GeocodedLocation = {
-              text: selected.display_name,
-              latitude: parseFloat(selected.lat),
-              longitude: parseFloat(selected.lon),
+              text: selected.address,
+              latitude: parseFloat(selected.latitude),
+              longitude: parseFloat(selected.longitude),
             };
             onSelect(geocoded);
-            onChange(selected.display_name);
+            onChange(selected.address);
             closeDropdown();
             inputRef.current?.blur();
           }
@@ -239,14 +291,14 @@ export function LocationAutocomplete({
   );
 
   const handleSuggestionClick = useCallback(
-    (result: LocationIQSearchResult) => {
+    (result: BarikoiAutocompleteResult) => {
       const geocoded: GeocodedLocation = {
-        text: result.display_name,
-        latitude: parseFloat(result.lat),
-        longitude: parseFloat(result.lon),
+        text: result.address,
+        latitude: parseFloat(result.latitude),
+        longitude: parseFloat(result.longitude),
       };
       onSelect(geocoded);
-      onChange(result.display_name);
+      onChange(result.address);
       closeDropdown();
       inputRef.current?.focus();
     },
@@ -350,7 +402,7 @@ export function LocationAutocomplete({
             <ul role="presentation">
               {suggestions.map((suggestion, index) => (
                 <li
-                  key={suggestion.place_id}
+                  key={suggestion.id}
                   id={`${id}-suggestion-${index}`}
                   role="option"
                   aria-selected={index === highlightedIndex}
@@ -370,38 +422,27 @@ export function LocationAutocomplete({
                       aria-hidden="true"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{suggestion.display_name}</p>
-                      {suggestion.class && suggestion.type && (
-                        <p className="truncate text-xs text-ink-muted capitalize">
-                          {suggestion.class} · {suggestion.type}
-                        </p>
-                      )}
+                      <p className="truncate font-medium">{suggestion.address}</p>
+                      <p className="truncate text-xs text-ink-muted capitalize">
+                        {suggestion.pType} · {suggestion.subType}
+                      </p>
                     </div>
                   </div>
                 </li>
               ))}
             </ul>
 
-            {/* LocationIQ Attribution - per LocationIQ ToS/docs (https://locationiq.com/attribution) */}
+            {/* Attribution - Barikoi (verify exact requirements during ToS review) */}
             <div className="border-t border-ink/5 px-3.5 py-2">
               <p className="text-xs text-ink-muted text-center">
                 Location data by{" "}
                 <a
-                  href="https://locationiq.com/?ref=maps"
+                  href="https://barikoi.com/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline hover:text-accent-500"
                 >
-                  © LocationIQ
-                </a>
-                {" | "}
-                <a
-                  href="https://www.openstreetmap.org/copyright"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-accent-500"
-                >
-                  © OpenStreetMap
+                  © Barikoi
                 </a>
               </p>
             </div>
