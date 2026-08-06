@@ -3,14 +3,15 @@
  */
 
 /**
- * LocationIQ Autocomplete API response item.
- * See: https://locationiq.com/docs#autocomplete
+ * LocationIQ Search/Geocoding API response item.
+ * See: https://locationiq.com/docs#search
+ * Used for autocomplete with viewbox bias (soft bias toward Bangladesh).
  */
-export type LocationIQAutocompleteResult = {
-  place_id: string;
+export type LocationIQSearchResult = {
+  place_id: number;
   licence: string;
   osm_type: string;
-  osm_id: string;
+  osm_id: number;
   boundingbox: string[];
   lat: string;
   lon: string;

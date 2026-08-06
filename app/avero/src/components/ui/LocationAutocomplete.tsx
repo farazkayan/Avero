@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { SearchIcon, MapPinIcon, XIcon } from "./icons";
-import type { LocationIQAutocompleteResult, GeocodedLocation } from "../../types/location";
+import type { LocationIQSearchResult, GeocodedLocation } from "../../types/location";
 
 interface LocationAutocompleteProps {
   value: string;
@@ -19,10 +19,13 @@ interface LocationAutocompleteProps {
 const DEBOUNCE_MS = 350;
 const MIN_QUERY_LENGTH = 2;
 const AUTOCOMPLETE_LIMIT = 5;
-const LOCATIONIQ_API_URL = "https://api.locationiq.com/v1/autocomplete";
+// Bangladesh approximate bounding box: [minLon, minLat, maxLon, maxLat]
+// Covers roughly 88°E to 92.7°E, 20.6°N to 26.6°N
+const BANGLADESH_VIEWBOX = "88,20.6,92.7,26.6";
+const LOCATIONIQ_API_URL = "https://api.locationiq.com/v1/search";
 
 /**
- * LocationAutocomplete - Search-as-you-type location input using LocationIQ Autocomplete API.
+ * LocationAutocomplete - Search-as-you-type location input using LocationIQ Search/Geocoding API.
  *
  * Features:
  * - Debounced requests (350ms) to respect 5,000/day free tier
@@ -31,6 +34,7 @@ const LOCATIONIQ_API_URL = "https://api.locationiq.com/v1/autocomplete";
  * - Click outside to close
  * - Free-text fallback: if user types but never selects, onChange fires with text only,
  *   onSelect never called → lat/long remain null
+ * - Soft bias toward Bangladesh via viewbox + bounded=0 (prioritizes local results without excluding international)
  * - Follows Design System input styling conventions
  */
 export function LocationAutocomplete({
@@ -46,7 +50,7 @@ export function LocationAutocomplete({
   id = "location-autocomplete",
   name = "location",
 }: LocationAutocompleteProps) {
-  const [suggestions, setSuggestions] = useState<LocationIQAutocompleteResult[]>([]);
+  const [suggestions, setSuggestions] = useState<LocationIQSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -115,6 +119,9 @@ export function LocationAutocomplete({
           key: apiKey,
           q: query,
           limit: String(AUTOCOMPLETE_LIMIT),
+          format: "json",
+          viewbox: BANGLADESH_VIEWBOX,
+          bounded: "0", // Soft bias: prioritize results in viewbox but don't exclude others
           // tag: "place", // Optional: filter to places only
         });
 
@@ -132,7 +139,7 @@ export function LocationAutocomplete({
           throw new Error("Search failed. Please try again.");
         }
 
-        const data = (await response.json()) as LocationIQAutocompleteResult[];
+        const data = (await response.json()) as LocationIQSearchResult[];
         setSuggestions(data);
         setIsOpen(data.length > 0);
         setHighlightedIndex(-1);
@@ -232,7 +239,7 @@ export function LocationAutocomplete({
   );
 
   const handleSuggestionClick = useCallback(
-    (result: LocationIQAutocompleteResult) => {
+    (result: LocationIQSearchResult) => {
       const geocoded: GeocodedLocation = {
         text: result.display_name,
         latitude: parseFloat(result.lat),
