@@ -69,19 +69,24 @@ export default function SpaceMapPage() {
   }, []);
 
   // Tile layer configuration based on theme
+  // LocationIQ ToS/docs require "© LocationIQ" + "© OpenStreetMap" in map attribution
+  // See: https://docs.locationiq.com/docs/examples-leaflet
   const tileConfig = useMemo(() => {
+    const locationIQAttribution =
+      '&copy; <a href="https://locationiq.com/?ref=maps" target="_blank" rel="noopener noreferrer">LocationIQ</a>';
+    const osmAttribution =
+      '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors';
+
     if (theme === "dark") {
       return {
         url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        attribution: `${locationIQAttribution} ${osmAttribution} &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>`,
         subdomains: "abcd",
       };
     }
     return {
       url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      attribution: `${locationIQAttribution} ${osmAttribution}`,
       subdomains: "abc",
     };
   }, [theme]);
@@ -297,17 +302,26 @@ export default function SpaceMapPage() {
                   </MapContainer>
                 </div>
 
-                {/* LocationIQ Attribution - placeholder, must verify against actual ToS */}
+                {/* LocationIQ Attribution - per LocationIQ ToS/docs (https://locationiq.com/attribution, https://docs.locationiq.com/docs/examples-leaflet) */}
                 <div className="px-4 py-2 text-center">
                   <p className="text-xs text-ink-muted">
-                    Location data provided by{" "}
+                    Location data by{" "}
                     <a
-                      href="https://locationiq.com/"
+                      href="https://locationiq.com/?ref=maps"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline hover:text-accent-500"
                     >
-                      LocationIQ
+                      © LocationIQ
+                    </a>
+                    {" | "}
+                    <a
+                      href="https://www.openstreetmap.org/copyright"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-accent-500"
+                    >
+                      © OpenStreetMap
                     </a>
                   </p>
                 </div>
