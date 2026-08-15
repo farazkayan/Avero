@@ -7,6 +7,7 @@ import SearchInput from "../components/ui/SearchInput";
 import SortControl, { type SortOption } from "../components/ui/SortControl";
 import { SparkleIcon, GearIcon, SearchIcon, ChartIcon, MapPinIcon } from "../components/ui/icons";
 import MemoryTimelineCard from "../components/memories/MemoryTimelineCard";
+import EchoesCarousel from "../components/memories/EchoesCarousel";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { filterMemories } from "../lib/search";
@@ -17,6 +18,7 @@ import {
   type MemoryReactionSummary,
 } from "../lib/reactions";
 import { fetchTimelineThumbnailsBatch } from "../lib/media";
+import { fetchEchoesMemories, getTodayLocalDate, computeEchoesTargetDates } from "../lib/echoes";
 import {
   AUTHENTICATED_HOME_PATH,
   memoryCreatePath,
@@ -122,6 +124,13 @@ export default function SpaceDetailPage() {
   const [thumbnailsByMemoryId, setThumbnailsByMemoryId] = useState<
     Record<string, Media[]>
   >({});
+
+  // Echoes ("On This Day") — memories matching today's date across previous intervals.
+  // Fetched once on mount, runs in parallel with the main timeline fetch.
+  // Zero echoes = no render at all (no empty state, no placeholder), per Spec §1 and §4.
+  const [echoesMemories, setEchoesMemories] = useState<Memory[]>([]);
+  const [echoesThumbnails, setEchoesThumbnails] = useState<Record<string, Media[]>>({});
+  const [echoesToday, setEchoesToday] = useState<string>(""); // today's date for interval labels
 
   useEffect(() => {
     if (!spaceId) {
@@ -323,6 +332,54 @@ export default function SpaceDetailPage() {
     };
   }, [memories]);
 
+  // --- Fetch Echoes ("On This Day") memories for this Space -----------------
+  // Runs once on mount (when spaceId changes), in parallel with the main timeline.
+  // Computes target dates client-side, then single query for all matching memories.
+  // Batch-fetches thumbnails for echoes memories. Zero echoes = no render.
+  useEffect(() => {
+    if (!spaceId) return;
+    const currentSpaceId = spaceId; // narrow type for async closure
+    let cancelled = false;
+
+    async function fetchEchoes() {
+      // Compute today's local date and the target dates for Echoes intervals
+      const today = getTodayLocalDate();
+      const targetDates = computeEchoesTargetDates(today);
+
+      if (!cancelled) {
+        setEchoesToday(today);
+      }
+
+      try {
+        const echoes = await fetchEchoesMemories(currentSpaceId, targetDates);
+        if (cancelled) return;
+
+        setEchoesMemories(echoes);
+
+        // Batch-fetch thumbnails for echoes memories (reuse existing helper)
+        if (echoes.length > 0) {
+          const echoesMemoryIds = echoes.map((m) => m.id);
+          const thumbs = await fetchTimelineThumbnailsBatch(echoesMemoryIds);
+          if (!cancelled) {
+            setEchoesThumbnails(thumbs);
+          }
+        }
+      } catch {
+        // Calm failure: leave echoes empty, timeline still renders normally.
+        if (!cancelled) {
+          setEchoesMemories([]);
+          setEchoesThumbnails({});
+        }
+      }
+    }
+
+    void fetchEchoes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [spaceId]);
+
   // --- Toggle a reaction on a Memory (optimistic + revert) -----------------
   // Mirrors ReactionBar.handleToggle but operates on the batch map. The
   // "switch" case (user has a different type and toggles heart, or picks a new
@@ -495,6 +552,16 @@ export default function SpaceDetailPage() {
               Create Memory
             </Link>
           </section>
+
+          {/* Echoes ("On This Day") carousel — renders at top of timeline, above regular memories */}
+          {echoesMemories.length > 0 && (
+            <EchoesCarousel
+              memories={echoesMemories}
+              thumbnails={echoesThumbnails}
+              spaceId={space.id}
+              today={echoesToday}
+            />
+          )}
 
           {/* Memories timeline */}
           <section className="mt-10">
