@@ -28,7 +28,7 @@ export function getTodayLocalDate(): string {
  * e.g., clampDayToMonth(2026, 1, 31) → 28 (Feb 2026 has 28 days)
  * e.g., clampDayToMonth(2024, 1, 31) → 29 (Feb 2024 is a leap year)
  */
-function clampDayToMonth(year: number, month: number, day: number): number {
+export function clampDayToMonth(year: number, month: number, day: number): number {
   // month is 0-indexed (0 = Jan, 1 = Feb, ...)
   const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
   return Math.min(day, lastDayOfMonth);
@@ -38,7 +38,7 @@ function clampDayToMonth(year: number, month: number, day: number): number {
  * Subtracts N months from a date, clamping the day if the target month is shorter.
  * e.g., 2026-03-31 minus 1 month → 2026-02-28 (not 2026-02-31 which doesn't exist)
  */
-function subtractMonths(date: Date, months: number): Date {
+export function subtractMonths(date: Date, months: number): Date {
   const year = date.getFullYear();
   const month = date.getMonth() - months;
   const day = date.getDate();
@@ -55,7 +55,7 @@ function subtractMonths(date: Date, months: number): Date {
  * e.g., 2024-02-29 minus 1 year → 2023-02-28
  * e.g., 2024-02-29 minus 4 years → 2020-02-29 (leap year preserved)
  */
-function subtractYears(date: Date, years: number): Date {
+export function subtractYears(date: Date, years: number): Date {
   const year = date.getFullYear() - years;
   const month = date.getMonth();
   const day = date.getDate();
@@ -67,7 +67,7 @@ function subtractYears(date: Date, years: number): Date {
 /**
  * Formats a Date as "YYYY-MM-DD" in local timezone.
  */
-function formatLocalDate(date: Date): string {
+export function formatLocalDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -161,7 +161,8 @@ export function getIntervalLabel(memoryDate: string, today: string): string {
   }
 
   // Fallback (shouldn't happen if query is correct, but safe)
-  if (yearDiff >= 1) return `${yearDiff} years ago`;
+  if (yearDiff === 1) return "1 year ago";
+  if (yearDiff >= 2) return `${yearDiff} years ago`;
   return "Earlier";
 }
 
