@@ -1197,3 +1197,103 @@ export async function fetchSpaceListThumbnailsBatch(
 
   return map;
 }
+
+// ============================================================================
+// Mosaic thumbnails batch (MultiPhotoMosaic — Space Dashboard & Timeline)
+// ============================================================================
+//
+// The MultiPhotoMosaic component needs up to 3 representative photos per Space
+// (Dashboard) or per Memory (Timeline). To avoid N+1 fetches, we batch across
+// all Spaces/Memories in a single RPC round trip.
+//
+// Two separate RPCs (matching the existing get_timeline_thumbnails /
+// get_space_list_thumbnails pattern):
+//   - get_space_mosaic_thumbnails: most recent photos across ALL memories in a Space
+//   - get_memory_mosaic_thumbnails: most recent photos within a specific Memory
+//
+// Both use SECURITY INVOKER + is_space_member pattern (same as existing
+// thumbnail RPCs). They return durable B2 object keys (thumbnail_grid_path
+// preferred), NOT presigned URLs. The per-thumbnail presigned GET URL is
+// resolved client-side by the component via getMediaDownloadUrl.
+
+/**
+ * Fetches up to 3 most recent photos across all Memories in each Space.
+ * Used by Spaces Dashboard cards.
+ *
+ * @param spaceIds Array of Space IDs to fetch mosaics for
+ * @returns Map of spaceId -> Media[] (up to 3 per Space, most recent first)
+ */
+export async function fetchSpaceMosaicThumbnailsBatch(
+  spaceIds: string[],
+): Promise<Record<string, Media[]>> {
+  const map: Record<string, Media[]> = {};
+  for (const id of spaceIds) {
+    map[id] = [];
+  }
+
+  if (spaceIds.length === 0) {
+    return map;
+  }
+
+  const { data, error } = await supabase.rpc("get_space_mosaic_thumbnails", {
+    p_space_ids: spaceIds,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  for (const row of (data ?? []) as Media[]) {
+    if (asMediaType(row.type) === null) {
+      continue;
+    }
+    // The RPC returns rows with space_id for grouping
+    const spaceId = (row as Media & { space_id: string }).space_id;
+    const bucket = map[spaceId];
+    if (bucket && bucket.length < 3) {
+      bucket.push(row);
+    }
+  }
+
+  return map;
+}
+
+/**
+ * Fetches up to 3 most recent photos within each specific Memory.
+ * Used by Space Detail Timeline Memory cards.
+ *
+ * @param memoryIds Array of Memory IDs to fetch mosaics for
+ * @returns Map of memoryId -> Media[] (up to 3 per Memory, most recent first)
+ */
+export async function fetchMemoryMosaicThumbnailsBatch(
+  memoryIds: string[],
+): Promise<Record<string, Media[]>> {
+  const map: Record<string, Media[]> = {};
+  for (const id of memoryIds) {
+    map[id] = [];
+  }
+
+  if (memoryIds.length === 0) {
+    return map;
+  }
+
+  const { data, error } = await supabase.rpc("get_memory_mosaic_thumbnails", {
+    p_memory_ids: memoryIds,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  for (const row of (data ?? []) as Media[]) {
+    if (asMediaType(row.type) === null) {
+      continue;
+    }
+    const bucket = map[row.memory_id];
+    if (bucket && bucket.length < 3) {
+      bucket.push(row);
+    }
+  }
+
+  return map;
+}

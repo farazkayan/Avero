@@ -1,0 +1,237 @@
+<!DOCTYPE html><html class="" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Avero - Sign In</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "canvas-warm": "#fbf9f5",
+                        "surface-container-low": "#faf2ec",
+                        "on-tertiary-fixed": "#041d33",
+                        "secondary-container": "#e1dfdc",
+                        "primary-fixed-dim": "#e5c190",
+                        "secondary": "#5e5e5c",
+                        "on-primary-fixed": "#291800",
+                        "surface-container-high": "#efe7e1",
+                        "card-warm": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#1e1b18",
+                        "accent-warm": "#9c7d52",
+                        "primary": "#725730",
+                        "primary-container": "#8d6f46",
+                        "tertiary": "#495e77",
+                        "background": "#fff8f4",
+                        "on-secondary-fixed-variant": "#474744",
+                        "surface-container": "#f4ece6",
+                        "on-primary-container": "#fffbff",
+                        "accent-dark": "#806540",
+                        "on-secondary-fixed": "#1b1c1a",
+                        "surface-tint": "#755a32",
+                        "surface-container-highest": "#e9e1db",
+                        "on-error": "#ffffff",
+                        "outline": "#80756a",
+                        "on-surface-variant": "#4e453b",
+                        "tertiary-fixed": "#d1e4ff",
+                        "inverse-primary": "#e5c190",
+                        "secondary-fixed-dim": "#c8c6c3",
+                        "on-background": "#1e1b18",
+                        "card-dark": "#131314",
+                        "surface-variant": "#e9e1db",
+                        "on-tertiary-container": "#fdfcff",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#f7efe9",
+                        "on-primary-fixed-variant": "#5b421d",
+                        "outline-variant": "#d1c4b7",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#ffddb2",
+                        "tertiary-container": "#617691",
+                        "tertiary-fixed-dim": "#b3c8e6",
+                        "surface-bright": "#fff8f4",
+                        "inverse-surface": "#33302c",
+                        "on-error-container": "#93000a",
+                        "surface": "#fff8f4",
+                        "on-tertiary": "#ffffff",
+                        "canvas-dark": "#0b0b0c",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#636360",
+                        "on-tertiary-fixed-variant": "#334861",
+                        "secondary-fixed": "#e4e2de",
+                        "surface-dim": "#e0d9d3",
+                        "error-container": "#ffdad6"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "unit": "4px",
+                        "margin-desktop": "48px",
+                        "container-max": "1280px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px"
+                    },
+                    fontFamily: {
+                        "headline-lg-mobile": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "mono-data": ["JetBrains Mono"],
+                        "mono-label": ["JetBrains Mono"],
+                        "headline-lg": ["Inter"]
+                    },
+                    fontSize: {
+                        "headline-lg-mobile": ["24px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "600" }],
+                        "body-sm": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+                        "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+                        "headline-md": ["20px", { lineHeight: "1.4", letterSpacing: "-0.01em", fontWeight: "500" }],
+                        "mono-data": ["14px", { lineHeight: "1.4", fontWeight: "400" }],
+                        "mono-label": ["12px", { lineHeight: "1.0", letterSpacing: "0.05em", fontWeight: "500" }],
+                        "headline-lg": ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "600" }]
+                    }
+                }
+            }
+        };
+    </script>
+<style>
+        .noise {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        .light .noise { opacity: 0.025; }
+        
+        .transition-theme {
+            transition: background-color 0.5s cubic-bezier(0.23, 1, 0.32, 1), 
+                        color 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+                        border-color 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        /* Custom brass colors for auth */
+        .bg-brass-solid { background-color: #9C7D52; }
+        .dark .bg-brass-solid { background-color: #886548; }
+        
+        .text-brass-link { color: #9C7D52; }
+        .dark .text-brass-link { color: #b89668; }
+        
+        .focus-brass:focus {
+            border-color: #9C7D52;
+            box-shadow: 0 0 0 1px #9C7D52;
+        }
+        .dark .focus-brass:focus {
+            border-color: #886548;
+            box-shadow: 0 0 0 1px #886548;
+        }
+    </style>
+</head>
+<body class="bg-canvas-warm dark:bg-canvas-dark text-on-surface dark:text-[#ececec] transition-theme min-h-screen flex flex-col md:flex-row font-body-md overflow-x-hidden relative">
+<!-- Theme Toggle (Global) -->
+<button class="absolute top-margin-mobile md:top-margin-desktop right-margin-mobile md:right-margin-desktop z-50 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors group" id="themeToggle">
+<span class="material-symbols-outlined hidden dark:block text-[#8d8d8a] group-hover:text-white transition-colors" id="icon-light">light_mode</span>
+<span class="material-symbols-outlined block dark:hidden text-secondary group-hover:text-black transition-colors" id="icon-dark">dark_mode</span>
+</button>
+<!-- Left Panel (Emotional Space) -->
+<div class="relative w-full md:w-[55%] min-h-[409px] md:min-h-screen flex flex-col p-margin-mobile md:p-margin-desktop bg-canvas-warm dark:bg-canvas-dark transition-theme border-b md:border-b-0 md:border-r border-black/5 dark:border-white/10">
+<div class="noise"></div>
+<!-- Wordmark -->
+<div class="z-20 font-mono-label text-mono-label tracking-widest uppercase text-on-surface dark:text-[#ececec] mb-auto">
+            AVERO
+        </div>
+<!-- Photo Stack -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 overflow-hidden md:overflow-visible pt-16 md:pt-0">
+<div class="relative w-[240px] h-[290px] md:w-[300px] md:h-[360px]">
+<!-- Bottom Polaroid -->
+<div class="absolute top-4 -right-8 w-full h-full bg-[#f4ece6] dark:bg-[#e9e1db] p-3 pb-12 md:p-4 md:pb-16 rounded-sm shadow-xl shadow-black/25 rotate-[6deg] blur-[2px] opacity-70">
+<div class="w-full h-full bg-gradient-to-br from-[#d2b89f] to-[#8d6f46]"></div>
+</div>
+<!-- Middle Polaroid -->
+<div class="absolute -top-2 -left-6 w-full h-full bg-[#faf2ec] dark:bg-[#efe7e1] p-3 pb-12 md:p-4 md:pb-16 rounded-sm shadow-xl shadow-black/25 -rotate-[4deg] blur-[1px] opacity-85">
+<div class="w-full h-full bg-gradient-to-tr from-[#8d6f46] to-[#e5c190]"></div>
+</div>
+<!-- Top Polaroid -->
+<div class="absolute top-0 left-0 w-full h-full bg-[#ffffff] dark:bg-[#fbf9f5] p-3 pb-12 md:p-4 md:pb-16 rounded-sm shadow-xl shadow-black/25 rotate-[2deg] transition-transform duration-700 hover:rotate-[1deg] hover:scale-[1.01]">
+<img alt="Candid polaroid" class="w-full h-full object-cover bg-surface-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNTSfBNu6_zfZbOGRefVMCMjOE-Z9Xx4kxCnxrDbWAEqEyEVrBTOd1FdL7ZFWJjnDkQmcC0ncX72qlGvm0wEVJVoNXAuiushjW5rl39g-_I0Qv2kXo3E2uynmZR1obEk3deLWwFYIip7EOi07OTBnUKTWoq1S9VDKwCli1iF0MYqGa1hnK98mjxJLGE1xZ6JmcXUdCZdEjs-wEfDg-2uxSVrd4dslmvxpSh0hguVtXE1OwsW9TjrcY">
+</div>
+</div>
+</div>
+<!-- Emotional Text -->
+<div class="z-20 mt-auto md:mb-[15%] pt-12 md:pt-0">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg mb-4 text-on-surface dark:text-white">
+                A private home for the moments that matter.
+            </h1>
+<p class="font-body-md text-body-md text-[#736b63] dark:text-[#8d8d8a] max-w-md">
+                Preserve shared stories with the people who matter most.
+            </p>
+</div>
+</div>
+<!-- Right Panel (Auth Form) -->
+<div class="w-full md:w-[45%] min-h-screen flex items-center justify-center p-margin-mobile md:p-margin-desktop bg-card-warm dark:bg-card-dark transition-theme z-20">
+<div class="w-full max-w-[400px]">
+<div class="mb-8">
+<h2 class="font-headline-md text-headline-md text-on-surface dark:text-white mb-2">Welcome back.</h2>
+<p class="font-body-md text-body-md text-secondary dark:text-[#8d8d8a]">Sign in to return to your Spaces.</p>
+</div>
+<!-- Google Sign In -->
+<button class="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-DEFAULT border border-outline-variant dark:border-white/10 hover:-translate-y-[1px] hover:shadow-sm transition-all duration-300 mb-6 bg-transparent">
+<svg height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+<span class="font-body-sm text-body-sm text-on-surface dark:text-[#ececec]">Continue with Google</span>
+</button>
+<!-- Divider -->
+<div class="flex items-center gap-4 mb-6">
+<div class="flex-1 h-px bg-outline-variant/50 dark:bg-white/10"></div>
+<span class="font-body-sm text-body-sm text-secondary dark:text-[#8d8d8a]">Or continue with email</span>
+<div class="flex-1 h-px bg-outline-variant/50 dark:bg-white/10"></div>
+</div>
+<!-- Form -->
+<form class="space-y-4">
+<div>
+<label class="sr-only" for="email">Email</label>
+<input class="w-full bg-card-warm dark:bg-canvas-dark border border-outline-variant dark:border-white/10 rounded-DEFAULT py-3 px-4 text-on-surface dark:text-white placeholder-[#8d8d8a] focus:outline-none focus-brass transition-all font-body-sm text-body-sm" id="email" placeholder="Email address" type="email">
+</div>
+<div class="relative">
+<label class="sr-only" for="password">Password</label>
+<input class="w-full bg-card-warm dark:bg-canvas-dark border border-outline-variant dark:border-white/10 rounded-DEFAULT py-3 px-4 pr-12 text-on-surface dark:text-white placeholder-[#8d8d8a] focus:outline-none focus-brass transition-all font-body-sm text-body-sm" id="password" placeholder="Password" type="password">
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-[#8d8d8a] hover:text-on-surface dark:hover:text-white transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</div>
+<div class="flex justify-end pt-1">
+<a class="font-body-sm text-body-sm text-brass-link hover:opacity-80 transition-opacity" href="#">Forgot password?</a>
+</div>
+<button class="w-full bg-brass-solid text-white font-body-md text-body-md py-3 rounded-lg hover:-translate-y-[2px] hover:shadow-[0_4px_20px_rgba(136,101,72,0.3)] transition-all duration-300 mt-6" type="submit">
+                    Sign in
+                </button>
+</form>
+<div class="mt-8 text-center">
+<span class="font-body-sm text-body-sm text-secondary dark:text-[#8d8d8a]">Don't have an account? </span>
+<a class="font-body-sm text-body-sm text-brass-link hover:opacity-80 transition-opacity" href="#">Create one.</a>
+</div>
+</div>
+</div>
+<script>
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+        });
+    </script>
+
+
+</body></html>

@@ -155,8 +155,8 @@ export default function SpaceStatsPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <Spinner />
+          <div className="flex items-center justify-center py-24 text-accent-400">
+            <Spinner size={28} />
           </div>
         ) : notFound ? (
           <div className="rounded-xl border border-ink/5 bg-canvas-soft p-8 text-center">
@@ -190,7 +190,7 @@ export default function SpaceStatsPage() {
                   <Link
                     to={spaceSettingsPath(spaceId)}
                     aria-label="Space settings"
-                    className="inline-flex shrink-0 items-center justify-center rounded-md p-2 text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
+                    className="inline-flex shrink-0 items-center justify-center rounded-full size-10 bg-canvas-soft hover:bg-canvas-raised text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
                   >
                     <SettingsGlyph />
                   </Link>
@@ -202,7 +202,7 @@ export default function SpaceStatsPage() {
               <>
                 {/* 2. Key numbers grid */}
                 <section className="mt-10">
-                  <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-ink-muted">
+                  <h2 className="mb-4 font-mono-label text-mono-label text-ink-muted tracking-wider uppercase">
                     The story so far
                   </h2>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -224,7 +224,7 @@ export default function SpaceStatsPage() {
                 {/* 3. Timeline density visualization */}
                 {histogram.length > 0 && (
                   <section className="mt-12">
-                    <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-ink-muted">
+                    <h2 className="mb-4 font-mono-label text-mono-label text-ink-muted tracking-wider uppercase">
                       Memories over time
                     </h2>
                     <TimelineDensity buckets={histogram} />
@@ -234,10 +234,10 @@ export default function SpaceStatsPage() {
                 {/* 4. Achievements grid */}
                 <section className="mt-12">
                   <div className="mb-4 flex items-baseline justify-between">
-                    <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+                    <h2 className="font-mono-label text-mono-label text-ink-muted tracking-wider uppercase">
                       Achievements
                     </h2>
-                    <span className="font-mono text-xs text-ink-muted">
+                    <span className="font-mono-data text-mono-data text-ink-muted">
                       {unlockedCount} / {achievements.length}
                     </span>
                   </div>
@@ -307,11 +307,11 @@ export default function SpaceStatsPage() {
 /** A single large stat tile — number in mono, label in sans (design-system §3). */
 function StatTile({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-ink/5 bg-canvas-soft p-4">
-      <div className="font-mono text-2xl font-semibold text-ink tabular-nums">
+    <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 hover:-translate-y-0.5 transition-transform duration-300">
+      <div className="font-mono-data text-mono-data text-accent-500 dark:text-accent-400 text-3xl font-semibold tabular-nums">
         {value.toLocaleString()}
       </div>
-      <div className="mt-1 text-xs text-ink-muted">{label}</div>
+      <div className="mt-1 font-body-sm text-body-sm text-ink-muted">{label}</div>
     </div>
   );
 }
@@ -338,10 +338,10 @@ function TimelineDensity({ buckets }: { buckets: MonthBucket[] }) {
   );
 
   return (
-    <div className="rounded-xl border border-ink/5 bg-canvas-soft p-4">
+    <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 md:p-8">
       <div className="overflow-x-auto">
         <div
-          className="flex h-32 min-w-full items-end gap-1"
+          className="flex h-32 md:h-48 min-w-full items-end gap-1"
           role="img"
           aria-label="Memory count by month"
         >
@@ -371,7 +371,7 @@ function TimelineDensity({ buckets }: { buckets: MonthBucket[] }) {
           })}
         </div>
       </div>
-      <div className="mt-2 flex justify-between font-mono text-[10px] text-ink-muted">
+      <div className="mt-4 flex justify-between font-mono-data text-mono-data text-ink-muted">
         <span>{formatMonth(buckets[0].month)}</span>
         <span>{formatMonth(buckets[buckets.length - 1].month)}</span>
       </div>
@@ -417,10 +417,11 @@ function AchievementsGrid({
           if (!list || list.length === 0) return null;
           return (
             <div key={category}>
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-muted">
+              <h3 className="mb-3 font-mono-label text-mono-label text-ink-muted tracking-wider">
+                <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-accent-500 align-middle opacity-60 dark:bg-accent-400" />
                 {categoryLabels[category]}
               </h3>
-              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <ul className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 {list.map((a) => (
                   <li key={a.id}>
                     <AchievementCard achievement={a} />
@@ -441,29 +442,30 @@ function AchievementCard({ achievement }: { achievement: AchievementWithState })
   return (
     <div
       className={
-        "hover-lift flex h-full flex-col rounded-xl border p-4 transition-colors duration-200 " +
+        "hover-lift flex h-full flex-col rounded-xl border p-5 transition-colors duration-300 " +
         (unlocked
           ? "border-accent-500/30 bg-canvas-soft"
-          : "border-ink/5 bg-canvas-soft opacity-60")
+          : "border-ink/5 bg-canvas-soft opacity-80")
       }
     >
       <div
         className={
-          "mb-3 flex h-10 w-10 items-center justify-center rounded-full " +
+          "relative mb-3 flex h-12 w-12 items-center justify-center rounded-full " +
           (unlocked
             ? "bg-accent-soft text-accent-400"
             : "bg-ink/5 text-ink-muted grayscale")
         }
         aria-hidden="true"
       >
-        <AchievementIcon name={achievement.icon} className="h-6 w-6" />
+        {unlocked && (
+          <div className="absolute inset-0 rounded-full bg-accent-500/20 blur-md dark:bg-accent-400/10" />
+        )}
+        <AchievementIcon name={achievement.icon} className="relative z-10 h-6 w-6" />
       </div>
-      <div className="text-sm font-semibold text-ink">{achievement.title}</div>
-      <div className="mt-1 text-xs text-ink-muted">
+      <div className="font-headline-md text-headline-md text-ink">{achievement.title}</div>
+      <div className="mt-1 font-mono-label text-mono-label text-ink-muted">
         {unlocked ? (
-          <span className="font-mono">
-            {formatUnlockDate(achievement.unlockedAt!)}
-          </span>
+          <span>{formatUnlockDate(achievement.unlockedAt!)}</span>
         ) : (
           <span className="italic">Not yet</span>
         )}

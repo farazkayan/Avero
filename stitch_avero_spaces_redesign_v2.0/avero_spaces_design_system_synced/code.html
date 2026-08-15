@@ -1,0 +1,310 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Avero - Spaces</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary": "#495e77",
+                "tertiary-container": "#617691",
+                "on-background": "#1e1b18",
+                "on-error-container": "#93000a",
+                "on-tertiary": "#ffffff",
+                "on-surface-variant": "#4e453b",
+                "on-tertiary-fixed": "#041d33",
+                "on-primary-container": "#fffbff",
+                "inverse-primary": "#e5c190",
+                "canvas-warm": "#fbf9f5",
+                "inverse-on-surface": "#f7efe9",
+                "secondary-fixed-dim": "#c8c6c3",
+                "canvas-dark": "#0b0b0c",
+                "inverse-surface": "#33302c",
+                "primary-container": "#8d6f46",
+                "accent-warm": "#9c7d52",
+                "surface": "#fff8f4",
+                "secondary-container": "#e1dfdc",
+                "on-secondary-container": "#636360",
+                "secondary": "#5e5e5c",
+                "surface-container-low": "#faf2ec",
+                "outline-variant": "#d1c4b7",
+                "surface-container-high": "#efe7e1",
+                "on-secondary": "#ffffff",
+                "card-dark": "#131314",
+                "tertiary-fixed": "#d1e4ff",
+                "primary": "#725730",
+                "error": "#ba1a1a",
+                "surface-dim": "#e0d9d3",
+                "on-tertiary-container": "#fdfcff",
+                "surface-container-lowest": "#ffffff",
+                "outline": "#80756a",
+                "on-error": "#ffffff",
+                "on-primary": "#ffffff",
+                "card-warm": "#ffffff",
+                "surface-variant": "#e9e1db",
+                "surface-tint": "#755a32",
+                "primary-fixed": "#ffddb2",
+                "on-surface": "#1e1b18",
+                "surface-bright": "#fff8f4",
+                "surface-container": "#f4ece6",
+                "on-primary-fixed": "#291800",
+                "surface-container-highest": "#e9e1db",
+                "accent-dark": "#806540",
+                "secondary-fixed": "#e4e2de",
+                "tertiary-fixed-dim": "#b3c8e6",
+                "error-container": "#ffdad6",
+                "background": "#fff8f4",
+                "on-tertiary-fixed-variant": "#334861",
+                "on-secondary-fixed": "#1b1c1a",
+                "on-secondary-fixed-variant": "#474744",
+                "on-primary-fixed-variant": "#5b421d",
+                "primary-fixed-dim": "#e5c190"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "margin-mobile": "16px",
+                "gutter": "24px",
+                "margin-desktop": "48px",
+                "unit": "4px",
+                "container-max": "1280px"
+        },
+        "fontFamily": {
+                "headline-lg": [
+                        "Inter", "sans-serif"
+                ],
+                "mono-data": [
+                        "JetBrains Mono", "monospace"
+                ],
+                "body-sm": [
+                        "Inter", "sans-serif"
+                ],
+                "headline-md": [
+                        "Inter", "sans-serif"
+                ],
+                "mono-label": [
+                        "JetBrains Mono", "monospace"
+                ],
+                "headline-lg-mobile": [
+                        "Inter", "sans-serif"
+                ],
+                "body-md": [
+                        "Inter", "sans-serif"
+                ]
+        },
+        "fontSize": {
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "1.2",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "mono-data": [
+                        "14px",
+                        {
+                                "lineHeight": "1.4",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "1.5",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "20px",
+                        {
+                                "lineHeight": "1.4",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "mono-label": [
+                        "12px",
+                        {
+                                "lineHeight": "1.0",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "1.2",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+    .material-symbols-outlined {
+      font-variation-settings:
+      'FILL' 0,
+      'wght' 300,
+      'GRAD' 0,
+      'opsz' 24
+    }
+    .hover-lift {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -10px rgba(114, 87, 48, 0.2);
+    }
+    
+    .dark .hover-lift:hover {
+        box-shadow: 0 12px 24px -10px rgba(229, 193, 144, 0.2);
+    }
+</style>
+</head>
+<body class="text-on-surface dark:bg-canvas-dark dark:text-surface-container-lowest transition-colors duration-300 min-h-screen flex flex-col bg-canvas-warm">
+<!-- Shared TopNavBar (Modified for theme and requirements) -->
+<div class="w-full flex-col bg-surface-container-lowest dark:bg-card-dark border-b border-surface-variant dark:border-inverse-surface transition-colors duration-300">
+<div class="max-w-[1280px] mx-auto flex h-full grow flex-col">
+<header class="flex items-center justify-between whitespace-nowrap px-6 py-4 lg:px-12">
+<div class="flex items-center gap-4">
+<div class="size-8 text-accent-warm dark:text-primary-fixed-dim"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZrYQ7JAzDDcGuJBEi4iU02wj-D2mE6WmL5P_2fptV8xFurxzRP8tQ6QiALsIn9we_aReOLjx-uJrmh9R2sv9igD4k_hF7KNz0Y397-Baq3l1-AV6uskp5tGWrLHI2SEbpZvJfXVHUB1mCLTjfjEsvlUx9V-h7nM1tUvigCE9foy0r59DFcVYvSaD0BVVVaGolIMsh_NaOFExv_sDplfwpTdHzAAR1JRN47FG78eeUAd33LvB3qRydGBQ5kZW7CzQDLJU3rlApa1-ALA" alt="Avero Logo" class="w-full h-full object-contain"></div>
+<h2 class="text-on-surface dark:text-surface-container-lowest text-lg font-bold leading-tight tracking-[0.1em] uppercase">AVERO</h2>
+</div>
+<div class="flex items-center gap-6">
+<button class="flex cursor-pointer items-center justify-center rounded-full size-10 bg-surface-container hover:bg-surface-container-high dark:bg-inverse-surface dark:hover:bg-outline transition-colors text-on-surface-variant dark:text-surface-container-lowest" id="theme-toggle">
+<span class="material-symbols-outlined dark:hidden">dark_mode</span>
+<span class="material-symbols-outlined hidden dark:block">light_mode</span>
+</button>
+<button class="flex cursor-pointer items-center justify-center rounded-full size-10 bg-surface-container hover:bg-surface-container-high dark:bg-inverse-surface dark:hover:bg-outline transition-colors text-on-surface-variant dark:text-surface-container-lowest">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-surface-variant dark:border-inverse-surface">
+<span class="hidden md:block text-sm font-medium text-on-surface dark:text-surface-container-lowest">Faraz Kayan Haque</span>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant" data-alt="A cinematic portrait of a young professional male with dark hair, warm lighting, soft background blur. The photo is composed to look like a high-end corporate headshot with a slightly casual, approachable feel. Neutral tones with subtle warm highlights to match the brand aesthetic." style="background-image: url(&quot;https://lh3.googleusercontent.com/aida/AP1WRLu3CxEKQ1rdyTVmhYh7ntIC74heuhBSQElKmBQTdH70VcwaRSau61diIf8CKI-vjfoWMgWrK2lVMvY7M5cSoz7xV8o8GKQTW09I5gEk-zsEQg5MF_03Q134joABsbuAhPD_xq4CYYbDC3KyoDKNMg7M0DkzMoPtcA11jyC8MSv1l8Q02rdQmiojkPCMuhFNiB-9M5lUearCLSuMua7HRrarcECpR933OTHPj4DVkKPw0LNzlKZbY-eunQ&quot;);"></div>
+</div>
+</div>
+</header>
+</div>
+</div>
+<main class="flex-1 max-w-[1280px] mx-auto w-full px-6 py-10 lg:px-12 flex flex-col gap-8">
+<!-- Header -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
+<div>
+<h1 class="text-headline-lg font-headline-lg text-on-surface dark:text-surface-container-lowest mb-2">Your Spaces</h1>
+<p class="text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">Shared albums and collaborative memory vaults.</p>
+</div>
+<button class="flex items-center gap-2 h-12 px-6 rounded-lg bg-accent-warm hover:bg-accent-dark dark:bg-primary-fixed-dim dark:hover:bg-primary-fixed text-on-primary dark:text-on-primary-fixed font-medium transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">add</span>
+            Create a Space
+        </button>
+</div>
+<!-- Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Card 1: Tokyo 2024 -->
+<article class="hover-lift flex flex-col bg-surface-container-low dark:bg-card-dark rounded-[16px] overflow-hidden border border-outline-variant dark:border-outline shadow-sm cursor-pointer group">
+<div class="h-48 grid grid-cols-2 grid-rows-2 gap-1 p-1 bg-surface-container dark:bg-inverse-surface">
+<div class="col-span-1 row-span-2 bg-cover bg-center rounded-tl-[12px] rounded-bl-[4px]" data-alt="A stunning street photography shot of Tokyo at dusk, focusing on a narrow alleyway illuminated by warm, glowing paper lanterns and neon signs. The scene features soft, rain-slicked pavement reflecting the vibrant colors. Cinematic lighting, rich contrast between deep shadows and bright accents, evoking a sense of nostalgia and wanderlust." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBJxDP0SHZpnVEQxW-4Eng7jxnqfX_NkMfRxVoIwFaRWAti3lbca51JJNQrcQ5luG_UqvpXdccEc-BwbPXq_ebsRzTpu37xA5mp86WTgW7K3AyjpM7ik4SEX1sO58OI7Ag4f0UczVkcGthSXP_msFwm4n5tSDBeera5TM1rtGDTbRiB4k8AavAbpNCSWHan9_faFN7C4I9V1Kjao_zHZMxSUrRdHmePim84WMSqLqKpus8oruaNmJZT');"></div>
+<div class="col-span-1 row-span-1 bg-cover bg-center rounded-tr-[12px]" data-alt="A detailed close-up of a beautifully arranged plate of sushi, highlighting the textures of fresh fish and rice. Soft, natural light illuminating the dish, set against a dark, minimalist wooden table setting. High-end food photography style, appetizing and refined." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAmcfoaf7nd2RiVnBV0k6iqKj_YGnt0k2UdpJUfDVTi7WqmW7Vt8VYwfe3plDszA2cwPJkO20Vr71If3tT75P40e2bT4v3rwCf3R60iSY0KyAwRtqsTvWB9XbJbZPvbvGb0JCr5EMe7xfYroi84YMcsmLfXaIe2GWg4AgOTSdpUG26owIa35ONirKu5Wwh6n81nWK8mBnUQ38hZozOOXHIJnygWSY7hDTvU_1hhsbOIcDzCHcvherc9');"></div>
+<div class="col-span-1 row-span-1 bg-cover bg-center rounded-br-[4px]" data-alt="A serene view of Mount Fuji captured during cherry blossom season. Soft pastel pinks of the blossoms frame the majestic, snow-capped peak in the distance. The sky is a clear, gradient blue. The aesthetic is tranquil, picturesque, and embodies classic Japanese landscape photography." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAPhUQMvCdJ0eYCnpao70UsRv2dJO8yi7aiJduVZ0GfVs4jEJk0t_ezO3-XvE1RVuQgLRHjiverVUgKsrFTqVbBKYIeqbDuhu8CI0v1hxVzxmxQnOJFxYsq1NZLQa1eKaozuXRm7OulHoNRa9rGXA6LLlZ05CqYkX4KnFBpKfhENsAbldpdr2i9Hj4q--ZvyE_Ayg-aJvkvUBUo6ExRShgsZIZIcVT1W6x86k0Kkx0Mv9Z2sCKcnj77');"></div>
+</div>
+<div class="p-6 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<h3 class="text-headline-md font-headline-md text-on-surface dark:text-surface-container-lowest group-hover:text-accent-warm dark:group-hover:text-primary-fixed-dim transition-colors">Tokyo 2024</h3>
+<span class="px-2.5 py-1 rounded-full bg-accent-warm/20 text-accent-warm dark:text-primary-fixed-dim text-xs font-semibold tracking-wide uppercase">Owner</span>
+</div>
+<div class="flex items-center justify-between mt-auto">
+<div class="flex -space-x-2">
+<div class="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-cover bg-center" data-alt="Portrait of a smiling woman with glasses." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC7-24VE4M_3_XbcOX_7SINsosKRuacT0Idz3JgPlsq15EnvujzrnnWkG_qu4aXB8j_W-0_Tx2cn3DaIA4Fsp0gjpqKnUtXYVfg34xA4e5ggYP1mk7_C-_4EJo6O41buVXY9nBn-t0lqfePQmGte2GZRMXPCcNmX-QfJeVVZCUARVSxzaMfXXFnrf64i9vq6fKWHJphW187ld_ne33yDxQDCbYWit3GVyIj9i7MxeEQwt6C68bux5pZ');"></div>
+<div class="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-cover bg-center" data-alt="Portrait of a young man with a beard." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC_WsrftH3jWu-dVhEhbC7k2lhe5deMnQOA2zIQG_vOuzGTfGaAmdKv0isfkHuQiA999EhNdJMsjGc84LEKIPNqmoB9PnDcvs4kHWn7oXKiRdV5Hb2vAJgSko5cjAkeUsJb7L9N4vFl7lOmdLE0p8oRz1jpFrGrARh0twiASO4u554Z3b09671VrGTeIottfaBzpV7u2jLRD_hO8X3AOgUWJ0I3Mvo9Y3OvYmneFoaVpYR64emnEmWs');"></div>
+<div class="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-surface-container dark:bg-inverse-surface flex items-center justify-center text-xs font-medium text-on-surface-variant dark:text-surface-container-lowest">+3</div>
+</div>
+<span class="font-mono-data text-mono-data text-on-surface-variant dark:text-secondary-fixed-dim text-right">
+                        128 memories<br>updated 2d ago
+                    </span>
+</div>
+</div>
+</article>
+<!-- Card 2: Family Archives -->
+<article class="hover-lift flex flex-col bg-surface-container-low dark:bg-card-dark rounded-[16px] overflow-hidden border border-outline-variant dark:border-outline shadow-sm cursor-pointer group">
+<div class="h-48 grid grid-cols-3 gap-1 p-1 bg-surface-container dark:bg-inverse-surface">
+<div class="col-span-2 bg-cover bg-center rounded-tl-[12px] rounded-bl-[4px]" data-alt="A beautifully restored, sepia-toned vintage photograph of a large family gathering from the 1950s. The image captures candid smiles and timeless fashion. The lighting is soft and warm, emphasizing the historical and emotional weight of the memory. The aesthetic is nostalgic, reminiscent of an old family album." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBgmlXw0dqdD0byxB0hHOtLsW5Txnej2RxSV5kP4Kp7lq5cKMhWHbFI54_KxVjr_rls0EqrD_GrIs_Cy1NC6_9ZScHONrtJKUDXXC-5TsxCIPbpp8TXW4GEjcR2jIMkRULcyWK_vOsJiqragSge20N6LSkrE-_jzfKSWMmivZXyATeHngC5kGs2mlAv4wa7v-e5t0PAVMgluqlUDCYdYpHUTJlgOsJ5Ie1gqTh8VgU4JKQWBQl5trJ3');"></div>
+<div class="col-span-1 grid grid-rows-2 gap-1">
+<div class="bg-cover bg-center rounded-tr-[12px]" data-alt="A macro shot of a weathered, handwritten letter on textured, cream-colored paper. The ink is slightly faded blue. The lighting is soft and directional, highlighting the grain of the paper and the elegant cursive handwriting. Intimate and personal mood." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBqjFSyQa-GBrsaRt0BvoBhTmVV6koWaLq_fRaw96iOA1i34E0t_u_MDQMG2bt0ceI16hRDNL27n93tRmGzwBHC_NfUKIy8wkNqsuZTM209QXZodx8zWNDO_qzE-d5hXurAqBkcQM5ajTygjHAXAlSEr35stNbnS4egnqOFVUGkZUmkwaePkiJJvhYxQxO0Ej_eSon2A2j9ZGhwXOyNc3qcVkTaYX6VcQ2t674RIlINQMD1no_F-Rv2');"></div>
+<div class="bg-cover bg-center rounded-br-[4px]" data-alt="A close-up of an old, intricate pocket watch resting on a worn leather surface. The metallic details are sharp against the blurred background. Warm, golden hour lighting creating a sense of enduring time and heirloom quality." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB9_mQa2lnt9yhRCpPH7AedMlOJJk-0JhWXCZz2MhEJwQ8rxoasNlrM66C0eHv-Q-70N09HxRTvh_hwn3FOHtccfEtbJ4lHRok1QhZurnZS4Bqv2y_ZYxGu8HnwN9Ap2Ewx3L1JNudLARb46ZmaJIkae5cm3DoFvK943a7uJr5aR_WrmhY5IOCDtgmx2o79VuFJpyQj8a0nKVyW3FFRnKbv_69gnDuu4F2j5zX08FturHW9kmHbpjSW');"></div>
+</div>
+</div>
+<div class="p-6 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<h3 class="text-headline-md font-headline-md text-on-surface dark:text-surface-container-lowest group-hover:text-accent-warm dark:group-hover:text-primary-fixed-dim transition-colors">Family Archives</h3>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-high dark:bg-inverse-surface text-on-surface-variant dark:text-secondary-fixed-dim text-xs font-semibold tracking-wide uppercase">Member</span>
+</div>
+<div class="flex items-center justify-between mt-auto">
+<div class="flex -space-x-2">
+<div class="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-cover bg-center" data-alt="Portrait of an older woman with grey hair." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA7qXgmZP__zeCgnzSIkHT9bpEKuA9iEzNuh7u_ktMzFk-c6gEz9nQGJdO5gcEOynvm5niL2KzQyA-jvacsNdeBolX5r89hOMuM-AiL77tHClYBNcoK3KWRWnENCSSp3E_Rs5ASYKp_dvJZkxr6mf_P11VCYd9xxDB5-hEgtWn63VG2uV5Z5W7Y_hfVduwxfkMP1hO1VXXyW_VRbHS9RJe-ia5X00FBwwCvaSruOZ4l1D2eaV6U3i9T');"></div>
+<div class="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-cover bg-center" data-alt="Portrait of a young child laughing." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBMp9iMPEtDAti7nMCEO23Ksao4U7_2KkNHavmk5YUUAsbDVy42TREptFAp6kUvMBlMTz39uCeVnfJyoVDl3D22i-oT_nSkhpDXFtlCkU785S_-5cvqvyWBjKivJ5wlaHW-TuXrURzFQl7k5yjKKxYCQForR231p17a_1z7lCMVKxhYeP3h4F98LHKm5LLj1VB9mFyPivqM2R-C1KwEpyIApBBykXm5rLZ4D4zFPts3R3rGxcXfjdOH');"></div>
+</div>
+<span class="font-mono-data text-mono-data text-on-surface-variant dark:text-secondary-fixed-dim text-right">
+                        450 memories<br>updated 1w ago
+                    </span>
+</div>
+</div>
+</article>
+<!-- Card 3: Summer in Provence -->
+<article class="hover-lift flex flex-col bg-surface-container-low dark:bg-card-dark rounded-[16px] overflow-hidden border border-outline-variant dark:border-outline shadow-sm cursor-pointer group"><div class="h-48 p-1 bg-surface-container dark:bg-inverse-surface">
+  <div class="w-full h-full bg-cover bg-center rounded-[12px]" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAtbgnc0NUDk04JrWePWFtLV5s8L10M0-71m8d5nsTcbjQZI755fOEV2yrMAuJ0twGI-blIiI6mLbtWKszwV0eE8g0mu5_5DY8NDh5s26GoDmWRKJWhevVzjGzgcCITlQ1uGi1a53fhRaTrz-h42OH2jxgQRqLhV5jxcDVz4IgQPEYqMafmoOBKMDC41mUqPbj6BjPwRZnft-zGTXgdP3v-_ogIs_ZNCdKxRB-vJNDDb7vdbPx38oNg');" data-alt="Lavender fields in Provence"></div>
+</div>
+<div class="p-6 flex flex-col gap-4">
+  <div class="flex justify-between items-start">
+    <h3 class="text-headline-md font-headline-md text-on-surface dark:text-surface-container-lowest group-hover:text-accent-warm dark:group-hover:text-primary-fixed-dim transition-colors">Summer in Provence</h3>
+    <span class="px-2.5 py-1 rounded-full bg-accent-warm/20 text-accent-warm dark:text-primary-fixed-dim text-xs font-semibold tracking-wide uppercase">Owner</span>
+  </div>
+  <div class="flex items-center justify-between mt-auto">
+    <div class="flex -space-x-2">
+      <div class="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD0TveJS7dVhbtpnq2_glKgBh6UDlW2mdQTBL4UEXFquudQYZapNhS1-gwbizY5K5zrL9T-gykHOvaiVZIbPr5o85MK4kQxdN2GkW6tTTVz4CPuAKpUGemco-wR6V6GDOxgt1g1eFS-7ijpQmbedYuT425jiMkNoCK6d6J6QJiUftGcXTn5dhH3XHxifNZ8tjnsAr1lqIbdKKKyNXEPY7TLalfGD0PruLGYmZZY-Xl_J0gfZ0HmRgwN');"></div>
+    </div>
+    <span class="font-mono-data text-mono-data text-on-surface-variant dark:text-secondary-fixed-dim text-right">
+      82 memories<br>updated 1m ago
+    </span>
+  </div>
+</div></article>
+</div>
+</main>
+<script>
+    const themeToggle = document.getElementById('theme-toggle');
+    const htmlElement = document.documentElement;
+
+    themeToggle.addEventListener('click', () => {
+        htmlElement.classList.toggle('dark');
+        // In a real app, save preference to localStorage
+    });
+</script>
+
+
+
+
+
+
+</body></html>

@@ -17,7 +17,7 @@ import {
   removeReaction,
   type MemoryReactionSummary,
 } from "../lib/reactions";
-import { fetchTimelineThumbnailsBatch } from "../lib/media";
+import { fetchTimelineThumbnailsBatch, fetchMemoryMosaicThumbnailsBatch } from "../lib/media";
 import { fetchEchoesMemories, getTodayLocalDate, computeEchoesTargetDates } from "../lib/echoes";
 import {
   AUTHENTICATED_HOME_PATH,
@@ -122,6 +122,14 @@ export default function SpaceDetailPage() {
   // independent failure modes (reactions depend on [memories, user];
   // thumbnails depend on [memories] only).
   const [thumbnailsByMemoryId, setThumbnailsByMemoryId] = useState<
+    Record<string, Media[]>
+  >({});
+  // Mosaic thumbnails for Memory cards with 3+ photos (plan §3.2). A separate
+  // batch fetch from the compact thumbnails — this one fetches up to 3 most
+  // recent photos per Memory (newest-first) via get_memory_mosaic_thumbnails,
+  // while the compact fetch gets the first 1–2 (oldest-first). The card uses
+  // the mosaic set when it has 3+ rows, falling back to compact otherwise.
+  const [mosaicByMemoryId, setMosaicByMemoryId] = useState<
     Record<string, Media[]>
   >({});
 
@@ -321,6 +329,43 @@ export default function SpaceDetailPage() {
         // render without thumbnails rather than blocking the timeline.
         if (!cancelled) {
           setThumbnailsByMemoryId({});
+        }
+      }
+    }
+
+    void fetchBatch();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [memories]);
+
+  // --- Batch-fetch mosaic thumbnails for Memory cards with 3+ photos --------
+  // A single RPC round trip fetches up to 3 most recent media rows per Memory
+  // (ordered by created_at DESC) via get_memory_mosaic_thumbnails. The card
+  // uses this set when it has 3+ rows (hero mosaic layout), falling back to
+  // the compact thumbnails (1–2 rows, oldest-first) otherwise. Separate from
+  // the compact thumbnails fetch so the two have independent failure modes.
+  useEffect(() => {
+    let cancelled = false;
+    const memoryIds = memories.map((m) => m.id);
+
+    async function fetchBatch() {
+      if (memories.length === 0) {
+        if (!cancelled) {
+          setMosaicByMemoryId({});
+        }
+        return;
+      }
+      try {
+        const result = await fetchMemoryMosaicThumbnailsBatch(memoryIds);
+        if (!cancelled) {
+          setMosaicByMemoryId(result);
+        }
+      } catch {
+        // Calm: cards fall back to compact thumbnails (or no thumbnail).
+        if (!cancelled) {
+          setMosaicByMemoryId({});
         }
       }
     }
@@ -629,7 +674,15 @@ export default function SpaceDetailPage() {
                         <MemoryTimelineCard
                           memory={memory}
                           spaceId={space.id}
-                          thumbnails={thumbnailsByMemoryId[memory.id] ?? []}
+                          // Deterministic rule (plan §3.2): 3+ mosaic photos →
+                          // hero layout uses the mosaic set; ≤2 → compact uses
+                          // the oldest-first thumbnails. The card decides based
+                          // on the array length it receives.
+                          thumbnails={
+                            (mosaicByMemoryId[memory.id]?.length ?? 0) >= 3
+                              ? mosaicByMemoryId[memory.id]
+                              : thumbnailsByMemoryId[memory.id] ?? []
+                          }
                           summary={reactionsByMemoryId[memory.id]}
                           currentUserId={user?.id ?? ""}
                           isPending={pendingByMemoryId[memory.id] ?? null}

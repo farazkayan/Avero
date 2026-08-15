@@ -1,0 +1,273 @@
+<!DOCTYPE html><html class="" lang="en" style="scroll-behavior: smooth;"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Avero - Forgot Password</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-container": "#617691",
+                "on-surface-variant": "#4e453b",
+                "inverse-on-surface": "#f7efe9",
+                "surface-bright": "#fff8f4",
+                "primary-fixed": "#ffddb2",
+                "accent-dark": "#806540",
+                "on-secondary-fixed": "#1b1c1a",
+                "surface": "#fff8f4",
+                "on-tertiary-fixed": "#041d33",
+                "on-primary-fixed-variant": "#5b421d",
+                "on-secondary-fixed-variant": "#474744",
+                "canvas-warm": "#fbf9f5",
+                "on-secondary": "#ffffff",
+                "on-surface": "#1e1b18",
+                "tertiary-fixed": "#d1e4ff",
+                "card-warm": "#ffffff",
+                "secondary-container": "#e1dfdc",
+                "surface-container-highest": "#e9e1db",
+                "surface-container-lowest": "#ffffff",
+                "on-background": "#1e1b18",
+                "surface-container-high": "#efe7e1",
+                "on-secondary-container": "#636360",
+                "card-dark": "#131314",
+                "on-primary-fixed": "#291800",
+                "background": "#fff8f4",
+                "inverse-primary": "#e5c190",
+                "primary-container": "#8d6f46",
+                "tertiary-fixed-dim": "#b3c8e6",
+                "primary": "#725730",
+                "on-tertiary-fixed-variant": "#334861",
+                "on-tertiary-container": "#fdfcff",
+                "surface-dim": "#e0d9d3",
+                "on-error": "#ffffff",
+                "secondary-fixed-dim": "#c8c6c3",
+                "outline-variant": "#d1c4b7",
+                "inverse-surface": "#33302c",
+                "error": "#ba1a1a",
+                "secondary-fixed": "#e4e2de",
+                "on-error-container": "#93000a",
+                "surface-container": "#f4ece6",
+                "surface-variant": "#e9e1db",
+                "primary-fixed-dim": "#e5c190",
+                "on-primary": "#ffffff",
+                "on-primary-container": "#fffbff",
+                "canvas-dark": "#0b0b0c",
+                "error-container": "#ffdad6",
+                "surface-tint": "#755a32",
+                "surface-container-low": "#faf2ec",
+                "tertiary": "#495e77",
+                "accent-warm": "#9c7d52",
+                "outline": "#80756a",
+                "secondary": "#5e5e5c",
+                "on-tertiary": "#ffffff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "container-max": "1280px",
+                "margin-desktop": "48px",
+                "gutter": "24px",
+                "unit": "4px",
+                "margin-mobile": "16px"
+        },
+        "fontFamily": {
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "mono-data": [
+                        "JetBrains Mono"
+                ],
+                "headline-md": [
+                        "Inter"
+                ],
+                "body-sm": [
+                        "Inter"
+                ],
+                "mono-label": [
+                        "JetBrains Mono"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "1.2",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ],
+                "mono-data": [
+                        "14px",
+                        {
+                                "lineHeight": "1.4",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "20px",
+                        {
+                                "lineHeight": "1.4",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "1.5",
+                                "fontWeight": "400"
+                        }
+                ],
+                "mono-label": [
+                        "12px",
+                        {
+                                "lineHeight": "1.0",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "1.2",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "600"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .noise {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        .light .noise { opacity: 0.025; }
+        
+        .transition-theme {
+            transition: background-color 0.5s cubic-bezier(0.23, 1, 0.32, 1), 
+                        color 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+                        border-color 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        /* Custom brass colors for auth */
+        .bg-brass-solid { background-color: #9C7D52; }
+        .dark .bg-brass-solid { background-color: #886548; }
+        
+        .text-brass-link { color: #9C7D52; }
+        .dark .text-brass-link { color: #b89668; }
+        
+        .focus-brass:focus {
+            border-color: #9C7D52;
+            box-shadow: 0 0 0 1px #9C7D52;
+        }
+        .dark .focus-brass:focus {
+            border-color: #886548;
+            box-shadow: 0 0 0 1px #886548;
+        }
+    </style>
+</head>
+<body class="bg-canvas-warm dark:bg-canvas-dark text-on-surface dark:text-[#ececec] transition-theme min-h-screen flex flex-col md:flex-row font-body-md overflow-x-hidden relative">
+<!-- Theme Toggle (Global) -->
+<button class="absolute top-margin-mobile md:top-margin-desktop right-margin-mobile md:right-margin-desktop z-50 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors group" id="themeToggle">
+<span class="material-symbols-outlined hidden dark:block text-[#8d8d8a] group-hover:text-white transition-colors" id="icon-light">light_mode</span>
+<span class="material-symbols-outlined block dark:hidden text-secondary group-hover:text-black transition-colors" id="icon-dark">dark_mode</span>
+</button>
+<!-- Left Panel (Emotional Space) -->
+<div class="relative w-full md:w-[55%] min-h-[409px] md:min-h-screen flex flex-col p-margin-mobile md:p-margin-desktop bg-canvas-warm dark:bg-canvas-dark transition-theme border-b md:border-b-0 md:border-r border-black/5 dark:border-white/10">
+<div class="noise"></div>
+<!-- Wordmark -->
+<div class="z-20 font-mono-label text-mono-label tracking-widest uppercase text-on-surface dark:text-[#ececec] mb-auto">
+            AVERO
+        </div>
+<!-- Photo Stack -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 overflow-hidden md:overflow-visible pt-16 md:pt-0">
+<div class="relative w-[240px] h-[290px] md:w-[300px] md:h-[360px]">
+<!-- Bottom Polaroid -->
+<div class="absolute top-4 -right-8 w-full h-full bg-[#f4ece6] dark:bg-[#e9e1db] p-3 pb-12 md:p-4 md:pb-16 rounded-sm shadow-xl shadow-black/25 rotate-[6deg] blur-[2px] opacity-70">
+<div class="w-full h-full bg-gradient-to-br from-[#d2b89f] to-[#8d6f46]"></div>
+</div>
+<!-- Middle Polaroid -->
+<div class="absolute -top-2 -left-6 w-full h-full bg-[#faf2ec] dark:bg-[#efe7e1] p-3 pb-12 md:p-4 md:pb-16 rounded-sm shadow-xl shadow-black/25 -rotate-[4deg] blur-[1px] opacity-85">
+<div class="w-full h-full bg-gradient-to-tr from-[#8d6f46] to-[#e5c190]"></div>
+</div>
+<!-- Top Polaroid -->
+<div class="absolute top-0 left-0 w-full h-full bg-[#ffffff] dark:bg-[#fbf9f5] p-3 pb-12 md:p-4 md:pb-16 rounded-sm shadow-xl shadow-black/25 rotate-[2deg] transition-transform duration-700 hover:rotate-[1deg] hover:scale-[1.01]">
+<img alt="Candid polaroid" class="w-full h-full object-cover bg-surface-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNTSfBNu6_zfZbOGRefVMCMjOE-Z9Xx4kxCnxrDbWAEqEyEVrBTOd1FdL7ZFWJjnDkQmcC0ncX72qlGvm0wEVJVoNXAuiushjW5rl39g-_I0Qv2kXo3E2uynmZR1obEk3deLWwFYIip7EOi07OTBnUKTWoq1S9VDKwCli1iF0MYqGa1hnK98mjxJLGE1xZ6JmcXUdCZdEjs-wEfDg-2uxSVrd4dslmvxpSh0hguVtXE1OwsW9TjrcY">
+</div>
+</div>
+</div>
+<!-- Emotional Text -->
+<div class="z-20 mt-auto md:mb-[15%] pt-12 md:pt-0">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg mb-4 text-on-surface dark:text-white">
+                A private home for the moments that matter.
+            </h1>
+<p class="font-body-md text-body-md text-[#736b63] dark:text-[#8d8d8a] max-w-md">
+                Preserve shared stories with the people who matter most.
+            </p>
+</div>
+</div>
+<!-- Right Panel (Reset Form) -->
+<div class="w-full md:w-[45%] min-h-screen flex items-center justify-center p-margin-mobile md:p-margin-desktop bg-card-warm dark:bg-card-dark transition-theme z-20">
+<div class="w-full max-w-[400px]">
+<div class="mb-8">
+<h2 class="font-headline-md text-headline-md text-on-surface dark:text-white mb-2">Reset your password.</h2>
+<p class="font-body-md text-body-md text-secondary dark:text-[#8d8d8a]">We'll email you a secure link.</p>
+</div>
+<!-- Form -->
+<form class="space-y-4" onsubmit="event.preventDefault();">
+<div>
+<label class="sr-only" for="email">Email</label>
+<input class="w-full h-11 bg-card-warm dark:bg-canvas-dark border border-outline-variant dark:border-white/10 rounded-DEFAULT py-3 px-4 text-on-surface dark:text-white placeholder-[#8d8d8a] focus:outline-none focus-brass transition-all font-body-sm text-body-sm" id="email" placeholder="you@example.com" required="" type="email">
+</div>
+<button class="w-full bg-brass-solid text-white font-body-md text-body-md py-3 rounded-lg hover:-translate-y-[2px] hover:shadow-[0_4px_20px_rgba(136,101,72,0.3)] transition-all duration-300 mt-6" type="submit">
+                    Send reset link
+                </button>
+</form>
+<div class="mt-8 text-center">
+<a class="font-body-sm text-body-sm text-brass-link hover:opacity-80 transition-opacity" href="#">Back to sign in.</a>
+</div>
+</div>
+</div>
+<script>
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+        });
+    </script>
+</body></html>

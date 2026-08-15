@@ -50,8 +50,8 @@
      inverted for light backgrounds (Design System §2). The lightness ramp
      keeps the same elevation direction as dark: raised surfaces are lighter
      than the page, so cards read as lifted, not as a color change. */
-  --color-canvas: 245 244 238;      /* #f5f4ee  oklch(0.96 0.005 75) — warm paper */
-  --color-canvas-soft: 251 250 245; /* #fbfaf5  oklch(0.985 0.004 75) — cards */
+  --color-canvas: 251 249 245;      /* #fbf9f5  oklch(0.98 0.004 75) — warm off-white canvas */
+  --color-canvas-soft: 250 242 236; /* #faf2ec  oklch(0.97 0.005 75) — cards */
   --color-canvas-raised: 255 255 255;/* #ffffff  oklch(1 0 0) — glass base */
   --color-ink: 33 31 26;            /* #211f1a  oklch(0.18 0.006 75) — near-black */
   --color-ink-muted: 107 105 99;    /* #6b6963  oklch(0.50 0.006 75) — secondary */

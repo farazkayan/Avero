@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import MemoryThumbnail from "./MemoryThumbnail";
+import MultiPhotoMosaic from "../ui/MultiPhotoMosaic";
 import TimelineReactionControl from "../reactions/TimelineReactionControl";
 import { memoryDetailPath } from "../../constants/routes";
 import type { Memory, MemoryType } from "../../types/memory";
@@ -89,6 +90,12 @@ export default function MemoryTimelineCard({
   isPending,
   onToggleReaction,
 }: MemoryTimelineCardProps) {
+  // Deterministic layout rule (plan §3.2): 3+ photos → hero mosaic layout
+  // (MultiPhotoMosaic, full-width below text), ≤2 photos → compact thumbnail
+  // (MemoryThumbnail, top-right ~64px). This gives Memories with many photos
+  // a richer visual presence while keeping low-photo Memories compact.
+  const useHeroMosaic = thumbnails.length >= 3;
+
   return (
     <div className="hover-lift rounded-xl border border-ink/5 bg-canvas-soft p-5">
       <div className="flex items-start gap-4">
@@ -150,10 +157,24 @@ export default function MemoryTimelineCard({
           )}
         </div>
 
-        {/* Photo thumbnail — top-right, ~64px square. Renders nothing when
-            the Memory has no media (no placeholder, no broken-image icon). */}
-        <MemoryThumbnail media={thumbnails} />
+        {/* Photo thumbnail — compact mode (≤2 photos): top-right, ~64px
+            square. Renders nothing when the Memory has no media. */}
+        {!useHeroMosaic && <MemoryThumbnail media={thumbnails} />}
       </div>
+
+      {/* Hero mosaic (3+ photos): full-width below the text content, giving
+          Memories with many photos a richer visual presence. Uses
+          MultiPhotoMosaic with landscape aspect ratio for a wider, more
+          cinematic feel. */}
+      {useHeroMosaic && (
+        <div className="mt-4">
+          <MultiPhotoMosaic
+            media={thumbnails}
+            aspectRatio="landscape"
+            className="w-full"
+          />
+        </div>
+      )}
     </div>
   );
 }

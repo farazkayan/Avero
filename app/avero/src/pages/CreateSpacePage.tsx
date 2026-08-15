@@ -143,8 +143,8 @@ export default function CreateSpacePage() {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-[420px]">
-        <div className="mb-8">
+      <div className="mx-auto w-full max-w-[560px]">
+        <div className="mb-10 text-center">
           <h1 className="text-2xl font-bold leading-tight text-ink sm:text-3xl">
             Create a Space
           </h1>
@@ -154,7 +154,7 @@ export default function CreateSpacePage() {
         </div>
 
         <form
-          className="space-y-5"
+          className="space-y-6 rounded-xl border border-ink/5 bg-canvas-soft p-8 sm:p-12"
           onSubmit={handleSubmit}
           noValidate
           aria-describedby={formError ? "create-space-form-error" : undefined}
@@ -199,14 +199,15 @@ export default function CreateSpacePage() {
             </p>
           )}
 
-          <PrimaryButton type="submit" loading={isSubmitting}>
-            {isSubmitting ? "Creating…" : "Create Space"}
-          </PrimaryButton>
+          <div className="pt-6 space-y-4">
+            <PrimaryButton type="submit" loading={isSubmitting} className="w-full">
+              {isSubmitting ? "Creating…" : "Create Space"}
+            </PrimaryButton>
+            <p className="text-center text-sm text-ink-muted">
+              <GhostLink to={AUTHENTICATED_HOME_PATH}>Back to Spaces</GhostLink>
+            </p>
+          </div>
         </form>
-
-        <p className="mt-8 text-center text-sm text-ink-muted">
-          <GhostLink to={AUTHENTICATED_HOME_PATH}>Back to Spaces</GhostLink>
-        </p>
       </div>
     </>
   );

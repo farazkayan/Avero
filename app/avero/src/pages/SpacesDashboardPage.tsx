@@ -6,7 +6,7 @@ import Spinner from "../components/ui/Spinner";
 import { SparkleIcon } from "../components/ui/icons";
 import SpaceCard from "../components/spaces/SpaceCard";
 import { useAuth } from "../context/AuthContext";
-import { fetchSpaceListThumbnailsBatch } from "../lib/media";
+import { fetchSpaceMosaicThumbnailsBatch } from "../lib/media";
 import { supabase } from "../lib/supabase";
 import { SPACE_CREATE_PATH } from "../constants/routes";
 import type { Media } from "../types/media";
@@ -109,13 +109,13 @@ export default function SpacesDashboardPage() {
     };
   }, [user]);
 
-  // Thumbnails batch — a single RPC round trip fetches the first 1–2 media
-  // rows of each Space's most recent Memory (ordered by created_at), avoiding
-  // N+1 per-card queries. Re-runs when the memberships list changes (no `user`
-  // dep — RLS via JWT context in the RPC, same as the Space timeline's
-  // thumbnails effect). A batch failure is calm: the map clears to `{}` and
-  // the cards still render, just without thumbnails (mirrors the timeline's
-  // "render the rest of the page" failure mode).
+  // Mosaic thumbnails batch — a single RPC round trip fetches up to 3 most
+  // recent media rows across ALL Memories in each Space (ordered by
+  // created_at DESC), avoiding N+1 per-card queries. Re-runs when the
+  // memberships list changes (no `user` dep — RLS via JWT context in the RPC,
+  // same as the Space timeline's thumbnails effect). A batch failure is calm:
+  // the map clears to `{}` and the cards still render, just without thumbnails
+  // (mirrors the timeline's "render the rest of the page" failure mode).
   useEffect(() => {
     if (memberships.length === 0) {
       return;
@@ -126,7 +126,7 @@ export default function SpacesDashboardPage() {
 
     async function fetchThumbnails() {
       try {
-        const result = await fetchSpaceListThumbnailsBatch(spaceIds);
+        const result = await fetchSpaceMosaicThumbnailsBatch(spaceIds);
         if (!cancelled) {
           setThumbnailsBySpaceId(result);
         }

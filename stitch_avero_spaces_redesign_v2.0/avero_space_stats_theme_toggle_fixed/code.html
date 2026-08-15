@@ -1,0 +1,358 @@
+<!DOCTYPE html><html class="" lang="en" style="width: 1279px; height: 2301px; overflow: hidden; position: relative;"><head></head><body class="min-h-screen flex flex-col pt-[72px] dark:bg-[#121414] dark:text-gray-100 transition-colors duration-300 bg-[#fbf9f5]"><svg aria-hidden="true" class="inline-defs-container" style="position:absolute;width:0;height:0;overflow:hidden"></svg>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Avero - Space Stats</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e9e1db",
+                        "primary": "#725730",
+                        "canvas-dark": "#121414",
+                        "surface-variant": "#e9e1db",
+                        "on-background": "#1e1b18",
+                        "card-warm": "#ffffff",
+                        "surface-tint": "#755a32",
+                        "inverse-primary": "#e5c190",
+                        "outline-variant": "#d1c4b7",
+                        "on-secondary-fixed-variant": "#474744",
+                        "surface-container-high": "#efe7e1",
+                        "secondary-fixed": "#e4e2de",
+                        "accent-warm": "#9c7d52",
+                        "surface": "#fff8f4",
+                        "on-tertiary-fixed-variant": "#334861",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#617691",
+                        "outline": "#80756a",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#c8c6c3",
+                        "on-surface": "#1e1b18",
+                        "surface-container": "#f4ece6",
+                        "on-primary-fixed-variant": "#5b421d",
+                        "primary-fixed-dim": "#e5c190",
+                        "secondary": "#5e5e5c",
+                        "accent-dark": "#806540",
+                        "on-secondary-fixed": "#1b1c1a",
+                        "on-tertiary-fixed": "#041d33",
+                        "background": "#fff8f4",
+                        "inverse-on-surface": "#f7efe9",
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#e0d9d3",
+                        "tertiary-fixed-dim": "#b3c8e6",
+                        "on-primary-fixed": "#291800",
+                        "on-error": "#ffffff",
+                        "on-secondary-container": "#636360",
+                        "inverse-surface": "#33302c",
+                        "tertiary": "#495e77",
+                        "surface-bright": "#fff8f4",
+                        "on-surface-variant": "#4e453b",
+                        "primary-fixed": "#ffddb2",
+                        "primary-container": "#8d6f46",
+                        "canvas-warm": "#fff8f4",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#d1e4ff",
+                        "on-tertiary-container": "#fdfcff",
+                        "surface-container-low": "#faf2ec",
+                        "card-dark": "#1a1c1c",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#fffbff",
+                        "secondary-container": "#e1dfdc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1280px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "mono-label": ["JetBrains Mono"],
+                        "mono-data": ["JetBrains Mono"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "mono-label": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "mono-data": ["14px", { "lineHeight": "1.4", "fontWeight": "400" }],
+                        "headline-md": ["20px", { "lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #fff8f4;
+            color: theme('colors.on-background');
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .dark body {
+            background-color: #121414;
+            color: #e2e2e2;
+        }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 20px -2px rgba(28, 25, 23, 0.05);
+        }
+        
+        .dark .card-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Line chart custom styling */
+        .chart-grid-line {
+            stroke: theme('colors.outline-variant');
+            stroke-width: 1;
+            stroke-dasharray: 4 4;
+            opacity: 0.5;
+        }
+        
+        .dark .chart-grid-line {
+            stroke: #38393a;
+            opacity: 0.3;
+        }
+    </style>
+<!-- TopAppBar -->
+<div class="w-full flex-col bg-surface-container-lowest dark:bg-[#121414] border-b border-surface-variant dark:border-white/10 transition-colors duration-300 fixed top-0 left-0 z-50">
+<div class="max-w-[1280px] mx-auto flex h-full grow flex-col">
+<header class="flex items-center justify-between whitespace-nowrap px-6 py-4 lg:px-12">
+<div class="flex items-center gap-4">
+<div class="size-8 text-accent-warm dark:text-[#f7d6ac]"><img alt="Avero Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZrYQ7JAzDDcGuJBEi4iU02wj-D2mE6WmL5P_2fptV8xFurxzRP8tQ6QiALsIn9we_aReOLjx-uJrmh9R2sv9igD4k_hF7KNz0Y397-Baq3l1-AV6uskp5tGWrLHI2SEbpZvJfXVHUB1mCLTjfjEsvlUx9V-h7nM1tUvigCE9foy0r59DFcVYvSaD0BVVVaGolIMsh_NaOFExv_sDplfwpTdHzAAR1JRN47FG78eeUAd33LvB3qRydGBQ5kZW7CzQDLJU3rlApa1-ALA"></div>
+<h2 class="text-on-surface dark:text-gray-100 text-lg font-bold leading-tight tracking-[0.1em] uppercase">AVERO</h2>
+</div>
+<div class="flex items-center gap-6">
+<button class="flex cursor-pointer items-center justify-center rounded-full size-10 bg-surface-container hover:bg-surface-container-high dark:bg-[#1e2020] dark:hover:bg-[#2a2c2c] transition-colors text-on-surface-variant dark:text-gray-300" id="theme-toggle"><svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg></button>
+<button class="flex cursor-pointer items-center justify-center rounded-full size-10 bg-surface-container hover:bg-surface-container-high dark:bg-[#1e2020] dark:hover:bg-[#2a2c2c] transition-colors text-on-surface-variant dark:text-gray-300">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-surface-variant dark:border-white/10">
+<span class="hidden md:block text-sm font-medium text-on-surface dark:text-gray-200">Faraz Kayan Haque</span>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-white/20" style="background-image: url(&quot;https://lh3.googleusercontent.com/aida/AP1WRLu3CxEKQ1rdyTVmhYh7ntIC74heuhBSQElKmBQTdH70VcwaRSau61diIf8CKI-vjfoWMgWrK2lVMvY7M5cSoz7xV8o8GKQTW09I5gEk-zsEQg5MF_03Q134joABsbuAhPD_xq4CYYbDC3KyoDKNMg7M0DkzMoPtcA11jyC8MSv1l8Q02rdQmiojkPCMuhFNiB-9M5lUearCLSuMua7HRrarcECpR933OTHPj4DVkKPw0LNzlKZbY-eunQ&quot;);"></div>
+</div>
+</div>
+</header>
+</div>
+</div>
+<!-- Main Content Canvas -->
+<main class="flex-grow max-w-container-max mx-auto w-full px-gutter md:px-margin-desktop py-8 md:py-12 flex flex-col gap-12">
+<!-- Page Header -->
+<div class="flex flex-col gap-4">
+<a class="inline-flex items-center gap-2 text-on-surface-variant hover:text-[#9c7d52] dark:text-[#8d8d8a] dark:hover:text-[#f7d6ac] transition-colors w-fit font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                Back to timeline
+            </a>
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<h1 class="font-headline-lg text-headline-lg text-on-surface dark:text-gray-100">Faraz</h1>
+<p class="font-mono-data text-mono-data text-on-surface-variant dark:text-[#8d8d8a]">10 memories · less than a year together</p>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low dark:hover:bg-[#1a1c1c] transition-colors duration-200 text-on-surface-variant dark:text-gray-300">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</div>
+<!-- The Story So Far (Stats Grid) -->
+<section class="flex flex-col gap-4">
+<h2 class="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider uppercase">THE STORY SO FAR</h2>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-gutter"><!-- Stat Card 1 (Memories) -->
+<div class="bg-card-warm border border-outline-variant/50 rounded-xl p-6 card-shadow flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
+<span class="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">auto_awesome</span>
+<span class="font-headline-lg text-headline-lg text-[#9c7d52] dark:text-[#f7d6ac]">10</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Memories</span>
+</div>
+<!-- Stat Card 2 (Photos) -->
+<div class="bg-card-warm border border-outline-variant/50 rounded-xl p-6 card-shadow flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
+<span class="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">photo_library</span>
+<span class="font-headline-lg text-headline-lg text-[#9c7d52] dark:text-[#f7d6ac]">42</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Photos &amp; videos</span>
+</div>
+<!-- Stat Card 3 (Comments) -->
+<div class="bg-card-warm border border-outline-variant/50 rounded-xl p-6 card-shadow flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
+<span class="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">chat_bubble</span>
+<span class="font-headline-lg text-headline-lg text-[#9c7d52] dark:text-[#f7d6ac]">15</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Comments</span>
+</div>
+<!-- Stat Card 4 (Reactions) -->
+<div class="bg-card-warm border border-outline-variant/50 rounded-xl p-6 card-shadow flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
+<span class="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">favorite</span>
+<span class="font-headline-lg text-headline-lg text-[#9c7d52] dark:text-[#f7d6ac]">84</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Reactions</span>
+</div>
+<!-- Stat Card 5 (Members) -->
+<div class="bg-card-warm border border-outline-variant/50 rounded-xl p-6 card-shadow flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
+<span class="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">group</span>
+<span class="font-headline-lg text-headline-lg text-[#9c7d52] dark:text-[#f7d6ac]">4</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Members</span>
+</div>
+<!-- Stat Card 6 (Days old) -->
+<div class="bg-card-warm border border-outline-variant/50 rounded-xl p-6 card-shadow flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
+<span class="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">schedule</span>
+<span class="font-headline-lg text-headline-lg text-[#9c7d52] dark:text-[#f7d6ac]">353</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Days old</span>
+</div></div>
+</section>
+<!-- Memories Over Time (Chart) -->
+<section class="flex flex-col gap-4">
+<h2 class="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider uppercase">MEMORIES OVER TIME</h2>
+<div class="bg-card-warm border border-outline-variant/50 rounded-xl p-6 md:p-8 card-shadow w-full dark:bg-[#1a1c1c] dark:border-white/10"><div class="w-full h-48 md:h-64 relative">
+<svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 200">
+<defs>
+<linearGradient id="chart-gradient-light" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#9c7d52" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#9c7d52" stop-opacity="0"></stop>
+</linearGradient>
+<linearGradient id="chart-gradient-dark" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#f7d6ac" stop-opacity="0.1"></stop>
+<stop offset="100%" stop-color="#f7d6ac" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+<!-- Grid lines -->
+<line class="chart-grid-line" x1="0" x2="1000" y1="50" y2="50"></line>
+<line class="chart-grid-line" x1="0" x2="1000" y1="100" y2="100"></line>
+<line class="chart-grid-line" x1="0" x2="1000" y1="150" y2="150"></line>
+<!-- Area Fill -->
+<path class="dark:hidden" d="M 0 180 C 100 180, 150 160, 200 150 S 300 140, 400 100 S 500 120, 600 80 S 700 90, 800 40 S 900 60, 1000 20 V 200 H 0 Z" fill="url(#chart-gradient-light)"></path>
+<path class="hidden dark:block" d="M 0 180 C 100 180, 150 160, 200 150 S 300 140, 400 100 S 500 120, 600 80 S 700 90, 800 40 S 900 60, 1000 20 V 200 H 0 Z" fill="url(#chart-gradient-dark)"></path>
+<!-- Data Line -->
+<path class="dark:hidden" d="M 0 180 C 100 180, 150 160, 200 150 S 300 140, 400 100 S 500 120, 600 80 S 700 90, 800 40 S 900 60, 1000 20" fill="none" stroke="#9c7d52" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+<path class="hidden dark:block" d="M 0 180 C 100 180, 150 160, 200 150 S 300 140, 400 100 S 500 120, 600 80 S 700 90, 800 40 S 900 60, 1000 20" fill="none" stroke="#f7d6ac" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+<!-- Data Points -->
+<g class="dark:hidden">
+<circle cx="200" cy="150" fill="#fff" r="4" stroke="#9c7d52" stroke-width="2"></circle>
+<circle cx="400" cy="100" fill="#fff" r="4" stroke="#9c7d52" stroke-width="2"></circle>
+<circle cx="600" cy="80" fill="#fff" r="4" stroke="#9c7d52" stroke-width="2"></circle>
+<circle cx="800" cy="40" fill="#fff" r="4" stroke="#9c7d52" stroke-width="2"></circle>
+<circle cx="1000" cy="20" fill="#fff" r="4" stroke="#9c7d52" stroke-width="2"></circle>
+</g>
+<g class="hidden dark:block">
+<circle cx="200" cy="150" fill="#1a1c1c" r="4" stroke="#f7d6ac" stroke-width="2"></circle>
+<circle cx="400" cy="100" fill="#1a1c1c" r="4" stroke="#f7d6ac" stroke-width="2"></circle>
+<circle cx="600" cy="80" fill="#1a1c1c" r="4" stroke="#f7d6ac" stroke-width="2"></circle>
+<circle cx="800" cy="40" fill="#1a1c1c" r="4" stroke="#f7d6ac" stroke-width="2"></circle>
+<circle cx="1000" cy="20" fill="#1a1c1c" r="4" stroke="#f7d6ac" stroke-width="2"></circle>
+</g>
+</svg>
+</div>
+<div class="flex justify-between items-center mt-4 font-mono-data text-mono-data text-on-surface-variant dark:text-[#8d8d8a]">
+<span class="">Aug 2025</span>
+<span class="opacity-50 dark:opacity-40">Nov 2025</span>
+<span class="opacity-50 dark:opacity-40">Feb 2026</span>
+<span class="opacity-50 dark:opacity-40">May 2026</span>
+<span class="">Aug 2026</span>
+</div></div>
+</section>
+<!-- Summary Insights -->
+<section class="flex flex-col gap-2 p-6 bg-surface-container-low rounded-xl border border-outline-variant/30 dark:bg-[#1a1c1c] dark:border-white/10">
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-gray-300">
+                Your most memory-filled month was <span class="font-semibold text-[#9c7d52] dark:text-[#f7d6ac]">August 2026</span>.
+            </p>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-gray-300">
+                The longest stretch between memories was <span class="font-semibold text-[#9c7d52] dark:text-[#f7d6ac]">353 days</span>.
+            </p>
+</section>
+<!-- Achievements -->
+<section class="flex flex-col gap-6"><div class="flex justify-between items-baseline border-b border-outline-variant/30 dark:border-white/10 pb-2"><h2 class="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider uppercase">ACHIEVEMENTS</h2><span class="font-mono-data text-mono-data text-on-surface-variant dark:text-[#8d8d8a]">4 / 12</span></div><div class="flex flex-col gap-8"><div class="flex flex-col gap-4"><h3 class="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider"><span class="inline-block w-1.5 h-1.5 rounded-full bg-accent-warm dark:bg-[#f7d6ac] mr-2 align-middle opacity-60"></span>MILESTONES</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-gutter"><div class="bg-card-warm border border-outline-variant/50 rounded-xl p-5 card-shadow flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10"><div class="absolute top-3 right-3 text-[#9c7d52] dark:text-[#f7d6ac]">
+<span class="material-symbols-outlined text-[18px] filled">stars</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary/10 dark:bg-[#f7d6ac]/10 flex items-center justify-center text-[#9c7d52] dark:text-[#f7d6ac] relative">
+<div class="absolute inset-0 rounded-full bg-accent-warm/20 dark:bg-[#f7d6ac]/10 blur-md"></div>
+<span class="material-symbols-outlined filled relative z-10">flag</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-1 dark:text-gray-100">First Memory</h4>
+<p class="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a]">Aug 12, 2025</p>
+</div></div><div class="bg-card-warm border border-outline-variant/50 rounded-xl p-5 card-shadow flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10"><div class="absolute top-3 right-3 text-[#9c7d52] dark:text-[#f7d6ac]">
+<span class="material-symbols-outlined text-[18px] filled">stars</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary/10 dark:bg-[#f7d6ac]/10 flex items-center justify-center text-[#9c7d52] dark:text-[#f7d6ac] relative">
+<div class="absolute inset-0 rounded-full bg-accent-warm/20 dark:bg-[#f7d6ac]/10 blur-md"></div>
+<span class="material-symbols-outlined filled relative z-10">auto_awesome</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-1 dark:text-gray-100">Ten Stories</h4>
+<p class="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a]">Aug 18, 2026</p>
+</div></div><div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 opacity-80 dark:bg-transparent dark:border-white/5" style="border-style: dashed;"><div class="w-12 h-12 rounded-full bg-surface-variant dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-white/20"><span class="material-symbols-outlined">collections_bookmark</span></div><div><h4 class="font-headline-md text-headline-md text-on-surface mb-1 opacity-70 dark:text-white/40">Fifty Stories</h4><p class="font-body-sm text-body-sm text-on-surface-variant dark:text-white/30 italic">Not yet</p></div></div><div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 opacity-80 dark:bg-transparent dark:border-white/5" style="border-style: dashed;"><div class="w-12 h-12 rounded-full bg-surface-variant dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-white/20"><span class="material-symbols-outlined">military_tech</span></div><div><h4 class="font-headline-md text-headline-md text-on-surface mb-1 opacity-70 dark:text-white/40">A Hundred Moments</h4><p class="font-body-sm text-body-sm text-on-surface-variant dark:text-white/30 italic">Not yet</p></div></div></div></div><div class="flex flex-col gap-4"><h3 class="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider"><span class="inline-block w-1.5 h-1.5 rounded-full bg-[#9c7d52] dark:bg-[#f7d6ac] mr-2 align-middle opacity-60"></span>TIME</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-gutter"><div class="bg-card-warm border border-outline-variant/50 rounded-xl p-5 card-shadow flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10"><div class="absolute top-3 right-3 text-[#9c7d52] dark:text-[#f7d6ac]">
+<span class="material-symbols-outlined text-[18px] filled">stars</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary/10 dark:bg-[#f7d6ac]/10 flex items-center justify-center text-[#9c7d52] dark:text-[#f7d6ac] relative">
+<div class="absolute inset-0 rounded-full bg-[#9c7d52]/20 dark:bg-[#f7d6ac]/10 blur-md"></div>
+<span class="material-symbols-outlined filled relative z-10">flag</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-1 dark:text-gray-100">First Memory</h4>
+<p class="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a]">Aug 12, 2025</p>
+</div></div><div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 opacity-80 dark:bg-transparent dark:border-white/5" style="border-style: dashed;"><div class="w-12 h-12 rounded-full bg-surface-variant dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-white/20"><span class="material-symbols-outlined">event_repeat</span></div><div><h4 class="font-headline-md text-headline-md text-on-surface mb-1 opacity-70 dark:text-white/40">A Year of Memories</h4><p class="font-body-sm text-body-sm text-on-surface-variant dark:text-white/30 italic">Not yet</p></div></div><div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 opacity-80 dark:bg-transparent dark:border-white/5" style="border-style: dashed;"><div class="w-12 h-12 rounded-full bg-surface-variant dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-white/20"><span class="material-symbols-outlined">wb_sunny</span></div><div><h4 class="font-headline-md text-headline-md text-on-surface mb-1 opacity-70 dark:text-white/40">Every Season</h4><p class="font-body-sm text-body-sm text-on-surface-variant dark:text-white/30 italic">Not yet</p></div></div></div></div><div class="flex flex-col gap-4"><h3 class="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider"><span class="inline-block w-1.5 h-1.5 rounded-full bg-[#9c7d52] dark:bg-[#f7d6ac] mr-2 align-middle opacity-60"></span>COLLABORATION</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-gutter"><div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 opacity-80 dark:bg-transparent dark:border-white/5" style="border-style: dashed;"><div class="w-12 h-12 rounded-full bg-surface-variant dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-white/20"><span class="material-symbols-outlined">groups</span></div><div><h4 class="font-headline-md text-headline-md text-on-surface mb-1 opacity-70 dark:text-white/40">Everyone's Story</h4><p class="font-body-sm text-body-sm text-on-surface-variant dark:text-white/30 italic">Not yet</p></div></div><div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 opacity-80 dark:bg-transparent dark:border-white/5" style="border-style: dashed;"><div class="w-12 h-12 rounded-full bg-surface-variant dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-white/20"><span class="material-symbols-outlined">forum</span></div><div><h4 class="font-headline-md text-headline-md text-on-surface mb-1 opacity-70 dark:text-white/40">Lots to Say</h4><p class="font-body-sm text-body-sm text-on-surface-variant dark:text-white/30 italic">Not yet</p></div></div><div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 opacity-80 dark:bg-transparent dark:border-white/5" style="border-style: dashed;"><div class="w-12 h-12 rounded-full bg-surface-variant dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-white/20"><span class="material-symbols-outlined">favorite</span></div><div><h4 class="font-headline-md text-headline-md text-on-surface mb-1 opacity-70 dark:text-white/40">Well Loved</h4><p class="font-body-sm text-body-sm text-on-surface-variant dark:text-white/30 italic">Not yet</p></div></div></div></div><div class="flex flex-col gap-4"><h3 class="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider"><span class="inline-block w-1.5 h-1.5 rounded-full bg-[#9c7d52] dark:bg-[#f7d6ac] mr-2 align-middle opacity-60"></span>VARIETY</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-gutter"><div class="bg-card-warm border border-outline-variant/50 rounded-xl p-5 card-shadow flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10"><div class="absolute top-3 right-3 text-[#9c7d52] dark:text-[#f7d6ac]">
+<span class="material-symbols-outlined text-[18px] filled">stars</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary/10 dark:bg-[#f7d6ac]/10 flex items-center justify-center text-[#9c7d52] dark:text-[#f7d6ac] relative">
+<div class="absolute inset-0 rounded-full bg-[#9c7d52]/20 dark:bg-[#f7d6ac]/10 blur-md"></div>
+<span class="material-symbols-outlined filled relative z-10">flag</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-1 dark:text-gray-100">First Memory</h4>
+<p class="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a]">Aug 12, 2025</p>
+</div></div><div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 opacity-80 dark:bg-transparent dark:border-white/5" style="border-style: dashed;"><div class="w-12 h-12 rounded-full bg-surface-variant dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-white/20"><span class="material-symbols-outlined">movie</span></div><div><h4 class="font-headline-md text-headline-md text-on-surface mb-1 opacity-70 dark:text-white/40">Moving Pictures</h4><p class="font-body-sm text-body-sm text-on-surface-variant dark:text-white/30 italic">Not yet</p></div></div></div></div></div></section>
+</main>
+<script>
+(function() {
+    const themeToggle = document.getElementById('theme-toggle');
+    const htmlElement = document.documentElement;
+    
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+            if (htmlElement.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    }
+    
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        htmlElement.classList.add('dark');
+    } else {
+        htmlElement.classList.remove('dark');
+    }
+})();
+</script>
+
+
+</body></html>

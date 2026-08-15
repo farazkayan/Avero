@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import MemoryThumbnail from "../memories/MemoryThumbnail";
+import MultiPhotoMosaic from "../ui/MultiPhotoMosaic";
 import { spaceDetailPath } from "../../constants/routes";
 import type { Space, SpaceRole } from "../../types/space";
 import type { Media } from "../../types/media";
@@ -8,51 +8,41 @@ type SpaceCardProps = {
   space: Space;
   role: SpaceRole;
   /**
-   * The first 1–2 media rows of this Space's most recent Memory (oldest first),
-   * from the dashboard's batch thumbnail fetch. Empty array → no thumbnail.
+   * Up to 3 most recent media rows across ALL Memories in this Space (newest first),
+   * from the dashboard's batch mosaic thumbnail fetch. Empty array → placeholder.
    */
   thumbnails: Media[];
 };
 
 /**
  * A single Space in the dashboard list (spaces-design §6.1, design-system §6),
- * redesigned to the v2.0 design system and carrying a small photo preview so
- * Spaces feel alive on the "Your Spaces" list — mirroring the now-redesigned
- * {@link MemoryTimelineCard} / {@link MemoryThumbnail}.
+ * redesigned to the v2.0 design system and carrying a multi-photo mosaic
+ * preview so Spaces feel alive on the "Your Spaces" list.
  *
  * The whole card is a React Router `<Link>` to the Space detail page
  * (`/spaces/:id`), so the entire surface is clickable. The role badge is
  * rendered inside the link but is non-interactive (purely informational), so
- * no nested interactive elements are introduced. The thumbnail's media is
- * `pointer-events-none` (handled by `MemoryThumbnail`), so a click on the
- * thumbnail passes through to the link rather than stealing it.
+ * no nested interactive elements are introduced. The mosaic's media is
+ * `pointer-events-none` (handled by {@link MultiPhotoMosaic}), so a click on
+ * the mosaic passes through to the link rather than stealing it.
  *
- * Visual language (all from v2.0 tokens — no one-off values), mirroring
- * {@link MemoryTimelineCard}:
+ * Visual language (all from v2.0 tokens — no one-off values):
  *  - **Card surface:** `elevation-raised` → `bg-canvas-soft` + hairline
  *    `border border-ink/5`, `rounded-xl`.
  *  - **Hover:** the canonical `.hover-lift` utility (translateY, accent border,
- *    one hairline glow). This replaces the card's former ad-hoc
- *    `transition-colors duration-200 hover:border-ink/10 hover:bg-canvas-raised`
- *    — the deliberate `.hover-lift` application the design system calls for.
+ *    one hairline glow).
  *  - **Title:** `text-base font-semibold text-ink` (primary sans-serif, per
  *    Design System §3 — titles stay sans).
  *  - **Role badge:** `bg-accent-soft text-accent-400` (Owner) /
  *    `bg-ink/5 text-ink-muted` (Member), with `font-mono` text — the role
  *    label is metadata, so it uses the signature mono face per Design System
- *    §3 (mono reserved for dates/counts/metadata labels). The pill affordance
- *    is kept (a recognizable role indicator); only the text face changes.
+ *    §3 (mono reserved for dates/counts/metadata labels).
  *  - **Description:** `text-sm text-ink-muted line-clamp-2` (sans-serif).
- *  - **Thumbnail:** top-right, ~64px square, `rounded-lg`, hairline border,
- *    via {@link MemoryThumbnail} — reused as-is (not reinvented). The new
- *    Space-list thumbnails RPC returns exactly the `Media[]` shape (1–2 rows,
- *    oldest-first) that `MemoryThumbnail` already consumes, so the same
- *    stacked/fanned + poster-frame-for-video + "no media = no thumbnail"
- *    behavior applies here with zero new thumbnail logic.
- *
- * No member-count / memory-count displays are added — none exist on the card
- * today, and the spec forbids inventing new data displays. The card gains only
- * the thumbnail + token restyle + `.hover-lift` + mono role badge.
+ *  - **Mosaic:** top-right, ~64px square, via {@link MultiPhotoMosaic} —
+ *    shows up to 3 recent photos across all Memories in the Space. Layout
+ *    states: 0=placeholder, 1=single, 2=split, 3+=mosaic. The new
+ *    get_space_mosaic_thumbnails RPC returns up to 3 rows per Space (newest
+ *    first) that MultiPhotoMosaic consumes directly.
  */
 export default function SpaceCard({ space, role, thumbnails }: SpaceCardProps) {
   return (
@@ -74,11 +64,10 @@ export default function SpaceCard({ space, role, thumbnails }: SpaceCardProps) {
           )}
         </div>
 
-        {/* Photo preview — top-right, ~64px square. Renders nothing when the
-            Space's most recent Memory has no media (no placeholder, no
-            broken-image icon). Reuses MemoryThumbnail exactly as the Memory
-            card does. */}
-        <MemoryThumbnail media={thumbnails} />
+        {/* Photo preview — top-right, ~64px square. Uses MultiPhotoMosaic to
+            show up to 3 recent photos across all Memories in the Space.
+            Renders a calm placeholder when the Space has no media. */}
+        <MultiPhotoMosaic media={thumbnails} className="w-16 h-16 shrink-0" />
       </div>
     </Link>
   );

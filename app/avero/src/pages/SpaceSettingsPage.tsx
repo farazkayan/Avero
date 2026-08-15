@@ -581,7 +581,7 @@ export default function SpaceSettingsPage() {
                 Edit Space
               </h1>
               <form
-                className="mt-6 max-w-[420px] space-y-5"
+                className="mt-6 max-w-[420px] space-y-5 rounded-xl border border-ink/5 bg-canvas-soft p-6"
                 onSubmit={handleSaveEdit}
                 noValidate
                 aria-describedby={
@@ -626,14 +626,13 @@ export default function SpaceSettingsPage() {
                   </p>
                 )}
                 <div className="flex items-center gap-4">
-                  <button
+                  <PrimaryButton
                     type="submit"
+                    loading={isSavingEdit}
                     disabled={isSavingEdit}
-                    aria-busy={isSavingEdit || undefined}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isSavingEdit ? "Saving…" : "Save changes"}
-                  </button>
+                  </PrimaryButton>
                   <button
                     type="button"
                     onClick={handleCancelEdit}
@@ -675,11 +674,11 @@ export default function SpaceSettingsPage() {
           <section className="mt-10">
             <div className="flex items-baseline gap-2">
               <h2 className="text-lg font-semibold text-ink">Members</h2>
-              <span className="text-sm text-ink-muted">
+              <span className="font-mono text-xs text-ink-muted px-2 py-0.5 rounded-full bg-ink/5">
                 {members.length}
               </span>
             </div>
-            <ul className="mt-4 divide-y divide-white/5">
+            <ul className="mt-4 divide-y divide-ink/5">
               {members.map((member) => (
                 <MemberRow
                   key={member.id}
@@ -700,7 +699,7 @@ export default function SpaceSettingsPage() {
               </p>
 
               <form
-                className="mt-4 max-w-[420px] space-y-4"
+                className="mt-4 max-w-[420px] space-y-4 rounded-xl border border-ink/5 bg-canvas-soft p-6"
                 onSubmit={handleCreateInvite}
                 noValidate
                 aria-describedby={
@@ -738,6 +737,7 @@ export default function SpaceSettingsPage() {
                   type="submit"
                   loading={isCreatingInvite}
                   disabled={isCreatingInvite}
+                  className="w-full"
                 >
                   {isCreatingInvite ? "Creating…" : "Create Invite Link"}
                 </PrimaryButton>
@@ -758,14 +758,14 @@ export default function SpaceSettingsPage() {
                     {createdInviteLink}
                   </code>
                   <div className="mt-3 flex items-center gap-3">
-                    <button
+                    <PrimaryButton
                       type="button"
                       onClick={handleCopyInviteLink}
                       disabled={isInviteLinkCopied}
-                      className="inline-flex items-center justify-center rounded-lg bg-accent-600 px-3.5 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full sm:w-auto"
                     >
                       {isInviteLinkCopied ? "Copied!" : "Copy Link"}
-                    </button>
+                    </PrimaryButton>
                     <button
                       type="button"
                       onClick={() => {
@@ -790,7 +790,7 @@ export default function SpaceSettingsPage() {
                     No pending invites for this Space.
                   </p>
                 ) : (
-                  <ul className="mt-2 divide-y divide-white/5">
+                  <ul className="mt-2 divide-y divide-ink/5">
                     {invitations.map((invitation) => (
                       <li
                         key={invitation.id}
@@ -813,7 +813,7 @@ export default function SpaceSettingsPage() {
           )}
 
           {/* Danger zone */}
-          <section className="mt-10 rounded-xl border border-error/20 p-5">
+          <section className="mt-10 rounded-xl border border-error/20 bg-error-soft p-5">
             <h2 className="text-lg font-semibold text-ink">Danger zone</h2>
             <p className="mt-1 text-sm text-ink-muted">
               {isOwner

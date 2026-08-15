@@ -9,8 +9,8 @@ type AuthShellProps = {
 /**
  * The shared frame for every auth screen (auth-design §1, §5).
  *
- * Desktop: a two-panel split — a deep, soft near-black ambient panel carrying
- * a subtle accent gradient and brand-voice copy, beside a lighter form panel.
+ * Desktop: a two-panel split — a warm ambient panel carrying
+ * a subtle brass gradient and brand-voice copy, beside a form panel.
  * Mobile: the ambient panel is removed entirely; the wordmark sits at the top
  * and the form is centered with generous side margins.
  *
@@ -24,13 +24,13 @@ export default function AuthShell({ children, ambientCopy }: AuthShellProps) {
         {/* Ambient / brand-voice panel — desktop only, decorative */}
         <aside
           aria-hidden="true"
-          className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-canvas p-12 lg:flex"
+          className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-canvas p-12 lg:flex border-r border-ink/5"
         >
           <div
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "radial-gradient(120% 80% at 30% 20%, rgba(var(--accent-rgb), 0.14), transparent 60%)",
+                "radial-gradient(120% 80% at 30% 20%, rgba(var(--accent-rgb), 0.12), transparent 60%)",
             }}
           />
           <div className="relative">
