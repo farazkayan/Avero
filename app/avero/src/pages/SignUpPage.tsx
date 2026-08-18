@@ -4,9 +4,6 @@ import AuthFormPanel from "../components/auth/AuthFormPanel";
 import AuthHeading from "../components/auth/AuthHeading";
 import TextField from "../components/ui/TextField";
 import PasswordField from "../components/ui/PasswordField";
-import PrimaryButton from "../components/ui/PrimaryButton";
-import GhostLink from "../components/ui/GhostLink";
-import Spinner from "../components/ui/Spinner";
 import { GoogleIcon } from "../components/ui/icons";
 import { supabase } from "../lib/supabase";
 import { VERIFY_EMAIL_PATH } from "../constants/routes";
@@ -182,7 +179,7 @@ export default function SignUpPage() {
             className="mb-8"
           />
 
-          <p className="text-sm text-ink-muted">
+          <p className="auth-body text-sm">
             Once you've verified your email, you can sign in to your account.
           </p>
 
@@ -190,12 +187,7 @@ export default function SignUpPage() {
             <button
               type="button"
               onClick={handleUseDifferentEmail}
-              className={[
-                "inline-flex items-center justify-center text-sm font-medium",
-                "text-ink-muted transition-colors duration-200",
-                "hover:text-accent-400 focus:outline-none focus-visible:text-accent-400",
-                "focus-visible:ring-2 focus-visible:ring-accent-500/60 rounded-md",
-              ].join(" ")}
+              className="auth-link-button inline-flex items-center justify-center text-sm font-medium rounded-md"
             >
               Use a different email
             </button>
@@ -220,103 +212,117 @@ export default function SignUpPage() {
           onClick={handleGoogleSignIn}
           disabled={isGoogleLoading || isSubmitting}
           className={[
-            "inline-flex w-full items-center justify-center gap-2 rounded-lg",
-            "px-4 py-2.5 text-base font-medium text-ink",
-            "bg-canvas-raised border border-ink/10 transition-colors duration-200",
-            "hover:bg-ink/5 active:bg-ink/10",
-            "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
+            "auth-google-button w-full flex items-center justify-center gap-3 py-3 px-4 rounded-md mb-6 transition-all duration-300",
             (isGoogleLoading || isSubmitting)
               ? "cursor-not-allowed opacity-60"
               : "",
           ].join(" ")}
         >
-          {isGoogleLoading && <Spinner size={18} />}
+          {isGoogleLoading && (
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="none"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          )}
           <GoogleIcon className="flex-shrink-0" />
-          <span>Continue with Google</span>
+          <span className="auth-google-label text-sm">Continue with Google</span>
         </button>
 
         {/* Divider */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-ink/10" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-canvas-soft text-ink-muted">Or continue with email</span>
-          </div>
+        <div className="flex items-center gap-4 mb-6">
+          <div className="auth-divider flex-1 h-px"></div>
+          <span className="auth-divider-text text-sm">Or continue with email</span>
+          <div className="auth-divider flex-1 h-px"></div>
         </div>
 
-        <form
-          className="space-y-5"
-          onSubmit={handleSubmit}
-          noValidate
-          aria-describedby={formError ? "signup-form-error" : undefined}
-        >
-          <TextField
-            id="name"
-            name="name"
-            type="text"
-            label="Name"
-            autoComplete="name"
-            placeholder="Your name"
-            value={name}
-            disabled={isSubmitting}
-            error={nameError}
-            onChange={(event) => setName(event.target.value)}
-            onBlur={handleNameBlur}
-          />
-
-          <TextField
-            id="email"
-            name="email"
-            type="email"
-            label="Email"
-            autoComplete="email"
-            inputMode="email"
-            placeholder="you@example.com"
-            value={email}
-            disabled={isSubmitting}
-            error={emailError}
-            onChange={(event) => setEmail(event.target.value)}
-            onBlur={handleEmailBlur}
-          />
-
-          <PasswordField
-            id="password"
-            name="password"
-            label="Password"
-            autoComplete="new-password"
-            placeholder="Create a password"
-            helperText={`At least ${MIN_PASSWORD_LENGTH} characters.`}
-            value={password}
-            disabled={isSubmitting}
-            error={passwordError}
-            onChange={(event) => setPassword(event.target.value)}
-            onBlur={handlePasswordBlur}
-          />
+        {/* Form */}
+        <form className="space-y-4" onSubmit={handleSubmit} noValidate aria-describedby={formError ? "signup-form-error" : undefined}>
+          <div>
+            <TextField
+              id="name"
+              name="name"
+              type="text"
+              label="Name"
+              autoComplete="name"
+              placeholder="Your name"
+              value={name}
+              disabled={isSubmitting}
+              error={nameError}
+              onChange={(event) => setName(event.target.value)}
+              onBlur={handleNameBlur}
+            />
+          </div>
+          <div>
+            <TextField
+              id="email"
+              name="email"
+              type="email"
+              label="Email"
+              autoComplete="email"
+              inputMode="email"
+              placeholder="you@example.com"
+              value={email}
+              disabled={isSubmitting}
+              error={emailError}
+              onChange={(event) => setEmail(event.target.value)}
+              onBlur={handleEmailBlur}
+            />
+          </div>
+          <div className="relative">
+            <PasswordField
+              id="password"
+              name="password"
+              label="Password"
+              autoComplete="new-password"
+              placeholder="Create a password"
+              helperText={`At least ${MIN_PASSWORD_LENGTH} characters.`}
+              value={password}
+              disabled={isSubmitting}
+              error={passwordError}
+              onChange={(event) => setPassword(event.target.value)}
+              onBlur={handlePasswordBlur}
+            />
+          </div>
 
           {formError && (
             <p
               id="signup-form-error"
               role="alert"
-              className="text-sm text-error"
+              className="auth-form-error text-sm"
             >
               {formError}
             </p>
           )}
 
-          <PrimaryButton type="submit" loading={isSubmitting}>
+          <button
+            type="submit"
+            className="auth-submit-button w-full text-white py-3 rounded-lg mt-6 transition-all duration-300"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "Creating account…" : "Create account"}
-          </PrimaryButton>
+          </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-ink-muted">
+        <p className="auth-footnote mt-4 text-center text-sm">
           Your memories stay private. Only the people you invite can see them.
         </p>
 
-        <p className="mt-8 text-center text-sm text-ink-muted">
-          Already have an account?{" "}
-          <GhostLink to="/signin">Sign in.</GhostLink>
-        </p>
+        <div className="auth-signin-link mt-8 text-center text-sm">
+          <span>Already have an account? </span>
+          <a className="auth-brass-link hover:opacity-80 transition-opacity" href="/signin">Sign in.</a>
+        </div>
       </AuthFormPanel>
     </AuthShell>
   );

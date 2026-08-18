@@ -24,6 +24,9 @@ export type TextFieldProps = Omit<
  *
  * PasswordField composes this component, so behavior stays predictable
  * everywhere (Blueprint Principle #4: Consistency Builds Confidence).
+ *
+ * Labels are screen-reader-only (sr-only) per the Stitch source — placeholder
+ * text alone serves the visual labeling purpose.
  */
 const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
   function TextField(
@@ -41,10 +44,7 @@ const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 
     return (
       <div className={className}>
-        <label
-          htmlFor={inputId}
-          className="block text-sm font-medium text-ink-muted mb-2"
-        >
+        <label htmlFor={inputId} className="sr-only">
           {label}
         </label>
 
@@ -66,16 +66,10 @@ const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
             }
             aria-invalid={hasError || undefined}
             className={[
-              "w-full rounded-lg border bg-canvas px-3.5 py-2.5 text-base text-ink",
-              "placeholder:text-ink-disabled",
-              "transition-colors duration-200",
-              "focus:outline-none focus:ring-2 focus:ring-accent-500/60 focus:border-accent-500",
+              "auth-input w-full rounded-md py-3 px-4 text-base transition-all",
               leadingIcon ? "pl-10" : "",
               // Reserve space for a trailing addon so text never underlaps it.
-              trailingAddon ? "pr-11" : "",
-              hasError
-                ? "border-error/60 focus:border-error focus:ring-error/30"
-                : "border-ink/10 hover:border-ink/20",
+              trailingAddon ? "pr-12" : "",
             ].join(" ")}
             {...inputProps}
           />
@@ -86,9 +80,7 @@ const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
         {(helperText || error) && (
           <p
             id={describedById}
-            className={`mt-1.5 text-sm ${
-              hasError ? "text-error" : "text-ink-muted"
-            }`}
+            className={`auth-helper mt-2 text-sm ${hasError ? "auth-helper-error" : ""}`}
           >
             {error ?? helperText}
           </p>

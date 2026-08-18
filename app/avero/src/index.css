@@ -218,3 +218,461 @@ body::before {
     animation-duration: 0.01ms;
   }
 }
+
+/* Noise overlay for auth panels (from Stitch source).
+   The app uses `html.light` for the light theme (dark is the default, no class),
+   so we scope the light override to `html.light .noise` rather than `.light .noise`. */
+.noise {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+html.light .noise {
+  opacity: 0.025;
+}
+
+/* Theme transition */
+.transition-theme {
+  transition: background-color 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+              color 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+              border-color 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Custom brass colors for auth. The app's theme convention is `html.light` for
+   light (dark is default, no class), so dark styles are the base and light
+   overrides are scoped to `html.light`. */
+.bg-brass-solid {
+  background-color: #886548; /* dark theme brass */
+}
+
+html.light .bg-brass-solid {
+  background-color: #9C7D52; /* light theme brass */
+}
+
+.text-brass-link {
+  color: #b89668; /* dark theme link brass */
+}
+
+html.light .text-brass-link {
+  color: #9C7D52; /* light theme link brass */
+}
+
+.focus-brass:focus {
+  border-color: #886548; /* dark theme focus brass */
+  box-shadow: 0 0 0 1px #886548;
+}
+
+html.light .focus-brass:focus {
+  border-color: #9C7D52; /* light theme focus brass */
+  box-shadow: 0 0 0 1px #9C7D52;
+}
+
+/* ===========================================================================
+   Auth shell — Stitch source port (avero_sign_up_responsive_v2.1)
+   ---------------------------------------------------------------------------
+   The app's theme system uses `html.light` (dark is the default, no class on
+   <html>). Tailwind `dark:` variants are NOT used because darkMode is not
+   configured for the `dark` class strategy. Instead, these classes resolve
+   theme via the app's CSS-variable tokens (`bg-canvas`, `text-ink`, etc.)
+   which already flip under `:root` / `:root.light`, plus a few Stitch-source
+   hex values that don't map to a token are handled with `html.light` overrides.
+   =========================================================================== */
+
+.auth-shell {
+  /* Dark (default) — canvas-dark = #0b0b0c */
+  background-color: #0b0b0c;
+  color: #ececec;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  transition: background-color 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+              color 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+              border-color 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+html.light .auth-shell {
+  /* Light — canvas-warm = #fbf9f5 */
+  background-color: #fbf9f5;
+  color: #1e1b18;
+}
+
+/* Theme toggle button */
+.auth-theme-toggle {
+  background-color: transparent;
+}
+
+.auth-theme-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.05); /* dark hover */
+}
+
+html.light .auth-theme-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05); /* light hover */
+}
+
+.auth-icon-dark {
+  color: #8d8d8a;
+  font-size: 24px;
+  font-variation-settings: 'wght' 400, 'FILL' 0;
+  transition: color 0.2s;
+}
+
+.auth-icon-dark:hover {
+  color: #ffffff;
+}
+
+.auth-icon-light {
+  color: #5e5e5c;
+  font-size: 24px;
+  font-variation-settings: 'wght' 400, 'FILL' 0;
+  transition: color 0.2s;
+}
+
+.auth-icon-light:hover {
+  color: #000000;
+}
+
+/* Left panel */
+.auth-left-panel {
+  background-color: #0b0b0c; /* canvas-dark */
+  border-color: rgba(255, 255, 255, 0.10);
+  transition: background-color 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+              border-color 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+html.light .auth-left-panel {
+  background-color: #fbf9f5; /* canvas-warm */
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Wordmark — mono label role (JetBrains Mono, uppercase, wide tracking) */
+.auth-wordmark {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.0;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: #ececec; /* dark on-surface */
+}
+
+html.light .auth-wordmark {
+  color: #1e1b18; /* light on-surface */
+}
+
+/* Polaroid backgrounds */
+.auth-polaroid-bottom {
+  background-color: #e9e1db; /* dark surface-container-highest */
+}
+
+html.light .auth-polaroid-bottom {
+  background-color: #f4ece6; /* light surface-container */
+}
+
+.auth-polaroid-middle {
+  background-color: #efe7e1; /* dark surface-container-high */
+}
+
+html.light .auth-polaroid-middle {
+  background-color: #faf2ec; /* light surface-container-low */
+}
+
+.auth-polaroid-top {
+  background-color: #fbf9f5; /* dark canvas-warm (near-white) */
+}
+
+html.light .auth-polaroid-top {
+  background-color: #ffffff; /* light card-warm */
+}
+
+/* Headline (emotional H1) */
+.auth-headline {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  color: #ffffff; /* dark */
+}
+
+html.light .auth-headline {
+  color: #1e1b18; /* light on-surface */
+}
+
+@media (min-width: 768px) {
+  .auth-headline {
+    font-size: 32px;
+  }
+}
+
+/* Subhead (emotional paragraph) */
+.auth-subhead {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #8d8d8a; /* dark muted */
+}
+
+html.light .auth-subhead {
+  color: #736b63; /* light muted (Stitch source value) */
+}
+
+/* Right panel — flat near-white (light) / near-black (dark), NO gradient */
+.auth-right-panel {
+  background-color: #131314; /* card-dark */
+  transition: background-color 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+html.light .auth-right-panel {
+  background-color: #ffffff; /* card-warm — clean flat, no gradient */
+}
+
+/* ===========================================================================
+   Auth form elements — Stitch source port
+   =========================================================================== */
+
+/* Text inputs (name / email / password) */
+.auth-input {
+  background-color: #131314; /* card-dark (dark theme input bg) */
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #ffffff;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.auth-input::placeholder {
+  color: #8d8d8a;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #886548; /* dark theme brass */
+  box-shadow: 0 0 0 1px #886548;
+}
+
+html.light .auth-input {
+  background-color: #ffffff; /* card-warm */
+  border: 1px solid #d1c4b7; /* outline-variant */
+  color: #1e1b18; /* on-surface */
+}
+
+html.light .auth-input::placeholder {
+  color: #8d8d8a;
+}
+
+html.light .auth-input:focus {
+  border-color: #9C7D52; /* light theme brass */
+  box-shadow: 0 0 0 1px #9C7D52;
+}
+
+/* Helper / error text under inputs */
+.auth-helper {
+  color: #8d8d8a; /* dark muted */
+  opacity: 0.7;
+}
+
+html.light .auth-helper {
+  color: #5e5e5c; /* light secondary */
+}
+
+.auth-helper-error {
+  color: #c98a7a !important; /* dark error */
+  opacity: 1 !important;
+}
+
+html.light .auth-helper-error {
+  color: #ba1a1a !important; /* light error */
+}
+
+/* Form error (alert) */
+.auth-form-error {
+  color: #c98a7a; /* dark error */
+}
+
+html.light .auth-form-error {
+  color: #ba1a1a; /* light error */
+}
+
+/* Body text (verification notice) */
+.auth-body {
+  color: #8d8d8a; /* dark muted */
+}
+
+html.light .auth-body {
+  color: #5e5e5c; /* light secondary */
+}
+
+/* Link button (use a different email) */
+.auth-link-button {
+  color: #8d8d8a; /* dark muted */
+  transition: color 0.2s;
+}
+
+.auth-link-button:hover,
+.auth-link-button:focus {
+  color: #b89668; /* dark brass link */
+  outline: none;
+}
+
+html.light .auth-link-button {
+  color: #5e5e5c; /* light secondary */
+}
+
+html.light .auth-link-button:hover,
+html.light .auth-link-button:focus {
+  color: #9C7D52; /* light brass link */
+}
+
+/* Google OAuth button */
+.auth-google-button {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.auth-google-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+html.light .auth-google-button {
+  border: 1px solid #d1c4b7; /* outline-variant */
+}
+
+.auth-google-label {
+  color: #ececec; /* dark on-surface */
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+html.light .auth-google-label {
+  color: #1e1b18; /* light on-surface */
+}
+
+/* Divider */
+.auth-divider {
+  background-color: rgba(255, 255, 255, 0.10);
+}
+
+html.light .auth-divider {
+  background-color: rgba(209, 196, 183, 0.5); /* outline-variant/50 */
+}
+
+.auth-divider-text {
+  color: #8d8d8a; /* dark muted */
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+html.light .auth-divider-text {
+  color: #5e5e5c; /* light secondary */
+}
+
+/* Submit button (Create account) — brass solid */
+.auth-submit-button {
+  background-color: #886548; /* dark brass */
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.auth-submit-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(136, 101, 72, 0.3);
+}
+
+.auth-submit-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+html.light .auth-submit-button {
+  background-color: #9C7D52; /* light brass */
+}
+
+/* Footnote (privacy line) */
+.auth-footnote {
+  color: #8d8d8a; /* dark muted */
+  opacity: 0.7;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+html.light .auth-footnote {
+  color: #5e5e5c; /* light secondary */
+}
+
+/* Sign in link container */
+.auth-signin-link {
+  color: #8d8d8a; /* dark muted */
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+html.light .auth-signin-link {
+  color: #5e5e5c; /* light secondary */
+}
+
+/* Brass link (Sign in.) */
+.auth-brass-link {
+  color: #b89668; /* dark brass link */
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+html.light .auth-brass-link {
+  color: #9C7D52; /* light brass link */
+}
+
+/* Material Symbols Outlined base */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Auth heading (H2 + supporting line) — Stitch source: headline-md / body-md */
+.auth-heading-headline {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 20px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+  color: #ffffff; /* dark on-surface */
+}
+
+html.light .auth-heading-headline {
+  color: #1e1b18; /* light on-surface */
+}
+
+.auth-heading-supporting {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #8d8d8a; /* dark muted */
+}
+
+html.light .auth-heading-supporting {
+  color: #5e5e5c; /* light secondary */
+}
