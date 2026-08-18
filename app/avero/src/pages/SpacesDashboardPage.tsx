@@ -10,7 +10,7 @@ import { fetchSpaceMosaicThumbnailsBatch } from "../lib/media";
 import { supabase } from "../lib/supabase";
 import { SPACE_CREATE_PATH } from "../constants/routes";
 import type { Media } from "../types/media";
-import type { SpaceMembershipWithSpace } from "../types/space";
+import type { SpaceMembershipWithSpace, SpaceMemberProfile } from "../types/space";
 
 /**
  * Spaces Dashboard — the authenticated landing page (spaces-design §6.1).
@@ -43,6 +43,10 @@ export default function SpacesDashboardPage() {
   const [thumbnailsBySpaceId, setThumbnailsBySpaceId] = useState<
     Record<string, Media[]>
   >({});
+  // Per-Space members (including profile avatars) for the avatar stack.
+  const [membersBySpaceId, setMembersBySpaceId] = useState<
+    Record<string, (SpaceMembershipWithSpace & { profiles: SpaceMemberProfile })[]>
+  >({});
   const [prevMemberships, setPrevMemberships] = useState(memberships);
 
   // When the memberships list becomes empty, clear stale thumbnails during
@@ -53,6 +57,7 @@ export default function SpacesDashboardPage() {
     setPrevMemberships(memberships);
     if (memberships.length === 0) {
       setThumbnailsBySpaceId({});
+      setMembersBySpaceId({});
     }
   }
 
@@ -109,6 +114,65 @@ export default function SpacesDashboardPage() {
     };
   }, [user]);
 
+  // Fetch members for each space when the memberships list changes.
+  useEffect(() => {
+    if (memberships.length === 0) {
+      setMembersBySpaceId({});
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchMembers() {
+      const spaceIds = memberships.map((m) => m.space_id);
+      if (spaceIds.length === 0) {
+        setMembersBySpaceId({});
+        return;
+      }
+
+      try {
+        const { data, error: membersError } = await supabase
+          .from("space_members")
+          .select("*, profiles!space_members_user_id_fkey(avatar_url, name)")
+          .in("space_id", spaceIds);
+
+        if (cancelled) {
+          return;
+        }
+
+        if (membersError) {
+          console.error("We couldn't load the members for your Spaces. Please try again.");
+          setMembersBySpaceId({});
+          return;
+        }
+
+        // Group by space_id
+        const grouped: Record<string, (SpaceMembershipWithSpace & { profiles: SpaceMemberProfile })[]> = {};
+        (data ?? []).forEach((member) => {
+          const spaceId = member.space_id;
+          if (!grouped[spaceId]) {
+            grouped[spaceId] = [];
+          }
+          grouped[spaceId].push(member as unknown as SpaceMembershipWithSpace & { profiles: SpaceMemberProfile });
+        });
+
+        setMembersBySpaceId(grouped);
+      } catch {
+        if (cancelled) {
+          return;
+        }
+        console.error("We couldn't load the members for your Spaces. Please try again.");
+        setMembersBySpaceId({});
+      }
+    }
+
+    void fetchMembers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [memberships]);
+
   // Mosaic thumbnails batch — a single RPC round trip fetches up to 3 most
   // recent media rows across ALL Memories in each Space (ordered by
   // created_at DESC), avoiding N+1 per-card queries. Re-runs when the
@@ -149,54 +213,64 @@ export default function SpacesDashboardPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold leading-tight text-ink sm:text-3xl">
-          Your Spaces
-        </h1>
-        <Link
-          to={SPACE_CREATE_PATH}
-          className="inline-flex shrink-0 items-center justify-center rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
-        >
-          Create a Space
-        </Link>
-      </div>
-
-      {isLoading ? (
-        <div
-          className="flex items-center justify-center py-24 text-accent-400"
-          role="status"
-          aria-live="polite"
-        >
-          <Spinner size={28} />
-        </div>
-      ) : error ? (
-        <div className="mt-10 rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
-          <p className="text-sm text-error">{error}</p>
-        </div>
-      ) : memberships.length === 0 ? (
-        <EmptyState
-          titleAs="h2"
-          icon={<SparkleIcon />}
-          title="Your first Space is where your shared story begins."
-          description="Create a Space for the people you share memories with, or accept an invitation to join one."
-        >
-          <Link to={SPACE_CREATE_PATH}>
-            <PrimaryButton type="button">Create a Space</PrimaryButton>
+      <div className="flex-1 max-w-[1280px] mx-auto w-full px-6 py-10 lg:px-12 flex flex-col gap-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
+          <div>
+            <h1 className="font-headline-lg text-headline-lg text-ink dark:text-surface-container-lowest mb-2">
+              Your Spaces
+            </h1>
+            <p className="font-body-md text-body-md text-ink-muted dark:text-secondary-fixed-dim">
+              Shared albums and collaborative memory vaults.
+            </p>
+          </div>
+          <Link
+            to={SPACE_CREATE_PATH}
+            className="flex items-center gap-2 h-12 px-6 rounded-lg bg-accent-600 hover:bg-accent-700 dark:bg-primary-fixed-dim dark:hover:bg-primary-fixed text-on-primary dark:text-on-primary-fixed font-medium transition-colors shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[20px]">add</span>
+            Create a Space
           </Link>
-        </EmptyState>
-      ) : (
-        <ul className="mt-8 space-y-4">
-          {memberships.map((membership) => (
-            <li key={membership.id}>
-              <SpaceCard
-                space={membership.spaces}
-                role={membership.role}
-                thumbnails={thumbnailsBySpaceId[membership.spaces.id] ?? []}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+        </div>
+
+        {isLoading ? (
+          <div
+            className="flex items-center justify-center py-24 text-accent-400"
+            role="status"
+            aria-live="polite"
+          >
+            <Spinner size={28} />
+          </div>
+        ) : error ? (
+          <div className="mt-10 rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
+            <p className="text-sm text-error">{error}</p>
+          </div>
+        ) : memberships.length === 0 ? (
+          <EmptyState
+            titleAs="h2"
+            icon={<SparkleIcon />}
+            title="Your first Space is where your shared story begins."
+            description="Create a Space for the people you share memories with, or accept an invitation to join one."
+          >
+            <Link to={SPACE_CREATE_PATH}>
+              <PrimaryButton type="button">Create a Space</PrimaryButton>
+            </Link>
+          </EmptyState>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {memberships.map((membership) => (
+              <div key={membership.id}>
+                <SpaceCard
+                  space={membership.spaces}
+                  role={membership.role}
+                  thumbnails={thumbnailsBySpaceId[membership.spaces.id] ?? []}
+                  members={membersBySpaceId[membership.spaces.id] ?? []}
+                  memoryCount={membership.spaces.memory_count ?? 0}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </>
   );
 }

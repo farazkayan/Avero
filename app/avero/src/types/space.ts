@@ -18,6 +18,8 @@ export type Space = {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  /** Number of memories in the space (optional, for dashboard use) */
+  memory_count?: number;
 };
 
 /**
@@ -49,6 +51,7 @@ export type SpaceMembershipWithSpace = {
  * absent (e.g. mid-cascade); the UI falls back gracefully when it is missing.
  */
 export type SpaceMemberProfile = {
+  id: string;
   name: string;
   avatar_url: string | null;
 };

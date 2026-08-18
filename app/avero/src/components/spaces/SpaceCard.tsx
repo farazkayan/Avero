@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import MultiPhotoMosaic from "../ui/MultiPhotoMosaic";
 import { spaceDetailPath } from "../../constants/routes";
-import type { Space, SpaceRole } from "../../types/space";
+import type { Space, SpaceRole, SpaceMembershipWithSpace, SpaceMemberProfile } from "../../types/space";
 import type { Media } from "../../types/media";
 
 type SpaceCardProps = {
@@ -12,12 +12,19 @@ type SpaceCardProps = {
    * from the dashboard's batch mosaic thumbnail fetch. Empty array → placeholder.
    */
   thumbnails: Media[];
+  /**
+   * Members of this Space (including profile avatars) for the avatar stack.
+   */
+  members: (SpaceMembershipWithSpace & { profiles: SpaceMemberProfile })[];
+  /**
+   * Number of memories in this Space.
+   */
+  memoryCount: number;
 };
 
 /**
  * A single Space in the dashboard list (spaces-design §6.1, design-system §6),
- * redesigned to the v2.0 design system and carrying a multi-photo mosaic
- * preview so Spaces feel alive on the "Your Spaces" list.
+ * redesigned to match the Stitch source exactly.
  *
  * The whole card is a React Router `<Link>` to the Space detail page
  * (`/spaces/:id`), so the entire surface is clickable. The role badge is
@@ -25,71 +32,148 @@ type SpaceCardProps = {
  * no nested interactive elements are introduced. The mosaic's media is
  * `pointer-events-none` (handled by {@link MultiPhotoMosaic}), so a click on
  * the mosaic passes through to the link rather than stealing it.
- *
- * Visual language (all from v2.0 tokens — no one-off values):
- *  - **Card surface:** `elevation-raised` → `bg-canvas-soft` + hairline
- *    `border border-ink/5`, `rounded-xl`.
- *  - **Hover:** the canonical `.hover-lift` utility (translateY, accent border,
- *    one hairline glow).
- *  - **Title:** `text-base font-semibold text-ink` (primary sans-serif, per
- *    Design System §3 — titles stay sans).
- *  - **Role badge:** `bg-accent-soft text-accent-400` (Owner) /
- *    `bg-ink/5 text-ink-muted` (Member), with `font-mono` text — the role
- *    label is metadata, so it uses the signature mono face per Design System
- *    §3 (mono reserved for dates/counts/metadata labels).
- *  - **Description:** `text-sm text-ink-muted line-clamp-2` (sans-serif).
- *  - **Mosaic:** top-right, ~64px square, via {@link MultiPhotoMosaic} —
- *    shows up to 3 recent photos across all Memories in the Space. Layout
- *    states: 0=placeholder, 1=single, 2=split, 3+=mosaic. The new
- *    get_space_mosaic_thumbnails RPC returns up to 3 rows per Space (newest
- *    first) that MultiPhotoMosaic consumes directly.
  */
-export default function SpaceCard({ space, role, thumbnails }: SpaceCardProps) {
+export default function SpaceCard({ space, role, thumbnails, members, memoryCount }: SpaceCardProps) {
+  // Helper to format time ago from an ISO string
+  const formatTimeAgo = (isoString: string): string => {
+    const now = new Date();
+    const past = new Date(isoString);
+    const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(months / 12);
+
+    if (years > 0) {
+      return `${years}y ago`;
+    } else if (months > 0) {
+      return `${months}mo ago`;
+    } else if (days > 0) {
+      return `${days}d ago`;
+    } else if (hours > 0) {
+      return `${hours}h ago`;
+    } else if (minutes > 0) {
+      return `${minutes}m ago`;
+    } else {
+      return "just now";
+    }
+  };
+
   return (
     <Link
       to={spaceDetailPath(space.id)}
-      className="hover-lift block rounded-xl border border-ink/5 bg-canvas-soft p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
+      className="hover-lift flex flex-col bg-surface-container-low dark:bg-card-dark rounded-[16px] overflow-hidden border border-outline-variant dark:border-outline shadow-sm cursor-pointer group"
     >
-      <div className="flex items-start gap-4">
-        {/* Text content — flexes to fill, stays left of the thumbnail. */}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-4">
-            <h3 className="text-base font-semibold text-ink">{space.name}</h3>
-            <RoleBadge role={role} />
-          </div>
-          {space.description && (
-            <p className="mt-2 line-clamp-2 text-sm text-ink-muted">
-              {space.description}
-            </p>
-          )}
+      {/* Photo mosaic - h-48 with Stitch source layout based on photo count */}
+      {thumbnails.length === 0 ? (
+        // 0 photos: placeholder (using MultiPhotoMosaic's placeholder)
+        <div className="h-48 p-1 bg-surface-container dark:bg-inverse-surface">
+          <MultiPhotoMosaic media={[]} className="w-full h-full" />
         </div>
+      ) : thumbnails.length === 1 ? (
+        // 1 photo: single image filling the area
+        <div className="h-48 p-1 bg-surface-container dark:bg-inverse-surface">
+          <MultiPhotoMosaic media={thumbnails} className="w-full h-full rounded-[12px]" />
+        </div>
+      ) : thumbnails.length === 2 ? (
+        // 2 photos: 3-column grid (left 2/3 width, right 1/3 width split vertically)
+        <div className="h-48 p-1 grid grid-cols-3 gap-1 bg-surface-container dark:bg-inverse-surface">
+          {/* Left column: spans 2 columns, 1 row (so full height) */}
+          <div className="col-span-2">
+            <MultiPhotoMosaic 
+              media={[thumbnails[0]]} 
+              className="w-full h-full bg-cover bg-center rounded-tl-[12px] rounded-bl-[4px]"
+            />
+          </div>
+          {/* Right column: 1 column wide, split into 2 rows */}
+          <div className="col-span-1 grid grid-rows-2 gap-1">
+            <MultiPhotoMosaic 
+              media={[thumbnails[1]]} 
+              className="w-full h-full bg-cover bg-center rounded-tr-[12px]"
+            />
+            <MultiPhotoMosaic 
+              media={[]} 
+              className="w-full h-full bg-cover bg-center rounded-br-[4px]"
+            />
+          </div>
+        </div>
+      ) : (
+        // 3+ photos: 2x2 grid (left column spans both rows, right column split into two rows)
+        <div className="h-48 p-1 grid grid-cols-2 grid-rows-2 gap-1 bg-surface-container dark:bg-inverse-surface">
+          {/* Left column: spans both rows (full height, 1/2 width) */}
+          <div className="col-span-1 row-span-2">
+            <MultiPhotoMosaic 
+              media={[thumbnails[0]]} 
+              className="w-full h-full bg-cover bg-center rounded-tl-[12px] rounded-bl-[4px]"
+            />
+          </div>
+          {/* Top right */}
+          <div className="col-span-1 row-span-1">
+            <MultiPhotoMosaic 
+              media={[thumbnails[1]]} 
+              className="w-full h-full bg-cover bg-center rounded-tr-[12px]"
+            />
+          </div>
+          {/* Bottom right */}
+          <div className="col-span-1 row-span-1">
+            <MultiPhotoMosaic 
+              media={[thumbnails[2]]} 
+              className="w-full h-full bg-cover bg-center rounded-br-[4px]"
+            />
+          </div>
+        </div>
+      )}
 
-        {/* Photo preview — top-right, ~64px square. Uses MultiPhotoMosaic to
-            show up to 3 recent photos across all Memories in the Space.
-            Renders a calm placeholder when the Space has no media. */}
-        <MultiPhotoMosaic media={thumbnails} className="w-16 h-16 shrink-0" />
+      <div className="p-6 flex flex-col gap-4">
+        <div className="flex justify-between items-start">
+          <h3 
+            className="text-headline-md font-headline-md text-on-surface dark:text-surface-container-lowest group-hover:text-accent-warm dark:group-hover:text-primary-fixed-dim transition-colors"
+          >
+            {space.name}
+          </h3>
+          <span 
+            className={role === "owner" 
+              ? "px-2.5 py-1 rounded-full bg-accent-warm/20 text-accent-warm dark:text-primary-fixed-dim text-xs font-semibold tracking-wide uppercase"
+              : "px-2.5 py-1 rounded-full bg-surface-container-high dark:bg-inverse-surface text-on-surface-variant dark:text-secondary-fixed-dim text-xs font-semibold tracking-wide uppercase"
+            }
+          >
+            {role === "owner" ? "Owner" : "Member"}
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-between mt-auto">
+          {/* Member avatar stack */}
+          <div className="flex -space-x-2">
+            {members.slice(0, 3).map((member, index) => (
+              <div 
+                key={member.id}
+                className="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-cover bg-center"
+                style={{
+                  backgroundImage: member.profiles.avatar_url 
+                    ? `url(${member.profiles.avatar_url})` 
+                    : undefined
+                }}
+              />
+            ))}
+            {members.length > 3 && (
+              <div 
+                className="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-surface-container dark:bg-inverse-surface flex items-center justify-center text-xs font-medium text-on-surface-variant dark:text-surface-container-lowest"
+              >
+                +{members.length - 3}
+              </div>
+            )}
+          </div>
+          
+          {/* Memory count + updated timestamp */}
+          <span 
+            className="font-mono-data text-mono-data text-on-surface-variant dark:text-secondary-fixed-dim text-right"
+          >
+            {memoryCount} memories<br />
+            {formatTimeAgo(space.updated_at)}
+          </span>
+        </div>
       </div>
     </Link>
-  );
-}
-
-/**
- * The viewer's role within this Space, shown as a small pill. The pill
- * affordance is kept (a recognizable role indicator); only the text face
- * changes to `font-mono` because the role label is metadata (Design System
- * §3 — mono reserved for metadata labels).
- */
-function RoleBadge({ role }: { role: SpaceRole }) {
-  if (role === "owner") {
-    return (
-      <span className="shrink-0 rounded-full bg-accent-soft px-2.5 py-0.5 font-mono text-xs font-medium text-accent-400">
-        Owner
-      </span>
-    );
-  }
-  return (
-    <span className="shrink-0 rounded-full bg-ink/5 px-2.5 py-0.5 font-mono text-xs font-medium text-ink-muted">
-      Member
-    </span>
   );
 }
