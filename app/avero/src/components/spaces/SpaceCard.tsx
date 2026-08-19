@@ -145,19 +145,19 @@ export default function SpaceCard({ space, role, thumbnails, members, memoryCoun
         <div className="flex items-center justify-between mt-auto">
           {/* Member avatar stack */}
           <div className="flex -space-x-2">
-            {members.slice(0, 3).map((member, index) => (
-              <div 
+            {members.slice(0, 3).map((member) => (
+              <div
                 key={member.id}
                 className="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-cover bg-center"
                 style={{
-                  backgroundImage: member.profiles.avatar_url 
-                    ? `url(${member.profiles.avatar_url})` 
+                  backgroundImage: member.profiles.avatar_url
+                    ? `url(${member.profiles.avatar_url})`
                     : undefined
                 }}
               />
             ))}
             {members.length > 3 && (
-              <div 
+              <div
                 className="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-surface-container dark:bg-inverse-surface flex items-center justify-center text-xs font-medium text-on-surface-variant dark:text-surface-container-lowest"
               >
                 +{members.length - 3}
