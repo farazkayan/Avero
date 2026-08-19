@@ -147,24 +147,21 @@ body::before {
 
 /*
    Motion - reusable hover-lift + glow pattern (Design System S7).
-   Subtle translateY, border-color transition, and one soft accent glow-in.
+   Matches Stitch source exactly: translateY(-4px) with colored shadow.
    No bounce, no overshoot. This is the canonical hover affordance for
    interactive surfaces; components add this class instead of one-off CSS.
-*/
+ */
 .hover-lift {
-  transition:
-    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 180ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hover-lift:hover {
-  transform: translateY(-2px);
-  border-color: rgba(var(--accent-rgb), 0.4);
-  /* One hairline glow - the only place accent glow is applied on hover. */
-  box-shadow:
-    0 0 0 1px rgba(var(--accent-rgb), 0.1),
-    0 8px 24px -12px rgba(var(--accent-rgb), 0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -10px rgba(114, 87, 48, 0.2);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 12px 24px -10px rgba(229, 193, 144, 0.2);
 }
 
 /* One-time discoverability hint for the timeline reaction pill (Design System

@@ -1,9 +1,7 @@
 import { Link } from "react-router";
-import BrandWordmark from "./auth/BrandWordmark";
 import { useAuth } from "../context/AuthContext";
-import { AUTHENTICATED_HOME_PATH, SETTINGS_PATH } from "../constants/routes";
-import { AvatarUpload } from "./ui/AvatarUpload";
-import { GearIcon } from "./ui/icons";
+import { SETTINGS_PATH } from "../constants/routes";
+import { useTheme } from "../context/ThemeContext";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -12,28 +10,14 @@ type AppShellProps = {
 /**
  * The shared frame for the authenticated area (spaces-design §5.1).
  *
- * Unlike `AuthShell` — the two-panel ambient frame unique to the
- * unauthenticated threshold experience — `AppShell` is the authenticated
- * layout: a top bar carrying the wordmark, user identity, and a link to
- * account Settings, above a centered, width-constrained content area
- * (design-system §5: "Max width for content areas", "centered content for
- * readability"). Responsive: mobile single-column, desktop centered with a
- * comfortable max width.
- *
- * The sign-out action now lives on the Settings page (roadmap Phase 6),
- * so the header stays minimal: wordmark, identity, and a gear link. Sign-out
- * itself still uses Supabase directly; the existing `AuthProvider`
- * `onAuthStateChange` listener updates authentication state automatically,
- * and the route guards then redirect the now-unauthenticated user to
- * sign-in — no manual navigation is performed (the same pattern used by
- * `SpacesPlaceholderPage`).
- *
- * `AppShell` renders only the frame; each page supplies its own heading and
- * content via `children`, so there is exactly one H1 per screen
- * (auth-design §8).
+ * Matches the Stitch source exactly: full-width top bar with bottom border,
+ * max-w-[1280px] centered content, logo + "AVERO" wordmark left-aligned,
+ * then on the right: circular theme-toggle button, circular settings button,
+ * vertical divider, then avatar + name.
  */
 export default function AppShell({ children }: AppShellProps) {
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   // Prefer the profile name captured at sign-up (stored in user_metadata)
   // and fall back to the email — the canonical identity that is always
@@ -42,41 +26,69 @@ export default function AppShell({ children }: AppShellProps) {
     (user?.user_metadata?.name as string | undefined) || user?.email || "";
 
   return (
-    <div className="min-h-screen bg-canvas text-ink">
-      <header className="sticky top-0 z-10 border-b border-ink/5 bg-canvas">
-        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-6">
-          <Link
-            to={AUTHENTICATED_HOME_PATH}
-            className="rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-            aria-label="Avero home"
-          >
-            <BrandWordmark />
-          </Link>
+    <div className="min-h-screen bg-canvas-warm dark:bg-canvas-dark text-on-surface dark:text-surface-container-lowest transition-colors duration-300 flex flex-col">
+      {/* Top Nav Bar - matches Stitch source exactly */}
+      <div className="w-full bg-surface-container-lowest dark:bg-card-dark border-b border-surface-variant dark:border-inverse-surface transition-colors duration-300">
+        <div className="max-w-[1280px] mx-auto flex h-full grow flex-col">
+          <header className="flex items-center justify-between whitespace-nowrap px-6 py-4 lg:px-12">
+            {/* Left: Logo + AVERO wordmark */}
+            <div className="flex items-center gap-4">
+              <div className="size-8">
+                <img
+                  src="/avero-logo.png"
+                  alt="Avero Logo"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <h2 className="text-on-surface dark:text-surface-container-lowest text-lg font-bold leading-tight tracking-[0.1em] uppercase">
+                AVERO
+              </h2>
+            </div>
 
-          <div className="flex items-center gap-4">
-            <AvatarUpload name={displayName} size={32} />
-            {displayName && (
-              <span className="hidden text-sm text-ink-muted sm:block">
-                {displayName}
-              </span>
-            )}
-            {/* Settings — reachable from the header (roadmap Phase 6). A
-                gear glyph keeps the header calm while making the account
-                screen one tap away; the sign-out action now lives on the
-                Settings page itself, so it is removed from the header to
-                avoid duplicating the affordance. */}
-            <Link
-              to={SETTINGS_PATH}
-              aria-label="Settings"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-            >
-              <GearIcon />
-            </Link>
-          </div>
+            {/* Right: Theme toggle, Settings, Divider, Avatar + Name */}
+            <div className="flex items-center gap-6">
+              {/* Theme Toggle - circular button */}
+              <button
+                onClick={toggleTheme}
+                className="flex cursor-pointer items-center justify-center rounded-full size-10 bg-surface-container hover:bg-surface-container-high dark:bg-inverse-surface dark:hover:bg-outline transition-colors text-on-surface-variant dark:text-surface-container-lowest"
+                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                <span className="material-symbols-outlined dark:hidden">dark_mode</span>
+                <span className="material-symbols-outlined hidden dark:block">light_mode</span>
+              </button>
+
+              {/* Settings - circular button */}
+              <Link
+                to={SETTINGS_PATH}
+                className="flex cursor-pointer items-center justify-center rounded-full size-10 bg-surface-container hover:bg-surface-container-high dark:bg-inverse-surface dark:hover:bg-outline transition-colors text-on-surface-variant dark:text-surface-container-lowest"
+                aria-label="Settings"
+              >
+                <span className="material-symbols-outlined">settings</span>
+              </Link>
+
+              {/* Vertical divider + Avatar + Name */}
+              <div className="flex items-center gap-3 pl-4 border-l border-surface-variant dark:border-inverse-surface">
+                <span className="hidden md:block text-sm font-medium text-on-surface dark:text-surface-container-lowest">
+                  {displayName}
+                </span>
+                <div
+                  className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline"
+                  style={{
+                    backgroundImage: user?.user_metadata?.avatar_url
+                      ? `url(${user.user_metadata.avatar_url})`
+                      : undefined,
+                  }}
+                  aria-hidden="true"
+                />
+              </div>
+            </div>
+          </header>
         </div>
-      </header>
+      </div>
 
-      <main className="mx-auto w-full max-w-3xl px-6 py-10">{children}</main>
+      <main className="flex-1 max-w-[1280px] mx-auto w-full px-6 py-10 lg:px-12 flex flex-col gap-8">
+        {children}
+      </main>
     </div>
   );
 }

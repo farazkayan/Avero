@@ -27,17 +27,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 
   // Apply the theme to the document whenever it changes (and on mount).
-  // `useLayoutEffect` runs before paint so the `light` class is on <html>
-  // before the first frame — no flash of the wrong theme. The `light` class
-  // drives the `:root.light` token overrides in `index.css`; `color-scheme`
-  // (set in `index.css` via `html` / `html.light`) makes native controls
-  // (scrollbars, form inputs) match.
+  // `useLayoutEffect` runs before paint so the classes are on <html>
+  // before the first frame — no flash of the wrong theme.
+  // - `dark` class: drives Tailwind's `dark:` variants (darkMode: "class")
+  // - `light` class: drives `:root.light` CSS-variable token overrides in `index.css`
+  // - `color-scheme`: makes native controls (scrollbars, form inputs) match
   useLayoutEffect(() => {
     const root = document.documentElement;
     if (theme === "light") {
+      root.classList.remove("dark");
       root.classList.add("light");
     } else {
       root.classList.remove("light");
+      root.classList.add("dark");
     }
   }, [theme]);
 

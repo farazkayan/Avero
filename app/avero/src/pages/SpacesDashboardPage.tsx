@@ -213,64 +213,62 @@ export default function SpacesDashboardPage() {
 
   return (
     <>
-      <div className="flex-1 max-w-[1280px] mx-auto w-full px-6 py-10 lg:px-12 flex flex-col gap-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
-          <div>
-            <h1 className="font-headline-lg text-headline-lg text-ink dark:text-surface-container-lowest mb-2">
-              Your Spaces
-            </h1>
-            <p className="font-body-md text-body-md text-ink-muted dark:text-secondary-fixed-dim">
-              Shared albums and collaborative memory vaults.
-            </p>
-          </div>
-          <Link
-            to={SPACE_CREATE_PATH}
-            className="flex items-center gap-2 h-12 px-6 rounded-lg bg-accent-600 hover:bg-accent-700 dark:bg-primary-fixed-dim dark:hover:bg-primary-fixed text-on-primary dark:text-on-primary-fixed font-medium transition-colors shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[20px]">add</span>
-            Create a Space
-          </Link>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
+        <div>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface dark:text-surface-container-lowest mb-2">
+            Your Spaces
+          </h1>
+          <p className="font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">
+            Shared albums and collaborative memory vaults.
+          </p>
         </div>
-
-        {isLoading ? (
-          <div
-            className="flex items-center justify-center py-24 text-accent-400"
-            role="status"
-            aria-live="polite"
-          >
-            <Spinner size={28} />
-          </div>
-        ) : error ? (
-          <div className="mt-10 rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
-            <p className="text-sm text-error">{error}</p>
-          </div>
-        ) : memberships.length === 0 ? (
-          <EmptyState
-            titleAs="h2"
-            icon={<SparkleIcon />}
-            title="Your first Space is where your shared story begins."
-            description="Create a Space for the people you share memories with, or accept an invitation to join one."
-          >
-            <Link to={SPACE_CREATE_PATH}>
-              <PrimaryButton type="button">Create a Space</PrimaryButton>
-            </Link>
-          </EmptyState>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {memberships.map((membership) => (
-              <div key={membership.id}>
-                <SpaceCard
-                  space={membership.spaces}
-                  role={membership.role}
-                  thumbnails={thumbnailsBySpaceId[membership.spaces.id] ?? []}
-                  members={membersBySpaceId[membership.spaces.id] ?? []}
-                  memoryCount={membership.spaces.memory_count ?? 0}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        <Link
+          to={SPACE_CREATE_PATH}
+          className="flex items-center gap-2 h-12 px-6 rounded-lg bg-accent-warm hover:bg-accent-dark dark:bg-primary-fixed-dim dark:hover:bg-primary-fixed text-on-primary dark:text-on-primary-fixed font-medium transition-colors shadow-sm"
+        >
+          <span className="material-symbols-outlined text-[20px]">add</span>
+          Create a Space
+        </Link>
       </div>
+
+      {isLoading ? (
+        <div
+          className="flex items-center justify-center py-24 text-accent-warm dark:text-primary-fixed-dim"
+          role="status"
+          aria-live="polite"
+        >
+          <Spinner size={28} />
+        </div>
+      ) : error ? (
+        <div className="mt-10 rounded-xl border border-outline-variant dark:border-outline bg-surface-container-low dark:bg-card-dark p-6 text-center">
+          <p className="text-sm text-error">{error}</p>
+        </div>
+      ) : memberships.length === 0 ? (
+        <EmptyState
+          titleAs="h2"
+          icon={<SparkleIcon />}
+          title="Your first Space is where your shared story begins."
+          description="Create a Space for the people you share memories with, or accept an invitation to join one."
+        >
+          <Link to={SPACE_CREATE_PATH}>
+            <PrimaryButton type="button">Create a Space</PrimaryButton>
+          </Link>
+        </EmptyState>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {memberships.map((membership) => (
+            <div key={membership.id}>
+              <SpaceCard
+                space={membership.spaces}
+                role={membership.role}
+                thumbnails={thumbnailsBySpaceId[membership.spaces.id] ?? []}
+                members={membersBySpaceId[membership.spaces.id] ?? []}
+                memoryCount={membership.spaces.memory_count ?? 0}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }
