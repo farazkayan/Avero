@@ -53,8 +53,8 @@ export default function AppShell({ children }: AppShellProps) {
                 className="flex cursor-pointer items-center justify-center rounded-full size-10 bg-surface-container hover:bg-surface-container-high dark:bg-inverse-surface dark:hover:bg-outline transition-colors text-on-surface-variant dark:text-surface-container-lowest"
                 aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               >
-                <span className="material-symbols-outlined dark:hidden">dark_mode</span>
-                <span className="material-symbols-outlined hidden dark:block">light_mode</span>
+                <span className="material-symbols-outlined dark:hidden">light_mode</span>
+                <span className="material-symbols-outlined hidden dark:block">dark_mode</span>
               </button>
 
               {/* Settings - circular button */}

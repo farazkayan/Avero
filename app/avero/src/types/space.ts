@@ -20,6 +20,8 @@ export type Space = {
   updated_at: string;
   /** Number of memories in the space (optional, for dashboard use) */
   memory_count?: number;
+  /** Precomputed stats from space_stats_cache (joined via dashboard query) */
+  space_stats_cache?: { total_memories: number }[];
 };
 
 /**

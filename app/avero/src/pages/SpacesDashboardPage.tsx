@@ -79,7 +79,7 @@ export default function SpacesDashboardPage() {
       try {
         const { data, error: fetchError } = await supabase
           .from("space_members")
-          .select("*, spaces(*)")
+          .select("*, spaces(*, space_stats_cache(total_memories))")
           .eq("user_id", userId)
           .order("joined_at", { ascending: false });
 
@@ -116,17 +116,21 @@ export default function SpacesDashboardPage() {
 
   // Fetch members for each space when the memberships list changes.
   useEffect(() => {
-    if (memberships.length === 0) {
-      setMembersBySpaceId({});
-      return;
-    }
-
     let cancelled = false;
 
     async function fetchMembers() {
+      if (memberships.length === 0) {
+        if (!cancelled) {
+          setMembersBySpaceId({});
+        }
+        return;
+      }
+
       const spaceIds = memberships.map((m) => m.space_id);
       if (spaceIds.length === 0) {
-        setMembersBySpaceId({});
+        if (!cancelled) {
+          setMembersBySpaceId({});
+        }
         return;
       }
 
@@ -256,17 +260,22 @@ export default function SpacesDashboardPage() {
         </EmptyState>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {memberships.map((membership) => (
-            <div key={membership.id}>
-              <SpaceCard
-                space={membership.spaces}
-                role={membership.role}
-                thumbnails={thumbnailsBySpaceId[membership.spaces.id] ?? []}
-                members={membersBySpaceId[membership.spaces.id] ?? []}
-                memoryCount={membership.spaces.memory_count ?? 0}
-              />
-            </div>
-          ))}
+          {memberships.map((membership) => {
+            const space = membership.spaces;
+            const stats = space.space_stats_cache?.[0];
+            const memoryCount = stats?.total_memories ?? 0;
+            return (
+              <div key={membership.id}>
+                <SpaceCard
+                  space={space}
+                  role={membership.role}
+                  thumbnails={thumbnailsBySpaceId[space.id] ?? []}
+                  members={membersBySpaceId[space.id] ?? []}
+                  memoryCount={memoryCount}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </>
