@@ -24,12 +24,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 
   // Sync color-scheme on <html> so native controls (scrollbars, form inputs) match.
-  // The `dark` class is already managed by the pre-paint script and toggleTheme.
+  // Also manage the "light" class for light palette styles in index.css.
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "light") {
+      root.classList.remove("dark");
+      root.classList.add("light");
       root.style.colorScheme = "light";
     } else {
+      root.classList.remove("light");
+      root.classList.add("dark");
       root.style.colorScheme = "dark";
     }
   }, [theme]);
@@ -37,11 +41,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = useCallback((next: ThemePreference) => {
     setThemeState(next);
     writeThemePreference(next);
-    // Also toggle the `dark` class on <html> for Tailwind's darkMode: "class"
+    // Update theme classes on <html> for both Tailwind darkMode and light palette
     const root = document.documentElement;
     if (next === "light") {
       root.classList.remove("dark");
+      root.classList.add("light");
     } else {
+      root.classList.remove("light");
       root.classList.add("dark");
     }
   }, []);
@@ -53,7 +59,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const root = document.documentElement;
       if (next === "light") {
         root.classList.remove("dark");
+        root.classList.add("light");
       } else {
+        root.classList.remove("light");
         root.classList.add("dark");
       }
       root.style.colorScheme = next;

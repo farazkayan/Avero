@@ -1,22 +1,16 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { SETTINGS_PATH } from "../constants/routes";
 import { useTheme } from "../context/ThemeContext";
+import { getAvatarDownloadUrl } from "../lib/avatar";
 
 type AppShellProps = {
   children: React.ReactNode;
 };
 
-/**
- * The shared frame for the authenticated area (spaces-design §5.1).
- *
- * Matches the Stitch source exactly: full-width top bar with bottom border,
- * max-w-[1280px] centered content, logo + "AVERO" wordmark left-aligned,
- * then on the right: circular theme-toggle button, circular settings button,
- * vertical divider, then avatar + name.
- */
 export default function AppShell({ children }: AppShellProps) {
-  const { user } = useAuth();
+  const { user, avatarUrl, avatarVersion } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   // Prefer the profile name captured at sign-up (stored in user_metadata)
@@ -24,6 +18,40 @@ export default function AppShell({ children }: AppShellProps) {
   // present for an authenticated user.
   const displayName =
     (user?.user_metadata?.name as string | undefined) || user?.email || "";
+
+  // Avatar URL state - we need to resolve the B2 object key to a presigned URL
+  const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | null>(null);
+  const [prevAvatarUrl, setPrevAvatarUrl] = useState(avatarUrl ?? null);
+
+  // Reset the cached avatar URL when the source avatar changes
+  if (avatarUrl !== prevAvatarUrl) {
+    setPrevAvatarUrl(avatarUrl);
+    setResolvedAvatarUrl(null);
+  }
+
+  // Loading is true while we have an avatar path but haven't resolved its
+  // download URL yet
+  const isAvatarLoading = !!avatarUrl && !resolvedAvatarUrl;
+
+  // Fetch avatar download URL when the avatar changes
+  useEffect(() => {
+    if (!avatarUrl) {
+      setResolvedAvatarUrl(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    getAvatarDownloadUrl(avatarUrl).then((result) => {
+      if (!cancelled) {
+        setResolvedAvatarUrl(result.ok ? result.url : null);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarUrl, avatarVersion]);
 
   return (
     <div className="min-h-screen bg-canvas-warm dark:bg-canvas-dark text-on-surface dark:text-surface-container-lowest transition-colors duration-300 flex flex-col">
@@ -72,21 +100,37 @@ export default function AppShell({ children }: AppShellProps) {
                 <span className="material-symbols-outlined">settings</span>
               </Link>
 
-              {/* Vertical divider + Avatar + Name */}
-              <div className="flex items-center gap-3 pl-4 border-l border-surface-variant dark:border-inverse-surface">
-                <span className="hidden md:block text-sm font-medium text-on-surface dark:text-surface-container-lowest">
-                  {displayName}
-                </span>
-                <div
-                  className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline"
-                  style={{
-                    backgroundImage: user?.user_metadata?.avatar_url
-                      ? `url(${user.user_metadata.avatar_url})`
-                      : undefined,
-                  }}
-                  aria-hidden="true"
-                />
-              </div>
+{/* Vertical divider + Avatar + Name */}
+               <div className="flex items-center gap-3 pl-4 border-l border-surface-variant dark:border-inverse-surface">
+                 <span className="hidden md:block text-sm font-medium text-on-surface dark:text-surface-container-lowest">
+                   {displayName}
+                 </span>
+                 {isAvatarLoading ? (
+                   // Avatar loading state
+                   <div
+                     className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline"
+                     style={{ width: 10, height: 10 }}
+                     aria-hidden="true"
+                   />
+                 ) : (
+                   resolvedAvatarUrl ? (
+                     // Avatar image
+                     <div
+                       className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline"
+                       style={{
+                         backgroundImage: `url(${resolvedAvatarUrl})`,
+                         backgroundSize: "cover",
+                         backgroundPosition: "center",
+                       }}
+                     />
+                   ) : (
+                     // No avatar - fallback to initials or default avatar
+                     <div
+                       className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline"
+                     />
+                   )
+                 )}
+               </div>
             </div>
           </header>
         </div>
