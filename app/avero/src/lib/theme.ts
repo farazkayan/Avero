@@ -15,16 +15,20 @@
 // preference. Phase B (Light Theme) wires the preference to actually apply
 // the token set across the app. The two concerns are deliberately split so
 // the toggle can ship before the light palette exists.
+//
+// NOTE: The storage key is `theme` (not namespaced) to match the pre-paint
+// inline script in `index.html` which reads `localStorage.theme` before
+// React hydrates. This prevents FOUC (Flash of Unstyled Content).
 // ============================================================================
 
 /** The two supported themes. `dark` is the default and the existing palette. */
 export type ThemePreference = "dark" | "light";
 
 /** localStorage key for the persisted theme preference. */
-export const THEME_STORAGE_KEY = "avero:theme-preference";
+export const THEME_STORAGE_KEY = "theme";
 
 /** The default theme when no preference is stored yet (design-system §2). */
-export const DEFAULT_THEME: ThemePreference = "light";
+export const DEFAULT_THEME: ThemePreference = "dark";
 
 /**
  * Reads the persisted theme preference, falling back to {@link DEFAULT_THEME}

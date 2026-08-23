@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { ThemePreference } from "../lib/theme";
 import { readThemePreference, writeThemePreference } from "../lib/theme";
@@ -7,15 +7,12 @@ import { ThemeContext, type ThemeContextValue } from "./ThemeContext";
 /**
  * Provides the theme preference to the app (roadmap Phase 6 — Theming).
  *
- * Reads the persisted value once on first render (lazy initial state) so
- * there is no flash of the default theme before localStorage is consulted.
- * `setTheme` updates in-memory state and persists; `toggleTheme` flips the
- * two values. A layout effect applies the choice to the document: it toggles
- * the `light` class on <html> so the CSS-variable token set in `index.css`
- * (`:root` = dark, `:root.light` = light) resolves to the right palette, and
- * sets `color-scheme` so native form controls and scrollbars follow. Using
- * `useLayoutEffect` (via the `useIsomorphicLayoutEffect`-style guard below)
- * avoids a one-frame flash of the wrong theme on first paint.
+ * The pre-paint inline script in `index.html` handles the initial theme class
+ * on <html> before React mounts, preventing FOUC. This provider:
+ * - Reads the persisted value once on first render (lazy initial state)
+ * - Syncs the `color-scheme` property on <html> so native form controls and
+ *   scrollbars follow the theme
+ * - Provides `setTheme` and `toggleTheme` for user-initiated changes
  *
  * Split from `ThemeContext.tsx` so this file exports only a component,
  * satisfying the react-refresh rule (mirrors the `AuthContext` /
@@ -26,32 +23,40 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     readThemePreference(),
   );
 
-  // Apply the theme to the document whenever it changes (and on mount).
-  // `useLayoutEffect` runs before paint so the classes are on <html>
-  // before the first frame — no flash of the wrong theme.
-  // - `dark` class: drives Tailwind's `dark:` variants (darkMode: "class")
-  // - `light` class: drives `:root.light` CSS-variable token overrides in `index.css`
-  // - `color-scheme`: makes native controls (scrollbars, form inputs) match
-  useLayoutEffect(() => {
+  // Sync color-scheme on <html> so native controls (scrollbars, form inputs) match.
+  // The `dark` class is already managed by the pre-paint script and toggleTheme.
+  useEffect(() => {
     const root = document.documentElement;
     if (theme === "light") {
-      root.classList.remove("dark");
-      root.classList.add("light");
+      root.style.colorScheme = "light";
     } else {
-      root.classList.remove("light");
-      root.classList.add("dark");
+      root.style.colorScheme = "dark";
     }
   }, [theme]);
 
   const setTheme = useCallback((next: ThemePreference) => {
     setThemeState(next);
     writeThemePreference(next);
+    // Also toggle the `dark` class on <html> for Tailwind's darkMode: "class"
+    const root = document.documentElement;
+    if (next === "light") {
+      root.classList.remove("dark");
+    } else {
+      root.classList.add("dark");
+    }
   }, []);
 
   const toggleTheme = useCallback(() => {
     setThemeState((prev) => {
       const next: ThemePreference = prev === "dark" ? "light" : "dark";
       writeThemePreference(next);
+      const root = document.documentElement;
+      if (next === "light") {
+        root.classList.remove("dark");
+      } else {
+        root.classList.add("dark");
+      }
+      root.style.colorScheme = next;
       return next;
     });
   }, []);
