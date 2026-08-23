@@ -1,6 +1,8 @@
 import { useId } from "react";
 import { SearchIcon, CloseIcon } from "./icons";
 
+export type SearchInputVariant = "default" | "underline";
+
 export type SearchInputProps = {
   /** Controlled current value of the search box. */
   value: string;
@@ -14,28 +16,21 @@ export type SearchInputProps = {
   id?: string;
   /** Optional wrapper className (e.g. for layout spacing). */
   className?: string;
+  /** Visual variant: "default" (rounded) or "underline" (Stitch source style) */
+  variant?: SearchInputVariant;
 };
 
 /**
  * A calm, instant search box for filtering an in-memory list
  * (feature-specs §7, Design System §6 Inputs).
  *
- * Unlike TextField (a form field with a visible label), this is a label-less
- * filter affordance: a leading magnifying-glass glyph, a placeholder, and a
- * trailing clear (×) button that appears only when there is text to clear.
- * The input styling mirrors TextField exactly (minimal border, accent focus
- * ring, canvas background) so it reads as a natural sibling of the other
- * inputs (Blueprint Principle #4: Consistency Builds Confidence).
+ * Variants:
+ * - "default": rounded input with background, clear button (original design)
+ * - "underline": underline style matching Stitch source — transparent bg,
+ *   bottom border only, leading search icon, no clear button
  *
  * The component is fully controlled (`value` / `onChange`) and owns no
- * state. Filtering itself happens in the parent — this component only
- * reports the query — so the parent keeps the source list and the derived
- * results in one place and clears the search by setting `value` to "".
- *
- * The right padding is reserved even when the clear button is absent so the
- * input's layout never shifts as the user types or clears (Design System §7:
- * "Motion should explain change, not distract" — a stable box is calmer
- * than a jumping one).
+ * state. Filtering itself happens in the parent.
  */
 export default function SearchInput({
   value,
@@ -44,11 +39,49 @@ export default function SearchInput({
   ariaLabel = "Search",
   id,
   className = "",
+  variant = "default",
 }: SearchInputProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const hasValue = value.length > 0;
 
+  if (variant === "underline") {
+    return (
+      <div className={className}>
+        <div className="relative w-full sm:w-72">
+          <span
+            className="material-symbols-outlined absolute left-0 top-2.5 text-outline-variant/70 dark:text-secondary-fixed-dim/70 text-[20px] transition-colors duration-300"
+            data-icon="search"
+            aria-hidden="true"
+          >
+            search
+          </span>
+          <input
+            id={inputId}
+            type="text"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder={placeholder}
+            aria-label={ariaLabel}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            className={[
+              "journal-input w-full bg-transparent",
+              "border-b border-outline-variant/50 dark:border-secondary-fixed-dim/50",
+              "pl-8 pr-4 py-2",
+              "font-body-sm text-body-sm",
+              "text-on-surface dark:text-surface-container-lowest",
+              "placeholder:text-on-surface-variant/50 dark:placeholder:text-secondary-fixed-dim/50",
+              "transition-colors",
+            ].join(" ")}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Default variant (rounded with clear button)
   return (
     <div className={className}>
       <div className="relative">
@@ -74,8 +107,6 @@ export default function SearchInput({
             "placeholder:text-ink-disabled",
             "transition-colors duration-200",
             "focus:outline-none focus:ring-2 focus:ring-accent-500/60 focus:border-accent-500",
-            // Room for the leading search glyph and the trailing clear button
-            // so the typed text never underlaps either.
             "pl-10 pr-10",
             "border-ink/10 hover:border-ink/20",
           ].join(" ")}

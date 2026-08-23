@@ -1,7 +1,6 @@
 import { useId } from "react";
-import { ChevronDownIcon } from "../ui/icons";
 
-export type SortOption = "newest" | "oldest" | "recently-added";
+export type SortOption = "newest" | "oldest" | "location";
 
 export type SortControlProps = {
   /** Current sort option */
@@ -17,25 +16,13 @@ export type SortControlProps = {
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "newest", label: "Newest first" },
   { value: "oldest", label: "Oldest first" },
-  { value: "recently-added", label: "Recently added" },
+  { value: "location", label: "By Location" },
 ];
 
 /**
- * A subtle sort control for the Memories timeline (feature-specs §2).
- *
- * Per Design System §5 ("One primary focus per screen," no clutter) — this is
- * a single small control near the Timeline header, not a prominent feature.
- * Should feel like a subtle utility, not compete visually with the "Create
- * Memory" button or other primary actions.
- *
- * Uses the same input styling as SearchInput/TextField (minimal border,
- * accent focus ring, canvas background) so it reads as a natural sibling of
- * the other inputs (Blueprint Principle #4: Consistency Builds Confidence).
- *
- * Persistence: The selected sort order persists across visits via localStorage
- * (key: `avero:timeline:sort`). This is intentional — users who prefer a
- * specific view (e.g., "Recently added" to see what's new) shouldn't have to
- * re-select it every time they open a Space.
+ * Sort control with underline style matching Stitch source.
+ * Custom-styled <select> with underline border, chevron icon.
+ * Options: Newest first, Oldest first, By Location.
  */
 export default function SortControl({
   value,
@@ -51,22 +38,22 @@ export default function SortControl({
       <label htmlFor={selectId} className="sr-only">
         {ariaLabel}
       </label>
-      <div className="relative">
+      <div className="relative inline-block w-48 group">
         <select
           id={selectId}
           value={value}
           onChange={(event) => onChange(event.target.value as SortOption)}
           aria-label={ariaLabel}
           className={[
-            "appearance-none",
-            "rounded-lg border bg-canvas px-3 py-2 text-sm text-ink",
-            "transition-colors duration-200",
-            "focus:outline-none focus:ring-2 focus:ring-accent-500/60 focus:border-accent-500",
-            "border-ink/10 hover:border-ink/20",
-            // Reserve space for the chevron so text doesn't underlap
-            "pr-8",
-            // Subtle sizing — not a primary action
-            "w-auto min-w-[160px]",
+            "appearance-none w-full bg-transparent",
+            "border-b border-outline-variant/50 dark:border-secondary-fixed-dim/50",
+            "py-2 pl-0 pr-8",
+            "font-mono-data text-mono-data",
+            "text-on-surface-variant dark:text-secondary-fixed-dim",
+            "cursor-pointer",
+            "hover:border-accent-warm dark:hover:border-primary-fixed-dim",
+            "focus:outline-none focus:border-accent-warm",
+            "transition-colors",
           ].join(" ")}
         >
           {SORT_OPTIONS.map((option) => (
@@ -76,12 +63,11 @@ export default function SortControl({
           ))}
         </select>
         {/* Decorative chevron — purely visual, not interactive */}
-        <span
-          className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-muted"
-          aria-hidden="true"
-        >
-          <ChevronDownIcon className="w-4 h-4" />
-        </span>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-on-surface-variant dark:text-secondary-fixed-dim group-hover:text-accent-warm dark:group-hover:text-primary-fixed-dim transition-colors">
+          <span className="material-symbols-outlined text-[18px]" data-icon="expand_more">
+            expand_more
+          </span>
+        </div>
       </div>
     </div>
   );
