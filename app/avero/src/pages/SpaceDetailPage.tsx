@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import GhostLink from "../components/ui/GhostLink";
 import Spinner from "../components/ui/Spinner";
 import EmptyState from "../components/ui/EmptyState";
 import SearchInput from "../components/ui/SearchInput";
 import SortControl, { type SortOption } from "../components/ui/SortControl";
-import { SparkleIcon, GearIcon, SearchIcon, ChartIcon, MapPinIcon } from "../components/ui/icons";
+import { SparkleIcon } from "../components/ui/icons";
 import MemoryTimelineCard from "../components/memories/MemoryTimelineCard";
 import EchoesCarousel from "../components/memories/EchoesCarousel";
+import BackLink from "../components/ui/BackLink";
+import SegmentedControl from "../components/ui/SegmentedControl";
+import CreateMemoryButton from "../components/ui/CreateMemoryButton";
+import EndOfTimelineIndicator from "../components/ui/EndOfTimelineIndicator";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { filterMemories } from "../lib/search";
@@ -22,71 +25,38 @@ import { fetchEchoesMemories, getTodayLocalDate, computeEchoesTargetDates } from
 import {
   AUTHENTICATED_HOME_PATH,
   memoryCreatePath,
-  spaceSettingsPath,
-  spaceStatsPath,
-  spaceMapPath,
 } from "../constants/routes";
 import type { Memory } from "../types/memory";
 import type { Media } from "../types/media";
 import type { ReactionType } from "../types/reaction";
 import type { Space } from "../types/space";
 
-/**
- * Space Memories timeline (feature-specs §2).
- *
- * The Space detail route (`/spaces/:spaceId`) now hosts the Memories
- * timeline for that Space. The former detail content (members, invite,
- * danger zone) has been relocated to `/spaces/:spaceId/settings`
- * ({@link SpaceSettingsPage}).
- *
- * Fetches the Space (for the header) and all of its Memories on mount. RLS
- * auto-filters both queries: a non-member receives no rows for the Space,
- * which resolves to a calm "not found or no access" state rather than a raw
- * error (spaces-design §8 — "RLS will naturally return nothing for
- * unauthorized access"). The memories query is also RLS-filtered to
- * `deleted_at IS NULL` (migration 20260706090000), so soft-deleted memories
- * never appear here.
- *
- * Per feature-specs §2, Memories are ordered by `memory_date` DESCENDING
- * (most recent first) — NOT by upload time. This is the chronological order
- * the events actually happened, which is what a "timeline" means.
- *
- * The page shows:
- *  - The Space name + description as a header, with a settings gear link
- *    to the settings page (visible to all members).
- *  - A "Create Memory" button (visible to all members — feature-specs §2).
- *  - A loading state while fetching.
- *  - An inspiring empty state if the Space has zero memories
- *    (blueprint §6 — "Empty States Should Inspire").
- *  - A search box (feature-specs §7) that filters the timeline by title,
- *    tags, and description. Filtering is client-side over the loaded list
- *    (instant, no debounce), with a calm empty-results state and a clear
- *    button that restores the full timeline.
- *  - Each Memory as a card: title, a small type badge, the formatted
- *    memory_date, and the description (truncated if long). List items are
- *    NOT clickable yet — the Memory detail page is a future step.
- */
+type MemoryWithTags = Memory & {
+  memory_tags: {
+    tag_id: string;
+    tags:
+      | { id: string; name: string }
+      | { id: string; name: string }[]
+      | null;
+  }[];
+};
+
 export default function SpaceDetailPage() {
   const { spaceId } = useParams();
   const { user } = useAuth();
 
   const [space, setSpace] = useState<Space | null>(null);
   const [memories, setMemories] = useState<Memory[]>([]);
-  const [tagsByMemoryId, setTagsByMemoryId] = useState<Record<string, string[]>>(
-    {},
-  );
+  const [tagsByMemoryId, setTagsByMemoryId] = useState<Record<string, string[]>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [loadError, setLoadError] = useState<string | undefined>(undefined);
 
-  // Sort control state — persisted via localStorage so the user's preference
-  // survives across visits (key: `avero:timeline:sort`). Default is "newest"
-  // (memory_date DESC) per feature-specs §2.
   const [sortOption, setSortOption] = useState<SortOption>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("avero:timeline:sort");
-      if (stored === "newest" || stored === "oldest" || stored === "recently-added") {
+      if (stored === "newest" || stored === "oldest" || stored === "location") {
         return stored;
       }
     }
@@ -100,53 +70,25 @@ export default function SpaceDetailPage() {
     }
   }, []);
 
-  // Reactions for the timeline cards, batch-fetched in a single query across
-  // all loaded Memory ids (feature-specs §5) to avoid N+1 round trips. Keyed by
-  // memoryId; the page is the single source of truth, and each card's
-  // TimelineReactionControl receives its summary as a prop. Refresh-based,
-  // not realtime (database §14): the acting user's own add/remove updates
-  // this map immediately; other users' reactions appear on reload.
   const [reactionsByMemoryId, setReactionsByMemoryId] = useState<
     Record<string, MemoryReactionSummary>
   >({});
-  // The reaction type currently in flight per Memory (one at a time per
-  // card), for the subtle "working" state and to prevent a double-fire.
   const [pendingByMemoryId, setPendingByMemoryId] = useState<
     Record<string, ReactionType | null>
   >({});
-  // Thumbnail media for the timeline cards, batch-fetched in a single RPC
-  // round trip across all loaded Memory ids (feature-specs §3 — the deferred
-  // photo-thumbnail feature). Keyed by memoryId; each bucket holds the first
-  // 1–2 media rows (oldest first) for that Memory. Empty bucket → no
-  // thumbnail. Separate from the reactions map so the two batch fetches have
-  // independent failure modes (reactions depend on [memories, user];
-  // thumbnails depend on [memories] only).
   const [thumbnailsByMemoryId, setThumbnailsByMemoryId] = useState<
     Record<string, Media[]>
   >({});
-  // Mosaic thumbnails for Memory cards with 3+ photos (plan §3.2). A separate
-  // batch fetch from the compact thumbnails — this one fetches up to 3 most
-  // recent photos per Memory (newest-first) via get_memory_mosaic_thumbnails,
-  // while the compact fetch gets the first 1–2 (oldest-first). The card uses
-  // the mosaic set when it has 3+ rows, falling back to compact otherwise.
   const [mosaicByMemoryId, setMosaicByMemoryId] = useState<
     Record<string, Media[]>
   >({});
 
-  // Echoes ("On This Day") — memories matching today's date across previous intervals.
-  // Fetched once on mount, runs in parallel with the main timeline fetch.
-  // Zero echoes = no render at all (no empty state, no placeholder), per Spec §1 and §4.
   const [echoesMemories, setEchoesMemories] = useState<Memory[]>([]);
   const [echoesThumbnails, setEchoesThumbnails] = useState<Record<string, Media[]>>({});
-  const [echoesToday, setEchoesToday] = useState<string>(""); // today's date for interval labels
+  const [echoesToday, setEchoesToday] = useState<string>("");
 
   useEffect(() => {
     if (!spaceId) {
-      // React Router guarantees :spaceId is present when this page mounts
-      // (the route only matches /spaces/:spaceId). This guard only satisfies
-      // the type system. It must not call setState synchronously
-      // (react-hooks/set-state-in-effect), and since the branch is
-      // unreachable in practice, leaving the initial loading state is fine.
       return;
     }
 
@@ -156,18 +98,15 @@ export default function SpaceDetailPage() {
       setIsLoading(true);
       setNotFound(false);
       setLoadError(undefined);
-      // Reset any stale search when switching Spaces so a filter from one
-      // Space never bleeds into another's timeline.
       setSearchQuery("");
 
       try {
-        // Determine the order clause based on the selected sort option
         const getOrderClause = (option: SortOption) => {
           switch (option) {
             case "oldest":
               return { column: "memory_date", ascending: true };
-            case "recently-added":
-              return { column: "created_at", ascending: false };
+            case "location":
+              return { column: "location", ascending: true };
             case "newest":
             default:
               return { column: "memory_date", ascending: false };
@@ -182,14 +121,6 @@ export default function SpaceDetailPage() {
             .select("*")
             .eq("id", id)
             .maybeSingle(),
-          // Memories for this Space, ordered by the selected sort option.
-          // Default is memory_date DESC (feature-specs §2). RLS auto-filters
-          // to members only and excludes soft-deleted rows (deleted_at IS NULL),
-          // so no explicit filter is needed here. The memory_tags -> tags join
-          // embeds each Memory's tag names so search (feature-specs §7) can
-          // match on tags without a second round trip; the join is also
-          // RLS-gated (memory_tags_select / tags_select enforce is_space_member),
-          // so a non-member still receives no rows — search cannot bypass RLS.
           supabase
             .from("memories")
             .select("*, memory_tags(tag_id, tags(id, name))")
@@ -201,13 +132,8 @@ export default function SpaceDetailPage() {
           return;
         }
 
-        // Space fetch — a PostgREST error here is either a malformed id
-        // (treated as "not found") or a real failure (treated as "try
-        // again"). RLS returning no rows resolves to null data with no
-        // error, which is the normal "not a member / doesn't exist" path.
         if (spaceResponse.error) {
           if (spaceResponse.error.code === "22P02") {
-            // invalid_text_representation — not a valid UUID
             setNotFound(true);
           } else {
             setLoadError("We couldn't load this Space. Please try again.");
@@ -216,15 +142,10 @@ export default function SpaceDetailPage() {
         }
 
         if (!spaceResponse.data) {
-          // RLS returned no rows — the Space doesn't exist or the user
-          // isn't a member. Both resolve to the same calm state.
           setNotFound(true);
           return;
         }
 
-        // Memories fetch — if the Space was found (RLS passed), the
-        // memories query should also pass (same membership check). A failure
-        // here is unexpected; surface it as a general load error.
         if (memoriesResponse.error) {
           setLoadError("We couldn't load this Space. Please try again.");
           return;
@@ -232,8 +153,7 @@ export default function SpaceDetailPage() {
 
         setSpace(spaceResponse.data as Space);
 
-        const joinedMemories =
-          (memoriesResponse.data ?? []) as MemoryWithTags[];
+        const joinedMemories = (memoriesResponse.data ?? []) as MemoryWithTags[];
         setMemories(joinedMemories as Memory[]);
         setTagsByMemoryId(buildTagsByMemoryId(joinedMemories));
       } catch {
@@ -255,21 +175,11 @@ export default function SpaceDetailPage() {
     };
   }, [spaceId, sortOption]);
 
-  // --- Batch-fetch reactions for all loaded Memories (feature-specs §5) -----
-  // A single query across every Memory id avoids the N+1 problem (one round
-  // trip per card). Re-runs when the Memory list or the current user changes.
-  // A failure is calm: the cards still render, just without counts (every
-  // summary defaults to all-zero), matching the "render the rest of the page"
-  // pattern used elsewhere.
   useEffect(() => {
     let cancelled = false;
     const memoryIds = memories.map((m) => m.id);
 
     async function fetchBatch() {
-      // No user or no memories → nothing to fetch. The reset lives inside the
-      // async function (not the effect body) so it isn't a synchronous
-      // setState in the effect — same structure as `fetchSpaceTimeline`
-      // above.
       if (!user || memories.length === 0) {
         if (!cancelled) {
           setReactionsByMemoryId({});
@@ -282,8 +192,6 @@ export default function SpaceDetailPage() {
           setReactionsByMemoryId(result);
         }
       } catch {
-        // Calm: leave the existing (or empty) summaries in place. The cards
-        // render with zero counts rather than blocking the timeline.
         if (!cancelled) {
           setReactionsByMemoryId({});
         }
@@ -297,22 +205,11 @@ export default function SpaceDetailPage() {
     };
   }, [memories, user]);
 
-  // --- Batch-fetch thumbnail media for all loaded Memories (feature-specs §3) -
-  // A single RPC round trip fetches the first 1–2 media rows per Memory
-  // (ordered by created_at) via get_timeline_thumbnails, avoiding N+1 per-card
-  // queries. Re-runs when the Memory list changes (no user dep — thumbnails
-  // don't depend on who's viewing). A failure is calm: the cards still render,
-  // just without thumbnails (every bucket defaults to empty), matching the
-  // reactions batch pattern. SECURITY INVOKER on the RPC means media_select
-  // RLS filters exactly as a plain select would — no RLS bypass.
   useEffect(() => {
     let cancelled = false;
     const memoryIds = memories.map((m) => m.id);
 
     async function fetchBatch() {
-      // No memories → nothing to fetch. The reset lives inside the async
-      // function (not the effect body) so it isn't a synchronous setState in
-      // the effect — same structure as `fetchSpaceTimeline` above.
       if (memories.length === 0) {
         if (!cancelled) {
           setThumbnailsByMemoryId({});
@@ -325,8 +222,6 @@ export default function SpaceDetailPage() {
           setThumbnailsByMemoryId(result);
         }
       } catch {
-        // Calm: leave the existing (or empty) thumbnails in place. The cards
-        // render without thumbnails rather than blocking the timeline.
         if (!cancelled) {
           setThumbnailsByMemoryId({});
         }
@@ -340,12 +235,6 @@ export default function SpaceDetailPage() {
     };
   }, [memories]);
 
-  // --- Batch-fetch mosaic thumbnails for Memory cards with 3+ photos --------
-  // A single RPC round trip fetches up to 3 most recent media rows per Memory
-  // (ordered by created_at DESC) via get_memory_mosaic_thumbnails. The card
-  // uses this set when it has 3+ rows (hero mosaic layout), falling back to
-  // the compact thumbnails (1–2 rows, oldest-first) otherwise. Separate from
-  // the compact thumbnails fetch so the two have independent failure modes.
   useEffect(() => {
     let cancelled = false;
     const memoryIds = memories.map((m) => m.id);
@@ -363,7 +252,6 @@ export default function SpaceDetailPage() {
           setMosaicByMemoryId(result);
         }
       } catch {
-        // Calm: cards fall back to compact thumbnails (or no thumbnail).
         if (!cancelled) {
           setMosaicByMemoryId({});
         }
@@ -377,17 +265,12 @@ export default function SpaceDetailPage() {
     };
   }, [memories]);
 
-  // --- Fetch Echoes ("On This Day") memories for this Space -----------------
-  // Runs once on mount (when spaceId changes), in parallel with the main timeline.
-  // Computes target dates client-side, then single query for all matching memories.
-  // Batch-fetches thumbnails for echoes memories. Zero echoes = no render.
   useEffect(() => {
     if (!spaceId) return;
-    const currentSpaceId = spaceId; // narrow type for async closure
+    const currentSpaceId = spaceId;
     let cancelled = false;
 
     async function fetchEchoes() {
-      // Compute today's local date and the target dates for Echoes intervals
       const today = getTodayLocalDate();
       const targetDates = computeEchoesTargetDates(today);
 
@@ -401,7 +284,6 @@ export default function SpaceDetailPage() {
 
         setEchoesMemories(echoes);
 
-        // Batch-fetch thumbnails for echoes memories (reuse existing helper)
         if (echoes.length > 0) {
           const echoesMemoryIds = echoes.map((m) => m.id);
           const thumbs = await fetchTimelineThumbnailsBatch(echoesMemoryIds);
@@ -410,7 +292,6 @@ export default function SpaceDetailPage() {
           }
         }
       } catch {
-        // Calm failure: leave echoes empty, timeline still renders normally.
         if (!cancelled) {
           setEchoesMemories([]);
           setEchoesThumbnails({});
@@ -425,16 +306,10 @@ export default function SpaceDetailPage() {
     };
   }, [spaceId]);
 
-  // --- Toggle a reaction on a Memory (optimistic + revert) -----------------
-  // Mirrors ReactionBar.handleToggle but operates on the batch map. The
-  // "switch" case (user has a different type and toggles heart, or picks a new
-  // type from the popup) removes the old type and adds the new one. No confirm
-  // dialog — reactions are low-stakes and instantly reversible.
   const handleToggleReaction = useCallback(
     (memoryId: string, type: ReactionType) => {
       if (!user) return;
       const currentUserId = user.id;
-      // Ignore a second toggle while one is already in flight for this card.
       if (pendingByMemoryId[memoryId] !== null && pendingByMemoryId[memoryId] !== undefined) {
         return;
       }
@@ -443,28 +318,21 @@ export default function SpaceDetailPage() {
       if (!prev) return;
 
       const hasType = prev.mine.has(type);
-      // The user's *other* current reaction (if switching types). A user can
-      // hold multiple types, but the pill's quick-toggle treats heart as the
-      // single default; switching to heart removes any other type first.
       const otherTypes = [...prev.mine].filter((t) => t !== type);
 
-      // Snapshot for revert.
       const prevCounts = { ...prev.counts };
       const prevMine = new Set(prev.mine);
 
-      // Optimistic update.
       setReactionsByMemoryId((map) => {
         const current = map[memoryId];
         if (!current) return map;
         const nextCounts = { ...current.counts };
         const nextMine = new Set(current.mine);
-        // Remove any other type the user held (switching to the new type).
         for (const t of otherTypes) {
           nextMine.delete(t);
           nextCounts[t] = Math.max(0, nextCounts[t] - 1);
         }
         if (hasType) {
-          // Toggle off the chosen type.
           nextMine.delete(type);
           nextCounts[type] = Math.max(0, nextCounts[type] - 1);
         } else {
@@ -475,10 +343,7 @@ export default function SpaceDetailPage() {
       });
       setPendingByMemoryId((map) => ({ ...map, [memoryId]: type }));
 
-      // Fire the add/remove. For a switch (otherTypes non-empty), remove the
-      // old type then add the new one; the UNIQUE constraint allows both.
       async function apply() {
-        // Remove other types first (switch).
         for (const t of otherTypes) {
           await removeReaction({ memoryId, userId: currentUserId, type: t });
         }
@@ -493,7 +358,6 @@ export default function SpaceDetailPage() {
         });
 
         if (!result.ok) {
-          // Revert to the pre-toggle snapshot.
           setReactionsByMemoryId((map) => ({
             ...map,
             [memoryId]: { counts: prevCounts, mine: prevMine },
@@ -506,10 +370,6 @@ export default function SpaceDetailPage() {
     [pendingByMemoryId, reactionsByMemoryId, user],
   );
 
-  // Filter the timeline by the search query (feature-specs §7). Client-side
-  // over the already-loaded list, so it's instant and calm — no debounce or
-  // DB round trip per keystroke. Memoized so it only recomputes when the
-  // source list, the tag index, or the query changes.
   const filteredMemories = useMemo(
     () => filterMemories(memories, tagsByMemoryId, searchQuery),
     [memories, tagsByMemoryId, searchQuery],
@@ -517,13 +377,27 @@ export default function SpaceDetailPage() {
 
   return (
     <>
-      <div className="mb-6">
-        <GhostLink to={AUTHENTICATED_HOME_PATH}>Back to Spaces</GhostLink>
+      <div className="mb-12">
+        <BackLink to={AUTHENTICATED_HOME_PATH} className="mb-8" />
+
+        {space && (
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface dark:text-surface-container-lowest tracking-tight">
+                {space.name}
+              </h1>
+            </div>
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+              <SegmentedControl spaceId={space.id} />
+              <CreateMemoryButton spaceId={space.id} />
+            </div>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
         <div
-          className="flex items-center justify-center py-24 text-accent-400"
+          className="flex items-center justify-center py-24 text-accent-warm dark:text-primary-fixed-dim"
           role="status"
           aria-live="polite"
         >
@@ -531,74 +405,22 @@ export default function SpaceDetailPage() {
         </div>
       ) : notFound ? (
         <div className="py-16 text-center">
-          <h1 className="text-2xl font-bold leading-tight text-ink sm:text-3xl">
+          <h1 className="font-headline-lg text-headline-lg text-on-surface dark:text-surface-container-lowest">
             Space not found
           </h1>
-          <p className="mx-auto mt-3 max-w-sm text-sm text-ink-muted sm:text-base">
+          <p className="mx-auto mt-3 max-w-sm font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">
             This Space may have been deleted, or you may not have access to it.
           </p>
           <div className="mt-8">
-            <GhostLink to={AUTHENTICATED_HOME_PATH}>Back to Spaces</GhostLink>
+            <BackLink to={AUTHENTICATED_HOME_PATH} />
           </div>
         </div>
       ) : loadError ? (
-        <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
-          <p className="text-sm text-error">{loadError}</p>
+        <div className="rounded-xl border border-outline-variant/20 dark:border-inverse-surface bg-surface-container-low dark:bg-card-dark p-6 text-center">
+          <p className="text-error">{loadError}</p>
         </div>
       ) : space ? (
         <>
-          {/* Header — Space name + description, with a settings gear link */}
-          <section>
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h1 className="break-words text-2xl font-bold leading-tight text-ink sm:text-3xl">
-                  {space.name}
-                </h1>
-                {space.description && (
-                  <p className="mt-2 text-sm text-ink-muted sm:text-base">
-                    {space.description}
-                  </p>
-                )}
-              </div>
-              {spaceId && (
-                <div className="flex shrink-0 items-center gap-1">
-                  <Link
-                    to={spaceMapPath(spaceId)}
-                    aria-label="Space map"
-                    className="inline-flex items-center justify-center rounded-md p-2 text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-                  >
-                    <MapPinIcon />
-                  </Link>
-                  <Link
-                    to={spaceStatsPath(spaceId)}
-                    aria-label="Space stats"
-                    className="inline-flex items-center justify-center rounded-md p-2 text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-                  >
-                    <ChartIcon />
-                  </Link>
-                  <Link
-                    to={spaceSettingsPath(spaceId)}
-                    aria-label="Space settings"
-                    className="inline-flex items-center justify-center rounded-md p-2 text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-                  >
-                    <GearIcon />
-                  </Link>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Create Memory — visible to all members (feature-specs §2) */}
-          <section className="mt-6">
-            <Link
-              to={memoryCreatePath(space.id)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
-            >
-              Create Memory
-            </Link>
-          </section>
-
-          {/* Echoes ("On This Day") carousel — renders at top of timeline, above regular memories */}
           {echoesMemories.length > 0 && (
             <EchoesCarousel
               memories={echoesMemories}
@@ -608,7 +430,6 @@ export default function SpaceDetailPage() {
             />
           )}
 
-          {/* Memories timeline */}
           <section className="mt-10">
             {memories.length === 0 ? (
               <EmptyState
@@ -619,17 +440,14 @@ export default function SpaceDetailPage() {
               >
                 <Link
                   to={memoryCreatePath(space.id)}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-accent-warm dark:bg-primary-fixed text-canvas-warm dark:text-on-primary-fixed font-body-sm text-body-sm font-medium px-6 py-3 transition-colors hover:bg-opacity-90 hover:-translate-y-0.5 shadow-sm active:scale-95"
                 >
                   Create your first memory
                 </Link>
               </EmptyState>
             ) : (
               <>
-                {/* Sort control + Search — filters the timeline by title, tags,
-                    and description (feature-specs §7). Client-side over the
-                    already-loaded list, so it's instant and calm. */}
-                <div className="flex flex-col sm:flex-row sm:items-end gap-3 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8 border-b border-outline-variant/20 dark:border-inverse-surface pb-4 transition-colors duration-300">
                   <SortControl
                     value={sortOption}
                     onChange={handleSortChange}
@@ -639,15 +457,16 @@ export default function SpaceDetailPage() {
                   <SearchInput
                     value={searchQuery}
                     onChange={setSearchQuery}
-                    placeholder="Search memories…"
+                    placeholder="Search memories..."
                     ariaLabel="Search memories"
-                    className="w-full sm:w-[320px]"
+                    variant="underline"
+                    className="w-full sm:w-72"
                   />
                 </div>
 
                 {filteredMemories.length === 0 ? (
                   <EmptyState
-                    icon={<SearchIcon />}
+                    icon={<SparkleIcon />}
                     title="No matching memories"
                     titleAs="h2"
                     description="Nothing in this Space matches your search. Try a different word, or clear the search to see the full timeline."
@@ -655,44 +474,33 @@ export default function SpaceDetailPage() {
                     <button
                       type="button"
                       onClick={() => setSearchQuery("")}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-ink/10 bg-canvas px-4 py-2.5 text-sm font-semibold text-ink transition-colors duration-200 hover:border-ink/20 hover:bg-canvas-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-outline-variant/30 dark:border-inverse-surface bg-surface-container-low dark:bg-inverse-surface px-4 py-2.5 font-body-sm text-body-sm font-semibold text-on-surface dark:text-surface-container-lowest transition-colors duration-200 hover:bg-surface-container dark:hover:bg-inverse-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
                     >
                       Clear search
                     </button>
                   </EmptyState>
                 ) : (
-                  <ul className="space-y-4">
+                  <div className="flex flex-col gap-8 sm:gap-12 max-w-3xl mx-auto">
                     {filteredMemories.map((memory) => (
-                      <li key={memory.id}>
-                        {/* The card markup + token-driven styling + thumbnail
-                            slot + reaction control now live in
-                            {@link MemoryTimelineCard}. The page owns the batch
-                            state (reactions + thumbnails maps) and passes
-                            per-card props. The card is a <div> (not a <Link>) so
-                            the reaction pill <button> isn't nested inside an
-                            anchor; the title is the navigation link. */}
-                        <MemoryTimelineCard
-                          memory={memory}
-                          spaceId={space.id}
-                          // Deterministic rule (plan §3.2): 3+ mosaic photos →
-                          // hero layout uses the mosaic set; ≤2 → compact uses
-                          // the oldest-first thumbnails. The card decides based
-                          // on the array length it receives.
-                          thumbnails={
-                            (mosaicByMemoryId[memory.id]?.length ?? 0) >= 3
-                              ? mosaicByMemoryId[memory.id]
-                              : thumbnailsByMemoryId[memory.id] ?? []
-                          }
-                          summary={reactionsByMemoryId[memory.id]}
-                          currentUserId={user?.id ?? ""}
-                          isPending={pendingByMemoryId[memory.id] ?? null}
-                          onToggleReaction={(type) =>
-                            handleToggleReaction(memory.id, type)
-                          }
-                        />
-                      </li>
+                      <MemoryTimelineCard
+                        key={memory.id}
+                        memory={memory}
+                        spaceId={space.id}
+                        thumbnails={
+                          (mosaicByMemoryId[memory.id]?.length ?? 0) >= 3
+                            ? mosaicByMemoryId[memory.id]
+                            : thumbnailsByMemoryId[memory.id] ?? []
+                        }
+                        summary={reactionsByMemoryId[memory.id]}
+                        currentUserId={user?.id ?? ""}
+                        isPending={pendingByMemoryId[memory.id] ?? null}
+                        onToggleReaction={(type) =>
+                          handleToggleReaction(memory.id, type)
+                        }
+                      />
                     ))}
-                  </ul>
+                    <EndOfTimelineIndicator />
+                  </div>
                 )}
               </>
             )}
@@ -703,30 +511,6 @@ export default function SpaceDetailPage() {
   );
 }
 
-/**
- * Shape of a memories row with its tags embedded via the memory_tags -> tags
- * join, as returned by the Space timeline fetch. The base columns match
- * {@link Memory}; `memory_tags` is the join payload used only to build the
- * search index and is not part of the rendered Memory.
- */
-type MemoryWithTags = Memory & {
-  memory_tags: {
-    tag_id: string;
-    tags:
-      | { id: string; name: string }
-      | { id: string; name: string }[]
-      | null;
-  }[];
-};
-
-/**
- * Builds a Memory id -> tag-names map from the joined timeline response, for
- * use by {@link filterMemories}. Each memory_tags row links to exactly one
- * tag; the nested `tags` may arrive as a single object or a one-element array
- * depending on the PostgREST join cardinality, so both shapes are handled.
- * Tags with no resolved name (e.g. a tag deleted mid-join — unlikely given
- * CASCADE) are skipped.
- */
 function buildTagsByMemoryId(
   memories: MemoryWithTags[],
 ): Record<string, string[]> {
