@@ -35,7 +35,7 @@ const MAX_NAME_LENGTH = 100;
  *    the Settings page.
  *  - **Theme** — a light/dark selector persisted via `useTheme` (Phase A
  *    builds the UI; Phase B wires the actual token application).
-  - **Sign out** — the same Supabase `signOut` path used by `AppShell`,
+ *  - **Sign out** — the same Supabase `signOut` path used by `AppShell`,
  *    relocated here so the header can stay minimal. The `AuthProvider`
  *    `onAuthStateChange` listener redirects the now-unauthenticated user to
  *    sign-in automatically.
@@ -178,11 +178,11 @@ export default function SettingsPage() {
           <span className="material-symbols-outlined text-[16px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
           Back to Spaces
         </GhostLink>
-        <h2 className="font-headline-lg text-headline-lg md:text-[32px] text-ink dark:text-ink">Settings</h2>
+        <h2 className="font-headline-lg text-headline-lg md:text-[32px] text-on-surface dark:text-surface-container-lowest">Settings</h2>
       </div>
       {/* Profile Section */}
       <section className="mb-16">
-        <h3 className="font-headline-md text-headline-md mb-8 text-ink dark:text-ink pb-4 border-b border-outline-variant/30 dark:border-white/10">Profile</h3>
+        <h3 className="font-headline-md text-headline-md mb-8 text-on-surface dark:text-surface-container-lowest pb-4 border-b border-outline-variant/30 dark:border-white/10">Profile</h3>
         <div className="flex flex-col sm:flex-row gap-8 items-start mb-8">
           {/* Avatar Upload */}
           <div className="flex-shrink-0 relative group cursor-pointer">
@@ -197,8 +197,8 @@ export default function SettingsPage() {
             </div>
           </div>
           <div className="flex flex-col justify-center h-24">
-            <p className="font-medium text-ink dark:text-ink mb-1">Profile picture</p>
-            <p className="text-body-sm font-body-sm text-ink-muted/70 dark:text-ink-muted/70 max-w-xs">Click the avatar to upload a new image. PNG, JPG, or WebP up to 2 MB.</p>
+            <p className="font-medium text-on-surface dark:text-surface-container-lowest mb-1">Profile picture</p>
+            <p className="text-body-sm font-body-sm text-on-surface-variant dark:text-secondary-fixed-dim/70 max-w-xs">Click the avatar to upload a new image. PNG, JPG, or WebP up to 2 MB.</p>
           </div>
         </div>
         {/* Form Fields */}
@@ -208,7 +208,7 @@ export default function SettingsPage() {
           noValidate
         >
           <div>
-            <label className="block font-mono-label text-mono-label mb-2 text-ink-muted/80 dark:text-ink-muted/80 uppercase tracking-wider" for="display-name">Display name</label>
+            <label className="block font-mono-label text-mono-label mb-2 text-on-surface-variant dark:text-secondary-fixed-dim/80 uppercase tracking-wider" for="display-name">Display name</label>
             <TextField
               id="display-name"
               label="Display name"
@@ -230,12 +230,12 @@ export default function SettingsPage() {
               a non-editable reference rather than a disabled input (a
               disabled input implies it *could* be edited). */}
           <div>
-            <span className="block text-sm font-medium text-ink-muted/80 dark:text-ink-muted/80 mb-2">
+            <span className="block text-sm font-medium text-on-surface-variant dark:text-secondary-fixed-dim/80 mb-2">
               Email
             </span>
             <div className="relative">
               <input
-                className="w-full bg-surface-container-low dark:bg-[#161818] border border-outline-variant/30 dark:border-white/5 rounded-DEFAULT px-4 py-3 font-body-md text-ink-muted/70 dark:text-ink-muted/50 cursor-not-allowed"
+                className="w-full bg-surface-container-low dark:bg-[#161818] border border-outline-variant/30 dark:border-white/5 rounded-DEFAULT px-4 py-3 font-body-md text-on-surface-variant/70 dark:text-secondary-fixed-dim/50 cursor-not-allowed"
                 id="email"
                 type="email"
                 value={email}
@@ -263,8 +263,8 @@ export default function SettingsPage() {
       </section>
       {/* Theme Section */}
       <section className="mb-16">
-        <h3 className="font-headline-md text-headline-md mb-2 text-ink dark:text-ink pb-4 border-b border-outline-variant/30 dark:border-white/10">Theme</h3>
-        <p className="text-body-sm font-body-sm text-ink-muted/70 dark:text-ink-muted/70 mb-6 mt-4">Choose how Avero looks. Your choice is remembered on this device.</p>
+        <h3 className="font-headline-md text-headline-md mb-2 text-on-surface dark:text-surface-container-lowest pb-4 border-b border-outline-variant/30 dark:border-white/10">Theme</h3>
+        <p className="text-body-sm font-body-sm text-on-surface-variant dark:text-secondary-fixed-dim/70 mb-6 mt-4">Choose how Avero looks. Your choice is remembered on this device.</p>
         <div className="bg-surface-container-highest dark:bg-[#1a1c1e] p-1 rounded-lg inline-flex shadow-inner">
           <button
             className="px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 text-on-surface-variant dark:text-on-surface-variant/70 hover:text-on-surface dark:hover:text-inverse-on-surface"
@@ -284,7 +284,7 @@ export default function SettingsPage() {
       </section>
       {/* Account Section */}
       <section>
-        <h3 className="font-headline-md text-headline-md mb-6 text-ink dark:text-ink pb-4 border-b border-outline-variant/30 dark:border-white/10">Account</h3>
+        <h3 className="font-headline-md text-headline-md mb-6 text-on-surface dark:text-surface-container-lowest pb-4 border-b border-outline-variant/30 dark:border-white/10">Account</h3>
         <button
           className="border border-error text-error dark:border-error/70 dark:text-error/90 font-medium px-6 py-2.5 rounded-DEFAULT hover:bg-error/5 dark:hover:bg-error/10 active:scale-95 transition-all flex items-center gap-2"
           type="button"
