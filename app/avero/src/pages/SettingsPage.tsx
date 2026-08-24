@@ -57,7 +57,7 @@ export default function SettingsPage() {
   const initialName =
     (user?.user_metadata?.name as string | undefined) || user?.email || "";
   const [displayName, setDisplayName] = useState(initialName);
-  const [isSavingName, setIsSavingName] = useState(false);
+  const [isSavingName, setIsSavingState] = useState(false);
   const [nameError, setNameError] = useState<string | undefined>(undefined);
   const [nameSuccess, setNameSuccess] = useState<string | undefined>(
     undefined,
@@ -171,181 +171,128 @@ export default function SettingsPage() {
   const email = user?.email ?? "";
 
   return (
-    <>
-      <div className="mb-6">
-        <GhostLink to={AUTHENTICATED_HOME_PATH}>Back to Spaces</GhostLink>
+    <main className="max-w-[600px] mx-auto px-6 py-12 md:py-16">
+      {/* Page Header */}
+      <div className="mb-12">
+        <GhostLink to={AUTHENTICATED_HOME_PATH} className="inline-flex items-center gap-2 text-on-surface-variant dark:text-on-surface-variant/70 hover:text-on-surface dark:hover:text-accent-dark transition-colors mb-6 font-mono-label text-mono-label group">
+          <span className="material-symbols-outlined text-[16px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+          Back to Spaces
+        </GhostLink>
+        <h2 className="font-headline-lg text-headline-lg md:text-[32px] text-on-surface dark:text-inverse-on-surface">Settings</h2>
       </div>
-
-      <h1 className="text-2xl font-bold leading-tight text-ink sm:text-3xl">
-        Settings
-      </h1>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Profile                                                          */}
-      {/* ---------------------------------------------------------------- */}
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold text-ink">Profile</h2>
-
-        {/* Avatar — reuse the existing upload pipeline (no duplicated logic).
-            Rendered larger than the header affordance so it reads as the
-            primary identity control on this screen. */}
-        <div className="mt-4 flex items-center gap-5">
-          <AvatarUpload
-            name={displayName || email}
-            size={96}
-          />
-          <div className="min-w-0">
-            <p className="text-sm text-ink">
-              Profile picture
-            </p>
-            <p className="mt-1 text-sm text-ink-muted">
-              Click the avatar to upload a new image. PNG, JPG, or WebP up to
-              2&nbsp;MB.
-            </p>
+      {/* Profile Section */}
+      <section className="mb-16">
+        <h3 className="font-headline-md text-headline-md mb-8 text-on-surface dark:text-inverse-on-surface pb-4 border-b border-outline-variant/30 dark:border-white/10">Profile</h3>
+        <div className="flex flex-col sm:flex-row gap-8 items-start mb-8">
+          {/* Avatar Upload */}
+          <div className="flex-shrink-0 relative group cursor-pointer">
+            <div className="w-24 h-24 rounded-full overflow-hidden border border-outline-variant/50 dark:border-white/20 bg-surface-container-highest dark:bg-canvas-soft shadow-stone dark:shadow-none transition-transform group-hover:scale-[1.02]">
+              <AvatarUpload
+                name={displayName || email}
+                size={96}
+              />
+            </div>
+            <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-surface dark:bg-canvas-soft border border-outline-variant/50 dark:border-white/20 shadow-sm flex items-center justify-center text-on-surface-variant dark:text-on-surface-variant group-hover:text-primary dark:group-hover:text-accent-dark transition-colors">
+              <span className="material-symbols-outlined text-[16px]">edit</span>
+            </div>
+          </div>
+          <div className="flex flex-col justify-center h-24">
+            <p className="font-medium text-on-surface dark:text-inverse-on-surface mb-1">Profile picture</p>
+            <p className="text-body-sm font-body-sm text-on-surface-variant dark:text-on-surface-variant/70 max-w-xs">Click the avatar to upload a new image. PNG, JPG, or WebP up to 2 MB.</p>
           </div>
         </div>
-
-        {/* Display name — the only user-editable column on `profiles`. */}
-        <form
-          className="mt-6 max-w-[420px] space-y-4"
-          onSubmit={handleSaveName}
-          noValidate
-        >
-          <TextField
-            id="display-name"
-            name="name"
-            type="text"
-            label="Display name"
-            autoComplete="name"
-            maxLength={MAX_NAME_LENGTH}
-            value={displayName}
-            disabled={isSavingName}
-            error={nameError}
-            onChange={(event) => {
-              setDisplayName(event.target.value);
-              if (nameError) setNameError(undefined);
-              if (nameSuccess) setNameSuccess(undefined);
-            }}
-            onBlur={() => setNameError(validateName(displayName))}
-          />
-
-          {/* Read-only email — lives on auth.users, not profiles. Editing it
-              is an auth-level operation out of scope here, so it is shown as
-              a non-editable reference rather than a disabled input (a
-              disabled input implies it *could* be edited). */}
+        {/* Form Fields */}
+        <div className="space-y-6">
           <div>
-            <span className="block text-sm font-medium text-ink-muted mb-2">
-              Email
-            </span>
-            <p className="rounded-lg border border-ink/10 bg-canvas px-3.5 py-2.5 text-base text-ink-muted">
-              {email || "—"}
-            </p>
+            <label className="block font-mono-label text-mono-label mb-2 text-on-surface-variant dark:text-on-surface-variant/80 uppercase tracking-wider" for="display-name">Display name</label>
+            <input
+              className="w-full bg-white dark:bg-canvas-soft border border-outline-variant/50 dark:border-white/10 rounded-DEFAULT px-4 py-3 font-body-md text-on-surface dark:text-inverse-on-surface tactile-input focus:ring-0 shadow-stone dark:shadow-none hover:-translate-y-[1px] transition-transform"
+              id="display-name"
+              type="text"
+              value={displayName}
+              onChange={(event) => {
+                setDisplayName(event.target.value);
+                if (nameError) setNameError(undefined);
+                if (nameSuccess) setNameSuccess(undefined);
+              }}
+              onBlur={() => setNameError(validateName(displayName))}
+            />
           </div>
-
-          {nameSuccess && (
-            <p className="text-sm text-accent-400" role="status">
-              {nameSuccess}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={isSavingName}
-            aria-busy={isSavingName || undefined}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSavingName ? "Saving…" : "Save name"}
-          </button>
-        </form>
+          <div>
+            <label className="block font-mono-label text-mono-label mb-2 text-on-surface-variant dark:text-on-surface-variant/80 uppercase tracking-wider" for="email">Email</label>
+            <div className="relative">
+              <input
+                className="w-full bg-surface-container-low dark:bg-canvas-soft border border-outline-variant/30 dark:border-white/5 rounded-DEFAULT px-4 py-3 font-body-md text-on-surface-variant/70 dark:text-on-surface-variant/50 cursor-not-allowed"
+                id="email"
+                type="email"
+                value={email}
+                readOnly
+              />
+              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">lock</span>
+            </div>
+          </div>
+          <div className="pt-4">
+            <button
+              className="bg-accent-500 text-white hover:bg-accent-400 disabled:opacity-50"
+              type="button"
+              onClick={handleSaveName}
+              disabled={isSavingName}
+            >
+              {isSavingName ? "Saving…" : "Save name"}
+            </button>
+          </div>
+        </div>
       </section>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Theme                                                            */}
-      {/* ---------------------------------------------------------------- */}
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold text-ink">Theme</h2>
-        <p className="mt-1 text-sm text-ink-muted">
-          Choose how Avero looks. Your choice is remembered on this device.
-        </p>
-
-        {/* A two-option segmented selector. The selected option carries the
-            accent fill so the current choice is unambiguous; the other is a
-            calm outline. Two real <button>s (not a hidden radio group) so
-            the affordance is obvious and keyboard-accessible. */}
-        <div
-          className="mt-4 inline-flex rounded-lg border border-ink/10 p-1"
-          role="group"
-          aria-label="Theme preference"
+      {/* Theme Section */}
+      <section className="mb-16">
+        <h3 className="font-headline-md text-headline-md mb-2 text-on-surface dark:text-inverse-on-surface pb-4 border-b border-outline-variant/30 dark:border-white/10">Theme</h3>
+        <p className="text-body-sm font-body-sm text-on-surface-variant dark:text-on-surface-variant/70 mb-6 mt-4">Choose how Avero looks. Your choice is remembered on this device.</p>
+        <div className="bg-surface-container-highest dark:bg-canvas-soft p-1 rounded-lg inline-flex shadow-sm">
+          {/* Light Theme Button */}
+          <button
+            className={`
+              flex items-center justify-center rounded-DEFAULT w-24
+              bg-surface-container hover:bg-surface-container-high
+              dark:bg-inverse-surface dark:hover:bg-outline
+              transition-colors
+              text-on-surface-variant dark:text-surface-container-lowest
+              ${theme === 'light' ? 'bg-accent-600 text-white hover:bg-accent-500' : ''}
+            `}
+            onClick={() => handleSelectTheme('light')}
+          >
+            <span className="material-symbols-outlined text-[18px]">light_mode</span>
+            Light
+          </button>
+          {/* Dark Theme Button */}
+          <button
+            className={`
+              flex items-center justify-center rounded-DEFAULT w-24
+              bg-surface-container hover:bg-surface-container-high
+              dark:bg-inverse-surface dark:hover:bg-outline
+              transition-colors
+              text-on-surface-variant dark:text-surface-container-lowest
+              ${theme === 'dark' ? 'bg-accent-600 text-white hover:bg-accent-500' : ''}
+            `}
+            onClick={() => handleSelectTheme('dark')}
+          >
+            <span className="material-symbols-outlined text-[18px]">dark_mode</span>
+            Dark
+          </button>
+        </div>
+      </section>
+      {/* Account Section */}
+      <section>
+        <h3 className="font-headline-md text-headline-md mb-6 text-on-surface dark:text-inverse-on-surface pb-4 border-b border-outline-variant/30 dark:border-white/10">Account</h3>
+        <button
+          className="border border-error text-error dark:border-error/70 dark:text-error/90 font-medium px-6 py-2.5 rounded-DEFAULT hover:bg-error/5 dark:hover:bg-error/10 active:scale-95 transition-all flex items-center gap-2"
+          type="button"
+          onClick={handleSignOut}
+          disabled={isSigningOut}
         >
-          <ThemeOption
-            label="Dark"
-            value="dark"
-            current={theme}
-            onSelect={handleSelectTheme}
-          />
-          <ThemeOption
-            label="Light"
-            value="light"
-            current={theme}
-            onSelect={handleSelectTheme}
-          />
-        </div>
+          <span className="material-symbols-outlined text-[20px]">logout</span>
+          Sign out
+        </button>
       </section>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Sign out                                                         */}
-      {/* ---------------------------------------------------------------- */}
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold text-ink">Account</h2>
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={handleSignOut}
-            disabled={isSigningOut}
-            aria-busy={isSigningOut || undefined}
-            className="inline-flex items-center justify-center rounded-lg border border-error/40 bg-error-soft px-4 py-2 text-sm font-semibold text-error transition-colors duration-200 hover:border-error/60 hover:bg-error/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSigningOut ? "Signing out…" : "Sign out"}
-          </button>
-        </div>
-      </section>
-    </>
-  );
-}
-
-// ----------------------------------------------------------------------------
-// ThemeOption
-// ----------------------------------------------------------------------------
-
-type ThemeOptionProps = {
-  label: string;
-  value: ThemePreference;
-  current: ThemePreference;
-  onSelect: (value: ThemePreference) => void;
-};
-
-/**
- * A single segment of the theme selector. The selected segment takes the
- * accent fill (the design system's single restrained accent — §2) so the
- * active choice reads as the primary state; the unselected segment is a
- * calm outline that lifts to the accent on hover.
- */
-function ThemeOption({ label, value, current, onSelect }: ThemeOptionProps) {
-  const isSelected = value === current;
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(value)}
-      aria-pressed={isSelected}
-      className={[
-        "rounded-md px-4 py-1.5 text-sm font-medium transition-colors duration-200",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60",
-        isSelected
-          ? "bg-accent-600 text-white"
-          : "text-ink-muted hover:text-ink",
-      ].join(" ")}
-    >
-      {label}
-    </button>
+    </main>
   );
 }
