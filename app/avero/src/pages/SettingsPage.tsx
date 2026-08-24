@@ -57,7 +57,7 @@ export default function SettingsPage() {
   const initialName =
     (user?.user_metadata?.name as string | undefined) || user?.email || "";
   const [displayName, setDisplayName] = useState(initialName);
-  const [isSavingName, setIsSavingState] = useState(false);
+  const [isSavingName, setIsSavingName] = useState(false);
   const [nameError, setNameError] = useState<string | undefined>(undefined);
   const [nameSuccess, setNameSuccess] = useState<string | undefined>(
     undefined,
@@ -186,13 +186,13 @@ export default function SettingsPage() {
         <div className="flex flex-col sm:flex-row gap-8 items-start mb-8">
           {/* Avatar Upload */}
           <div className="flex-shrink-0 relative group cursor-pointer">
-            <div className="w-24 h-24 rounded-full overflow-hidden border border-outline-variant/50 dark:border-white/20 bg-surface-container-highest dark:bg-canvas-soft shadow-stone dark:shadow-none transition-transform group-hover:scale-[1.02]">
+            <div className="w-24 h-24 rounded-full overflow-hidden border border-outline-variant dark:border-white/20 bg-surface-container-high dark:bg-[#1a1c1e] shadow-stone dark:shadow-none transition-transform group-hover:scale-[1.02]">
               <AvatarUpload
                 name={displayName || email}
                 size={96}
               />
             </div>
-            <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-surface dark:bg-canvas-soft border border-outline-variant/50 dark:border-white/20 shadow-sm flex items-center justify-center text-on-surface-variant dark:text-on-surface-variant group-hover:text-primary dark:group-hover:text-accent-dark transition-colors">
+            <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-surface dark:bg-[#1e2020] border border-outline-variant dark:border-white/20 shadow-sm flex items-center justify-center text-on-surface-variant dark:text-on-surface-variant group-hover:text-primary dark:group-hover:text-accent-dark transition-colors">
               <span className="material-symbols-outlined text-[16px]">edit</span>
             </div>
           </div>
@@ -202,27 +202,40 @@ export default function SettingsPage() {
           </div>
         </div>
         {/* Form Fields */}
-        <div className="space-y-6">
+        <form
+          className="mt-6 max-w-[420px] space-y-4"
+          onSubmit={handleSaveName}
+          noValidate
+        >
           <div>
             <label className="block font-mono-label text-mono-label mb-2 text-on-surface-variant dark:text-on-surface-variant/80 uppercase tracking-wider" for="display-name">Display name</label>
-            <input
-              className="w-full bg-white dark:bg-canvas-soft border border-outline-variant/50 dark:border-white/10 rounded-DEFAULT px-4 py-3 font-body-md text-on-surface dark:text-inverse-on-surface tactile-input focus:ring-0 shadow-stone dark:shadow-none hover:-translate-y-[1px] transition-transform"
+            <TextField
               id="display-name"
-              type="text"
+              label="Display name"
               value={displayName}
+              disabled={isSavingName}
+              error={nameError}
               onChange={(event) => {
                 setDisplayName(event.target.value);
                 if (nameError) setNameError(undefined);
                 if (nameSuccess) setNameSuccess(undefined);
               }}
               onBlur={() => setNameError(validateName(displayName))}
+              maxLength={MAX_NAME_LENGTH}
             />
           </div>
+
+          {/* Read-only email — lives on auth.users, not profiles. Editing it
+              is an auth-level operation out of scope here, so it is shown as
+              a non-editable reference rather than a disabled input (a
+              disabled input implies it *could* be edited). */}
           <div>
-            <label className="block font-mono-label text-mono-label mb-2 text-on-surface-variant dark:text-on-surface-variant/80 uppercase tracking-wider" for="email">Email</label>
+            <span className="block text-sm font-medium text-on-surface-variant dark:text-on-surface-variant/80 mb-2">
+              Email
+            </span>
             <div className="relative">
               <input
-                className="w-full bg-surface-container-low dark:bg-canvas-soft border border-outline-variant/30 dark:border-white/5 rounded-DEFAULT px-4 py-3 font-body-md text-on-surface-variant/70 dark:text-on-surface-variant/50 cursor-not-allowed"
+                className="w-full bg-surface-container-low dark:bg-[#161818] border border-outline-variant/30 dark:border-white/5 rounded-DEFAULT px-4 py-3 font-body-md text-on-surface-variant/70 dark:text-on-surface-variant/50 cursor-not-allowed"
                 id="email"
                 type="email"
                 value={email}
@@ -231,48 +244,37 @@ export default function SettingsPage() {
               <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[20px]">lock</span>
             </div>
           </div>
-          <div className="pt-4">
-            <button
-              className="bg-accent-500 text-white hover:bg-accent-400 disabled:opacity-50"
-              type="button"
-              onClick={handleSaveName}
-              disabled={isSavingName}
-            >
-              {isSavingName ? "Saving…" : "Save name"}
-            </button>
-          </div>
-        </div>
+
+          {nameSuccess && (
+            <p className="text-sm text-accent-400" role="status">
+              {nameSuccess}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSavingName}
+            aria-busy={isSavingName || undefined}
+            className="bg-accent-warm dark:bg-[#f7d6ac] text-on-primary dark:text-black font-medium px-6 py-2.5 rounded-DEFAULT hover:opacity-90 active:scale-95 transition-all shadow-sm"
+          >
+            {isSavingName ? "Saving…" : "Save name"}
+          </button>
+        </form>
       </section>
       {/* Theme Section */}
       <section className="mb-16">
         <h3 className="font-headline-md text-headline-md mb-2 text-on-surface dark:text-inverse-on-surface pb-4 border-b border-outline-variant/30 dark:border-white/10">Theme</h3>
         <p className="text-body-sm font-body-sm text-on-surface-variant dark:text-on-surface-variant/70 mb-6 mt-4">Choose how Avero looks. Your choice is remembered on this device.</p>
-        <div className="bg-surface-container-highest dark:bg-canvas-soft p-1 rounded-lg inline-flex shadow-sm">
-          {/* Light Theme Button */}
+        <div className="bg-surface-container-highest dark:bg-[#1a1c1e] p-1 rounded-lg inline-flex shadow-inner">
           <button
-            className={`
-              flex items-center justify-center rounded-DEFAULT w-24
-              bg-surface-container hover:bg-surface-container-high
-              dark:bg-inverse-surface dark:hover:bg-outline
-              transition-colors
-              text-on-surface-variant dark:text-surface-container-lowest
-              ${theme === 'light' ? 'bg-accent-600 text-white hover:bg-accent-500' : ''}
-            `}
+            className="px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 text-on-surface-variant dark:text-on-surface-variant/70 hover:text-on-surface dark:hover:text-inverse-on-surface"
             onClick={() => handleSelectTheme('light')}
           >
             <span className="material-symbols-outlined text-[18px]">light_mode</span>
             Light
           </button>
-          {/* Dark Theme Button */}
           <button
-            className={`
-              flex items-center justify-center rounded-DEFAULT w-24
-              bg-surface-container hover:bg-surface-container-high
-              dark:bg-inverse-surface dark:hover:bg-outline
-              transition-colors
-              text-on-surface-variant dark:text-surface-container-lowest
-              ${theme === 'dark' ? 'bg-accent-600 text-white hover:bg-accent-500' : ''}
-            `}
+            className="px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 bg-[#2a2c2c] text-white shadow-sm border border-white/10"
             onClick={() => handleSelectTheme('dark')}
           >
             <span className="material-symbols-outlined text-[18px]">dark_mode</span>
