@@ -174,7 +174,7 @@ export default function SettingsPage() {
     <main className="max-w-[600px] mx-auto px-6 py-12 md:py-16">
       {/* Page Header */}
       <div className="mb-12">
-        <GhostLink to={AUTHENTICATED_HOME_PATH} className="inline-flex items-center gap-2 text-on-surface-variant dark:text-on-surface-variant/70 hover:text-on-surface dark:hover:text-accent-dark transition-colors mb-6 font-mono-label text-mono-label group">
+        <GhostLink to={AUTHENTICATED_HOME_PATH} className="inline-flex items-center gap-2 text-on-surface-variant dark:text-secondary-fixed-dim hover:text-accent-warm dark:hover:text-primary-fixed-dim transition-colors mb-6 font-mono-label text-mono-label group">
           <span className="material-symbols-outlined text-[16px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
           Back to Spaces
         </GhostLink>
@@ -192,7 +192,7 @@ export default function SettingsPage() {
                 size={96}
               />
             </div>
-            <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-surface dark:bg-[#1e2020] border border-outline-variant dark:border-white/20 shadow-sm flex items-center justify-center text-on-surface-variant dark:text-on-surface-variant/70 group-hover:text-primary dark:group-hover:text-accent-dark transition-colors">
+            <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-surface dark:bg-[#1e2020] border border-outline-variant dark:border-white/20 shadow-sm flex items-center justify-center text-on-surface-variant dark:text-secondary-fixed-dim hover:text-accent-warm dark:hover:text-primary-fixed-dim transition-colors">
               <span className="material-symbols-outlined text-[16px]">edit</span>
             </div>
           </div>
@@ -248,7 +248,7 @@ export default function SettingsPage() {
           {nameSuccess && (
             <p className="text-sm text-accent-400" role="status">
               {nameSuccess}
-            </p>
+            }
           )}
 
           <button
@@ -258,7 +258,7 @@ export default function SettingsPage() {
             className="bg-accent-warm dark:bg-[#f7d6ac] text-on-primary dark:text-black font-medium px-6 py-2.5 rounded-DEFAULT hover:opacity-90 active:scale-95 transition-all shadow-sm"
           >
             {isSavingName ? "Saving…" : "Save name"}
-          </button>
+          }
         </form>
       </section>
       {/* Theme Section */}
@@ -267,7 +267,7 @@ export default function SettingsPage() {
         <p className="text-body-sm font-body-sm text-on-surface-variant dark:text-secondary-fixed-dim/70 mb-6 mt-4">Choose how Avero looks. Your choice is remembered on this device.</p>
         <div className="bg-surface-container-highest dark:bg-[#1a1c1e] p-1 rounded-lg inline-flex shadow-inner">
           <button
-            className="px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 text-on-surface-variant dark:text-on-surface-variant/70 hover:text-on-surface dark:hover:text-inverse-on-surface"
+            className="px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 text-on-surface-variant dark:text-secondary-fixed-dim hover:text-accent-warm dark:hover:text-primary-fixed-dim"
             onClick={() => handleSelectTheme('light')}
           >
             <span className="material-symbols-outlined text-[18px]">light_mode</span>
@@ -277,7 +277,7 @@ export default function SettingsPage() {
             className="px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 bg-[#2a2c2c] text-white shadow-sm border border-white/10"
             onClick={() => handleSelectTheme('dark')}
           >
-            <span className="material-symbols-outlined text-[18px]">dark_mode</span>
+            <span className="material-symbols-outiled text-[18px]">dark_mode</span>
             Dark
           </button>
         </div>
