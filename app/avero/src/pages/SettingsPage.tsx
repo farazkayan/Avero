@@ -178,15 +178,15 @@ export default function SettingsPage() {
           <span className="material-symbols-outlined text-[16px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
           Back to Spaces
         </GhostLink>
-        <h2 className="font-headline-lg text-headline-lg md:text-[32px] text-on-surface dark:text-surface-container-lowest">Settings</h2>
+        <h2 className="font-headline-lg text-headline-lg md:text-[32px] text-on-surface dark:text-inverse-on-surface">Settings</h2>
       </div>
       {/* Profile Section */}
       <section className="mb-16">
-        <h3 className="font-headline-md text-headline-md mb-8 text-on-surface dark:text-surface-container-lowest pb-4 border-b border-outline-variant/30 dark:border-white/10">Profile</h3>
+        <h3 className="font-headline-md text-headline-md mb-8 text-on-surface dark:text-inverse-on-surface pb-4 border-b border-outline-variant/30 dark:border-white/10">Profile</h3>
         <div className="flex flex-col sm:flex-row gap-8 items-start mb-8">
           {/* Avatar Upload */}
           <div className="flex-shrink-0 relative group cursor-pointer">
-            <div className="w-24 h-24 rounded-full overflow-hidden border border-outline-variant dark:border-white/20 bg-surface-container-highest dark:bg-card-dark shadow-stone dark:shadow-none transition-transform group-hover:scale-[1.02]">
+            <div className="w-24 h-24 rounded-full overflow-hidden border border-outline-variant dark:border-white/20 bg-surface-container-highest dark:bg-[#1a1c1e] shadow-stone dark:shadow-none transition-transform group-hover:scale-[1.02]">
               <AvatarUpload
                 name={displayName || email}
                 size={96}
@@ -197,7 +197,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <div className="flex flex-col justify-center h-24">
-            <p className="font-medium text-on-surface dark:text-surface-container-lowest mb-1">Profile picture</p>
+            <p className="font-medium text-on-surface dark:text-inverse-on-surface mb-1">Profile picture</p>
             <p className="text-body-sm font-body-sm text-on-surface-variant dark:text-on-surface-variant/70 max-w-xs">Click the avatar to upload a new image. PNG, JPG, or WebP up to 2 MB.</p>
           </div>
         </div>
@@ -263,30 +263,18 @@ export default function SettingsPage() {
       </section>
       {/* Theme Section */}
       <section className="mb-16">
-        <h3 className="font-headline-md text-headline-md mb-2 text-on-surface dark:text-surface-container-lowest pb-4 border-b border-outline-variant/30 dark:border-white/10">Theme</h3>
+        <h3 className="font-headline-md text-headline-md mb-2 text-on-surface dark:text-inverse-on-surface pb-4 border-b border-outline-variant/30 dark:border-white/10">Theme</h3>
         <p className="text-body-sm font-body-sm text-on-surface-variant dark:text-on-surface-variant/70 mb-6 mt-4">Choose how Avero looks. Your choice is remembered on this device.</p>
-        <div className="bg-surface-container-highest dark:bg-card-dark p-1 rounded-lg inline-flex shadow-sm">
-          {/* Light Theme Button */}
+        <div className="bg-surface-container-highest dark:bg-[#1a1c1e] p-1 rounded-lg inline-flex shadow-inner">
           <button
-            className={`
-              px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2
-              text-on-surface-variant dark:text-on-surface-variant/70
-              hover:text-on-surface dark:hover:text-inverse-on-surface
-              ${theme === 'light' ? 'bg-accent-warm text-white shadow-sm' : ''}
-            `}
+            className="px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 text-on-surface-variant dark:text-on-surface-variant/70 hover:text-on-surface dark:hover:text-inverse-on-surface"
             onClick={() => handleSelectTheme('light')}
           >
             <span className="material-symbols-outlined text-[18px]">light_mode</span>
             Light
           </button>
-          {/* Dark Theme Button */}
           <button
-            className={`
-              px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2
-              text-on-surface-variant dark:text-on-surface-variant/70
-              hover:text-on-surface dark:hover:text-inverse-on-surface
-              ${theme === 'dark' ? 'bg-card-dark text-white shadow-sm border border-white/10' : ''}
-            `}
+            className="px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 bg-[#2a2c2c] text-white shadow-sm border border-white/10"
             onClick={() => handleSelectTheme('dark')}
           >
             <span className="material-symbols-outlined text-[18px]">dark_mode</span>
@@ -296,7 +284,7 @@ export default function SettingsPage() {
       </section>
       {/* Account Section */}
       <section>
-        <h3 className="font-headline-md text-headline-md mb-6 text-on-surface dark:text-surface-container-lowest pb-4 border-b border-outline-variant/30 dark:border-white/10">Account</h3>
+        <h3 className="font-headline-md text-headline-md mb-6 text-on-surface dark:text-inverse-on-surface pb-4 border-b border-outline-variant/30 dark:border-white/10">Account</h3>
         <button
           className="border border-error text-error dark:border-error/70 dark:text-error/90 font-medium px-6 py-2.5 rounded-DEFAULT hover:bg-error/5 dark:hover:bg-error/10 active:scale-95 transition-all flex items-center gap-2"
           type="button"
