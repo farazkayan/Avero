@@ -248,7 +248,7 @@ export default function SettingsPage() {
           {nameSuccess && (
             <p className="text-sm text-accent-400" role="status">
               {nameSuccess}
-            }
+            </p>
           )}
 
           <button
@@ -277,7 +277,7 @@ export default function SettingsPage() {
             className="px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 bg-[#2a2c2c] text-white shadow-sm border border-white/10"
             onClick={() => handleSelectTheme('dark')}
           >
-            <span className="material-symbols-outiled text-[18px]">dark_mode</span>
+            <span className="material-symbols-outlined text-[18px]">dark_mode</span>
             Dark
           </button>
         </div>
