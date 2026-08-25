@@ -258,7 +258,7 @@ export default function SettingsPage() {
             className="bg-accent-warm dark:bg-[#f7d6ac] text-on-primary dark:text-black font-medium px-6 py-2.5 rounded-DEFAULT hover:opacity-90 active:scale-95 transition-all shadow-sm"
           >
             {isSavingName ? "Saving…" : "Save name"}
-          }
+          </button>
         </form>
       </section>
       {/* Theme Section */}
