@@ -208,7 +208,7 @@ export default function SettingsPage() {
           noValidate
         >
           <div>
-            <label className="block font-mono-label text-mono-label mb-2 text-on-surface-variant dark:text-secondary-fixed-dim/80 uppercase tracking-wider" for="display-name">Display name</label>
+            <label className="block font-mono-label text-mono-label mb-2 text-on-surface-variant dark:text-secondary-fixed-dim/80 uppercase tracking-wider" htmlFor="display-name">Display name</label>
             <TextField
               id="display-name"
               label="Display name"
