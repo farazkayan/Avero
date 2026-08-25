@@ -51,6 +51,7 @@
 // ============================================================================
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 type AvatarCropDialogProps = {
   /** The already-loaded source image (decoded once, reused for upload). */
@@ -230,18 +231,16 @@ export default function AvatarCropDialog({
   // Slider tick percentages for the +/- buttons (10% of the range per click).
   const zoomStep = (MAX_ZOOM - MIN_ZOOM) / 10;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="avatar-crop-title"
-      // The crop dialog is rendered inside AvatarUpload's outer <div>, which
-      // carries an onClick that opens the OS file picker. Without stopping
-      // propagation here, any click inside this modal (including a plain
-      // no-drag click on the crop circle, which only binds pointer events)
-      // would bubble up and re-trigger file selection. We isolate the modal's
-      // click stream from the upload trigger entirely.
+      // The crop dialog is portaled to document.body to escape any
+      // overflow-hidden ancestors (e.g., the SettingsPage avatar container).
+      // We still stop propagation here to prevent clicks inside the modal
+      // from bubbling to any parent click handlers.
       onClick={(event) => event.stopPropagation()}
     >
       {/* Backdrop */}
@@ -417,6 +416,7 @@ export default function AvatarCropDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
