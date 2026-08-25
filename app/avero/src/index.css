@@ -165,10 +165,23 @@ body::before {
 }
 
 /* One-time discoverability hint for the timeline reaction pill (Design System
-   S7 - "Motion should explain change, not distract"). A single, calm accent
-   glow that plays once on the first Memory card a user ever sees, then never
-   again (gated by a localStorage flag in useReactionHint). It does not block
-   interaction, show a tooltip, or loop - it just draws the eye once. */
+    S7 - "Motion should explain change, not distract"). A single, calm accent
+    glow that plays once on the first Memory card a user ever sees, then never
+    again (gated by a localStorage flag in useReactionHint). It does not block
+    interaction, show a tooltip, or loop - it just draws the eye once. */
+
+/* Chart grid lines - from Stitch source */
+.chart-grid-line {
+  stroke: rgb(var(--color-outline-variant) / <alpha-value>);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  opacity: 0.5;
+}
+
+.dark .chart-grid-line {
+  stroke: #38393a;
+  opacity: 0.3;
+}
 @keyframes reaction-hint-pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0);
@@ -186,7 +199,16 @@ body::before {
 }
 
 /* Calm enter for the reaction picker popup (Design System S7 - smooth,
-   subtle, meaningful). A short opacity + slight rise, once. */
+    subtle, meaningful). A short opacity + slight rise, once. */
+
+/* Card shadow - from Stitch source */
+.card-shadow {
+  box-shadow: 0 4px 20px -2px rgba(28, 25, 23, 0.05);
+}
+
+.dark .card-shadow {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2);
+}
 @keyframes reaction-popup-enter {
   from {
     opacity: 0;

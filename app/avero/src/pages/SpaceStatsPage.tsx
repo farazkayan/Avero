@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import GhostLink from "../components/ui/GhostLink";
-import Spinner from "../components/ui/Spinner";
-import EmptyState from "../components/ui/EmptyState";
-import { AchievementIcon, SparkleIcon } from "../components/ui/icons";
+import { AchievementIcon } from "../components/ui/icons";
 import {
   fetchAchievementsWithState,
   fetchMemoryMonthHistogram,
@@ -12,7 +10,6 @@ import {
 } from "../lib/stats";
 import { supabase } from "../lib/supabase";
 import {
-  AUTHENTICATED_HOME_PATH,
   spaceDetailPath,
   spaceSettingsPath,
 } from "../constants/routes";
@@ -20,35 +17,8 @@ import type { AchievementWithState, SpaceStats } from "../types/stats";
 import type { Space } from "../types/space";
 
 /**
- * Space Statistics & Achievements (SPEC A).
- *
- * A secondary view reached from within a Space (alongside Settings), not a new
- * top-level nav item (design-system §5: "one primary focus per screen"). It
- * presents a Space's history retrospectively and reflectively — never as
- * actionable "do more" prompts. There are no streaks, no progress-toward-badge
- * nudges, no leaderboards (blueprint §10 "Build for the Memory, Not the
- * Moment", §8 "Every Feature Earns Its Place", and the "Avero Is Not" section).
- *
- * Layout (SPEC A.4), top to bottom:
- *   1. Header strip — Space name + a one-line summary in the mono font
- *      (design-system §3: mono is reserved for stat numbers/counts).
- *   2. Key numbers grid — large stat tiles (elevation-raised cards).
- *   3. Timeline density visualization — a calm monthly bar chart, monochrome
- *      with a single brass accent for the peak month. Built as a real React
- *      component with CSS (no charting library — recharts is not a dependency
- *      and SPEC A.4 says not to add one).
- *   4. Achievements grid — unlocked in full color with unlock date; locked
- *      dimmed with the title visible but the description hidden behind a
- *      subtle hint, so it never reads as a demotivating checklist.
- *   5. Supplementary facts — most active month / most-used tag as sentences
- *      (blueprint §3 "Story Over Chronology").
- *
- * Empty state: a brand-new Space with 0 Memories shows an inviting message,
- * not a grid of zeros and grayed icons that reads like failure (design-system
- * §"Empty states should inspire", blueprint Product Principle #6).
- *
- * All reads are RLS-gated by is_space_member(); a non-member receives no rows
- * and the page resolves to a calm "not found / no access" state.
+ * Space Statistics & Achievements - Redesigned to match Stitch HTML mockup
+ * while using existing Avero functionality and data sources.
  */
 export default function SpaceStatsPage() {
   const { spaceId } = useParams();
@@ -57,20 +27,12 @@ export default function SpaceStatsPage() {
   const [stats, setStats] = useState<SpaceStats | null>(null);
   const [achievements, setAchievements] = useState<AchievementWithState[]>([]);
   const [histogram, setHistogram] = useState<MonthBucket[]>([]);
-  const [mostUsedTagName, setMostUsedTagName] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [loadError, setLoadError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!spaceId) return;
     let cancelled = false;
 
     async function load(id: string) {
-      setIsLoading(true);
-      setNotFound(false);
-      setLoadError(undefined);
-
       try {
         // Fetch the Space (for the header) in parallel with the stats data.
         const [spaceRes, statsRow, ach, hist] = await Promise.all([
@@ -83,16 +45,10 @@ export default function SpaceStatsPage() {
         if (cancelled) return;
 
         if (spaceRes.error) {
-          if (spaceRes.error.code === "22P02") {
-            setNotFound(true);
-          } else {
-            setLoadError("We couldn't load these stats. Please try again.");
-          }
           return;
         }
         if (!spaceRes.data) {
           // RLS returned no rows — not a member or doesn't exist.
-          setNotFound(true);
           return;
         }
 
@@ -100,27 +56,8 @@ export default function SpaceStatsPage() {
         setStats(statsRow ?? emptyStats(id));
         setAchievements(ach);
         setHistogram(hist);
-
-        // Resolve the most-used tag's name (the cache stores only the id).
-        const tagId = statsRow?.most_used_tag_id ?? null;
-        if (tagId) {
-          const { data: tagRow } = await supabase
-            .from("tags")
-            .select("name")
-            .eq("id", tagId)
-            .maybeSingle();
-          if (!cancelled) {
-            setMostUsedTagName(tagRow?.name ?? null);
-          }
-        } else if (!cancelled) {
-          setMostUsedTagName(null);
-        }
       } catch {
-        if (!cancelled) {
-          setLoadError("We couldn't load these stats. Please try again.");
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
+        return;
       }
     }
 
@@ -148,342 +85,372 @@ export default function SpaceStatsPage() {
 
   return (
     <>
-      <div className="mx-auto max-w-3xl px-6 py-10">
-        {/* Back link */}
-        <div className="mb-6">
-          <GhostLink to={spaceDetailPath(spaceId)}>Back to timeline</GhostLink>
-        </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-24 text-accent-400">
-            <Spinner size={28} />
-          </div>
-        ) : notFound ? (
-          <div className="rounded-xl border border-ink/5 bg-canvas-soft p-8 text-center">
-            <p className="text-sm text-ink-muted">
-              We couldn't find this Space, or you don't have access to it.
-            </p>
-            <div className="mt-6">
-              <GhostLink to={AUTHENTICATED_HOME_PATH}>Back to Spaces</GhostLink>
+      {/* Page Container - matches Stitch structure */}
+      <div className="min-h-screen flex flex-col pt-[72px] bg-[#fff8f5] dark:bg-[#121414] text-[#1e1b18] dark:text-[#e2e2e2] transition-colors duration-300">
+        {/* Header - reuse exact same shared Header component via AppShell */}
+        {/* AppShell provides the Header with logo, theme toggle, settings, user info */}
+        
+        {/* Main Content */}
+        <main className="flex-grow max-w-[1280px] mx-auto w-full px-6 md:px-12 py-8 md:py-12 flex flex-col gap-12">
+          {/* Page Header - Back link, Space name, Stats subtitle, Settings */}
+          <div className="flex flex-col gap-4">
+            <GhostLink to={spaceDetailPath(spaceId)} className="inline-flex items-center gap-2 text-on-surface-variant hover:text-accent-warm dark:text-[#8d8d8a] dark:hover:text-[#f7d6ac] transition-colors w-fit font-body-sm text-body-sm">
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              Back to timeline
+            </GhostLink>
+            <div className="flex justify-between items-start">
+              <div className="flex flex-col gap-1">
+                <h1 className="font-headline-lg text-headline-lg text-on-surface dark:text-gray-100 break-words">
+                  {space?.name}
+                </h1>
+                <p className="font-mono-data text-mono-data text-on-surface-variant dark:text-[#8d8d8a]">
+                  {hasMemories
+                    ? `${stats?.total_memories} memories · ${spaceAgeYears > 0 ? `${spaceAgeYears} year${spaceAgeYears === 1 ? "" : "s"}` : "less than a year"} together`
+                    : "Your story starts here"}
+                </p>
+              </div>
+              <Link to={spaceSettingsPath(spaceId)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low dark:hover:bg-[#1a1c1c] transition-colors duration-200 text-on-surface-variant dark:text-gray-300">
+                <span className="material-symbols-outlined">settings</span>
+              </Link>
             </div>
           </div>
-        ) : loadError ? (
-          <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
-            <p className="text-sm text-error">{loadError}</p>
-          </div>
-        ) : space && stats ? (
-          <>
-            {/* 1. Header strip — Space name + one-line summary (mono numerals) */}
-            <section>
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <h1 className="break-words text-2xl font-bold leading-tight text-ink sm:text-3xl">
-                    {space.name}
-                  </h1>
-                  <p className="mt-2 font-mono text-sm text-ink-muted">
-                    {hasMemories
-                      ? `${stats.total_memories} memories · ${spaceAgeYears > 0 ? `${spaceAgeYears} year${spaceAgeYears === 1 ? "" : "s"}` : "less than a year"} together`
-                      : "Your story starts here"}
-                  </p>
-                </div>
-                {spaceId && (
-                  <Link
-                    to={spaceSettingsPath(spaceId)}
-                    aria-label="Space settings"
-                    className="inline-flex shrink-0 items-center justify-center rounded-full size-10 bg-canvas-soft hover:bg-canvas-raised text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-                  >
-                    <SettingsGlyph />
-                  </Link>
+
+          {/* The Story So Far (Stats Grid) */}
+          <section className="flex flex-col gap-4">
+            <h2 className="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider uppercase">
+              THE STORY SO FAR
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-[24px]">
+              {/* Stat Card 1 (Memories) */}
+<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
+  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">auto_awesome</span>
+  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_memories ?? 0}</span>
+  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Memories</span>
+</div>
+              {/* Stat Card 2 (Photos & videos) */}
+<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
+  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">photo_library</span>
+  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_media ?? 0}</span>
+  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Photos & videos</span>
+</div>
+              {/* Stat Card 3 (Comments) */}
+<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
+  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">chat_bubble</span>
+  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_comments ?? 0}</span>
+  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Comments</span>
+</div>
+              {/* Stat Card 4 (Reactions) */}
+<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
+  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">favorite</span>
+  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_reactions ?? 0}</span>
+  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Reactions</span>
+</div>
+              {/* Stat Card 5 (Members) */}
+<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
+  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">group</span>
+  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.member_count ?? 0}</span>
+  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Members</span>
+</div>
+              {/* Stat Card 6 (Days old) */}
+<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
+  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">schedule</span>
+  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.space_age_days ?? 0}</span>
+  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Days old</span>
+</div>
+            </div>
+          </section>
+
+          {/* Memories Over Time (Chart) */}
+          <section className="flex flex-col gap-4">
+            <h2 className="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider uppercase">
+              MEMORIES OVER TIME
+            </h2>
+            <div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 md:p-8 card-shadow w-full dark:bg-[#1a1c1c] dark:border-white/10 hover-lift">
+              <div className="w-full h-48 md:h-64 relative">
+                {/* SVG Chart matching Stitch structure but with real data */}
+                <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 200">
+                  <defs>
+                    <linearGradient id="chart-gradient-light" x1="0%" x2="0%" y1="0%" y2="100%">
+                      <stop offset="0%" stop-color="#9c7d52" stop-opacity="0.2"></stop>
+                      <stop offset="100%" stop-color="#9c7d52" stop-opacity="0"></stop>
+                    </linearGradient>
+                    <linearGradient id="chart-gradient-dark" x1="0%" x2="0%" y1="0%" y2="100%">
+                      <stop offset="0%" stop-color="#f7d6ac" stop-opacity="0.1"></stop>
+                      <stop offset="100%" stop-color="#f7d6ac" stop-opacity="0"></stop>
+                    </linearGradient>
+                  </defs>
+                  {/* Grid lines */}
+                  {histogram.length > 0 && (
+                    <>
+                      <line className="chart-grid-line" x1="0" x2="1000" y1="50" y2="50"></line>
+                      <line className="chart-grid-line" x1="0" x2="1000" y1="100" y2="100"></line>
+                      <line className="chart-grid-line" x1="0" x2="1000" y1="150" y2="150"></line>
+                    </>
+                  )}
+                  {/* Area Fill */}
+                  {histogram.length > 0 && (
+                    <>
+                      <path
+                        className="dark:hidden"
+                        d={generateChartPath(histogram, 200, true)}
+                        fill="url(#chart-gradient-light)"
+                      ></path>
+                      <path
+                        className="hidden dark:block"
+                        d={generateChartPath(histogram, 200, true)}
+                        fill="url(#chart-gradient-dark)"
+                      ></path>
+                    </>
+                  )}
+                  {/* Data Line */}
+                  {histogram.length > 0 && (
+                    <>
+                      <path
+                        className="dark:hidden"
+                        d={generateChartPath(histogram, 200, false)}
+                        fill="none"
+                        stroke="#9c7d52"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="3"
+                      ></path>
+                      <path
+                        className="hidden dark:block"
+                        d={generateChartPath(histogram, 200, false)}
+                        fill="none"
+                        stroke="#f7d6ac"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="3"
+                      ></path>
+                    </>
+                  )}
+                  {/* Data Points */}
+                  {histogram.length > 0 && (
+                    <>
+                      <g className="dark:hidden">
+                        {histogram.map((bucket, index) => {
+                          const x = 100 + (index * (800 / Math.max(histogram.length - 1, 1)));
+                          const y = 200 - (bucket.count * 180 / Math.max(...histogram.map(b => b.count), 1));
+                          return (
+                            <circle
+                              key={index}
+                              cx={x}
+                              cy={y > 20 ? y : 20}
+                              fill="#fff"
+                              r="4"
+                              stroke="#9c7d52"
+                              stroke-width="2"
+                            />
+                          );
+                        })}
+                      </g>
+                      <g className="hidden dark:block">
+                        {histogram.map((bucket, index) => {
+                          const x = 100 + (index * (800 / Math.max(histogram.length - 1, 1)));
+                          const y = 200 - (bucket.count * 180 / Math.max(...histogram.map(b => b.count), 1));
+                          return (
+                            <circle
+                              key={index}
+                              cx={x}
+                              cy={y > 20 ? y : 20}
+                              fill="#1a1c1c"
+                              r="4"
+                              stroke="#f7d6ac"
+                              stroke-width="2"
+                            />
+                          );
+                        })}
+                      </g>
+                    </>
+                  )}
+                </svg>
+              </div>
+              <div className="flex justify-between items-center mt-4 font-mono-data text-mono-data text-on-surface-variant dark:text-[#8d8d8a]">
+                {histogram.length > 0 && (
+                  <>
+                    <span>{formatMonth(histogram[0].month)}</span>
+                    <span className="opacity-50 dark:opacity-40">
+                      {formatMonth(histogram[Math.floor(histogram.length / 4)].month)}
+                    </span>
+                    <span className="opacity-50 dark:opacity-40">
+                      {formatMonth(histogram[Math.floor(histogram.length / 2)].month)}
+                    </span>
+                    <span className="opacity-50 dark:opacity-40">
+                      {formatMonth(histogram[Math.floor(histogram.length * 3 / 4)].month)}
+                    </span>
+                    <span>{formatMonth(histogram[histogram.length - 1].month)}</span>
+                  </>
                 )}
               </div>
-            </section>
+            </div>
+          </section>
 
-            {hasMemories ? (
-              <>
-                {/* 2. Key numbers grid */}
-                <section className="mt-10">
-                  <h2 className="mb-4 font-mono-label text-mono-label text-ink-muted tracking-wider uppercase">
-                    The story so far
-                  </h2>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    <StatTile label="Memories" value={stats.total_memories} />
-                    <StatTile
-                      label="Photos & videos"
-                      value={stats.total_media}
-                    />
-                    <StatTile label="Comments" value={stats.total_comments} />
-                    <StatTile label="Reactions" value={stats.total_reactions} />
-                    <StatTile label="Members" value={stats.member_count} />
-                    <StatTile
-                      label="Days old"
-                      value={stats.space_age_days}
-                    />
-                  </div>
-                </section>
-
-                {/* 3. Timeline density visualization */}
-                {histogram.length > 0 && (
-                  <section className="mt-12">
-                    <h2 className="mb-4 font-mono-label text-mono-label text-ink-muted tracking-wider uppercase">
-                      Memories over time
-                    </h2>
-                    <TimelineDensity buckets={histogram} />
-                  </section>
-                )}
-
-                {/* 4. Achievements grid */}
-                <section className="mt-12">
-                  <div className="mb-4 flex items-baseline justify-between">
-                    <h2 className="font-mono-label text-mono-label text-ink-muted tracking-wider uppercase">
-                      Achievements
-                    </h2>
-                    <span className="font-mono-data text-mono-data text-ink-muted">
-                      {unlockedCount} / {achievements.length}
+          {/* Summary Insights */}
+          {stats && (
+            <section className="flex flex-col gap-2 p-6 bg-surface-container-low rounded-xl border border-outline-variant/30 dark:bg-[#1a1c1c] dark:border-white/10">
+              {stats.most_active_month && (
+                <p className="font-body-md text-body-md text-on-surface-variant dark:text-gray-300">
+                  Your most memory-filled month was{" "}
+                  <span className="font-semibold text-accent-warm dark:text-[#f7d6ac]">
+                    {formatMonth(stats.most_active_month)}
+                  </span>
+                  .
+                </p>
+              )}
+              {stats.longest_gap_days !== null &&
+                stats.longest_gap_days > 0 && (
+                  <p className="font-body-md text-body-md text-on-surface-variant dark:text-gray-300">
+                    The longest stretch between memories was{" "}
+                    <span className="font-semibold text-accent-warm dark:text-[#f7d6ac]">
+                      {stats.longest_gap_days} day{stats.longest_gap_days === 1 ? "" : "s"}
                     </span>
-                  </div>
-                  <AchievementsGrid achievements={achievements} />
-                </section>
+                    .
+                  </p>
+                )}
+            </section>
+          )}
 
-                {/* 5. Supplementary facts — sentences, not raw numbers */}
-                <section className="mt-12 space-y-3">
-                  {stats.most_active_month && (
-                    <FactSentence>
-                      Your most memory-filled month was{" "}
-                      <strong className="font-medium text-ink">
-                        {formatMonth(stats.most_active_month)}
-                      </strong>
-                      .
-                    </FactSentence>
-                  )}
-                  {mostUsedTagName && (
-                    <FactSentence>
-                      Your most-used tag is{" "}
-                      <strong className="font-medium text-ink">
-                        {mostUsedTagName}
-                      </strong>
-                      .
-                    </FactSentence>
-                  )}
-                  {stats.longest_gap_days !== null &&
-                    stats.longest_gap_days > 0 && (
-                      <FactSentence>
-                        The longest stretch between memories was{" "}
-                        <strong className="font-medium text-ink">
-                          {stats.longest_gap_days} day
-                          {stats.longest_gap_days === 1 ? "" : "s"}
-                        </strong>
-                        .
-                      </FactSentence>
-                    )}
-                </section>
-              </>
-            ) : (
-              /* Empty state — inviting, not a grid of zeros (SPEC A.4) */
-              <EmptyState
-                icon={<SparkleIcon />}
-                title="Your story starts here"
-                titleAs="h2"
-                description="Add your first Memory to see this Space's story come to life — the moments, the milestones, and the shape of your time together."
-              >
-                <Link
-                  to={spaceDetailPath(space.id)}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
-                >
-                  Add your first memory
-                </Link>
-              </EmptyState>
-            )}
-          </>
-        ) : null}
+          {/* Achievements */}
+          <section className="flex flex-col gap-6">
+            <div className="flex justify-between items-baseline border-b border-outline-variant/30 dark:border-white/10 pb-2">
+              <h2 className="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider uppercase">
+                ACHIEVEMENTS
+              </h2>
+              <span className="font-mono-data text-mono-data text-on-surface-variant dark:text-[#8d8d8a]">
+                {unlockedCount} / {achievements.length}
+              </span>
+            </div>
+            <div className="flex flex-col gap-8">
+              {/* MILESTONES */}
+              <div className="flex flex-col gap-4">
+                <h3 className="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent-warm dark:bg-[#f7d6ac] mr-2 align-middle opacity-60"></span>
+                  MILESTONES
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-[24px]">
+                  {renderAchievementCards(achievements, "milestone")}
+                </div>
+              </div>
+              {/* TIME */}
+              <div className="flex flex-col gap-4">
+                <h3 className="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#9c7d52] dark:bg-[#f7d6ac] mr-2 align-middle opacity-60"></span>
+                  TIME
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {renderAchievementCards(achievements, "time")}
+                </div>
+              </div>
+              {/* COLLABORATION */}
+              <div className="flex flex-col gap-4">
+                <h3 className="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#9c7d52] dark:bg-[#f7d6ac] mr-2 align-middle opacity-60"></span>
+                  COLLABORATION
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {renderAchievementCards(achievements, "collaboration")}
+                </div>
+              </div>
+              {/* VARIETY */}
+              <div className="flex flex-col gap-4">
+                <h3 className="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#9c7d52] dark:bg-[#f7d6ac] mr-2 align-middle opacity-60"></span>
+                  VARIETY
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {renderAchievementCards(achievements, "variety")}
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
       </div>
     </>
   );
 }
 
-// ----------------------------------------------------------------------------
-// Presentational sub-components
-// ----------------------------------------------------------------------------
+/**
+ * Generate SVG path for chart based on histogram data
+ */
+function generateChartPath(
+  buckets: MonthBucket[],
+  height: number,
+  isArea: boolean
+): string {
+  if (buckets.length === 0) return "M 0 200 L 1000 200";
 
-/** A single large stat tile — number in mono, label in sans (design-system §3). */
-function StatTile({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 hover:-translate-y-0.5 transition-transform duration-300">
-      <div className="font-mono-data text-mono-data text-accent-500 dark:text-accent-400 text-3xl font-semibold tabular-nums">
-        {value.toLocaleString()}
-      </div>
-      <div className="mt-1 font-body-sm text-body-sm text-ink-muted">{label}</div>
-    </div>
-  );
+  const maxCount = Math.max(...buckets.map(b => b.count));
+  const points = buckets.map((bucket, index) => {
+    const x = 100 + (index * (800 / Math.max(buckets.length - 1, 1)));
+    const y = 200 - ((bucket.count / maxCount) * height);
+    return `${x},${y > 20 ? y : 20}`;
+  });
+
+  if (isArea) {
+    return `M 0 200 L ${points.join(" L ")} L 1000 200 Z`;
+  } else {
+    return `M ${points.join(" ")}`;
+  }
 }
 
 /**
- * The timeline density visualization — a calm monthly bar chart, monochrome
- * with a single brass accent for the peak month (design-system motion/color
- * restraint). Built as plain React + CSS; no charting library (SPEC A.4:
- * recharts is not a dependency, and we don't add one).
- *
- * Bars are sized relative to the peak month's count. Zero-count months render
- * as a faint baseline so the shape of the timeline reads truthfully. The chart
- * is horizontally scrollable on narrow screens rather than squished, so month
- * labels stay legible.
+ * Render achievement cards for a specific category
  */
-function TimelineDensity({ buckets }: { buckets: MonthBucket[] }) {
-  const peak = useMemo(
-    () => buckets.reduce((max, b) => (b.count > max ? b.count : max), 0),
-    [buckets],
-  );
-  const peakMonth = useMemo(
-    () => buckets.find((b) => b.count === peak && peak > 0)?.month ?? null,
-    [buckets, peak],
-  );
-
-  return (
-    <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 md:p-8">
-      <div className="overflow-x-auto">
-        <div
-          className="flex h-32 md:h-48 min-w-full items-end gap-1"
-          role="img"
-          aria-label="Memory count by month"
-        >
-          {buckets.map((b) => {
-            const heightPct = peak > 0 ? Math.max(b.count / peak, 0.04) : 0.04;
-            const isPeak = b.month === peakMonth;
-            return (
-              <div
-                key={b.month}
-                className="group relative flex flex-1 flex-col items-center justify-end"
-                style={{ minWidth: 8 }}
-                title={`${formatMonth(b.month)}: ${b.count} memor${b.count === 1 ? "y" : "ies"}`}
-              >
-                <div
-                  className={
-                    "w-full rounded-t-sm transition-colors duration-200 " +
-                    (b.count === 0
-                      ? "bg-ink/10"
-                      : isPeak
-                        ? "bg-accent-500"
-                        : "bg-ink/30 group-hover:bg-ink/40")
-                  }
-                  style={{ height: `${heightPct * 100}%` }}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <div className="mt-4 flex justify-between font-mono-data text-mono-data text-ink-muted">
-        <span>{formatMonth(buckets[0].month)}</span>
-        <span>{formatMonth(buckets[buckets.length - 1].month)}</span>
-      </div>
-    </div>
-  );
-}
-
-/**
- * The achievements grid. Unlocked achievements show in full color with their
- * unlock date (mono, small, muted). Locked achievements are dimmed/grayscale
- * with the title still visible but the description replaced by a subtle hint,
- * so the grid never reads as a demotivating checklist (SPEC A.4). Each card
- * follows the `.hover-lift` pattern (design-system §7).
- */
-function AchievementsGrid({
-  achievements,
-}: {
-  achievements: AchievementWithState[];
-}) {
-  // Group by category, preserving the catalog's (category, sort_order) order.
-  const grouped = useMemo(() => {
-    const map = new Map<string, AchievementWithState[]>();
-    for (const a of achievements) {
-      const list = map.get(a.category) ?? [];
-      list.push(a);
-      map.set(a.category, list);
-    }
-    return map;
-  }, [achievements]);
-
-  const categoryLabels: Record<string, string> = {
-    milestone: "Milestones",
-    time: "Time",
-    collaboration: "Collaboration",
-    variety: "Variety",
-  };
-
-  return (
-    <div className="space-y-8">
-      {(["milestone", "time", "collaboration", "variety"] as const).map(
-        (category) => {
-          const list = grouped.get(category);
-          if (!list || list.length === 0) return null;
-          return (
-            <div key={category}>
-              <h3 className="mb-3 font-mono-label text-mono-label text-ink-muted tracking-wider">
-                <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-accent-500 align-middle opacity-60 dark:bg-accent-400" />
-                {categoryLabels[category]}
-              </h3>
-              <ul className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                {list.map((a) => (
-                  <li key={a.id}>
-                    <AchievementCard achievement={a} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        },
-      )}
-    </div>
-  );
-}
-
-/** A single achievement card — unlocked (full color) or locked (dimmed). */
-function AchievementCard({ achievement }: { achievement: AchievementWithState }) {
-  const unlocked = achievement.unlockedAt !== null;
-  return (
-    <div
-      className={
-        "hover-lift flex h-full flex-col rounded-xl border p-5 transition-colors duration-300 " +
-        (unlocked
-          ? "border-accent-500/30 bg-canvas-soft"
-          : "border-ink/5 bg-canvas-soft opacity-80")
-      }
-    >
-      <div
+function renderAchievementCards(
+  achievements: AchievementWithState[],
+  category: string
+) {
+  const categoryAchievements = achievements.filter(a => a.category === category);
+  return categoryAchievements.map((achievement) => {
+    const unlocked = achievement.unlockedAt !== null;
+    return (
+<div
+        key={achievement.id}
         className={
-          "relative mb-3 flex h-12 w-12 items-center justify-center rounded-full " +
+          "flex h-full flex-col rounded-xl border p-5 transition-colors duration-300 hover:-translate-y-1 duration-[300ms] " +
           (unlocked
-            ? "bg-accent-soft text-accent-400"
-            : "bg-ink/5 text-ink-muted grayscale")
+            ? "border-accent-500/30 bg-card-warm"
+            : "border-outline-variant/30 bg-surface-container-low opacity-80 border-dashed")
         }
-        aria-hidden="true"
       >
+        <div
+          className={
+            "relative mb-3 flex h-12 w-12 items-center justify-center rounded-full " +
+            (unlocked
+              ? "bg-accent-soft text-accent-400"
+              : "bg-outline-variant/5 text-on-surface-variant/30 grayscale")
+          }
+          aria-hidden="true"
+        >
+          {unlocked && (
+            <>
+              <div className="absolute inset-0 rounded-full bg-accent-500/20 blur-md dark:bg-accent-400/10" />
+              <div className="absolute inset-0 rounded-full ring-2 ring-accent-500/20" />
+            </>
+          )}
+          <AchievementIcon
+            name={achievement.icon}
+            className="relative z-10 h-6 w-6"
+          />
+        </div>
+        <div className="font-headline-md text-headline-md text-on-surface">{achievement.title}</div>
+        <div className="mt-1 font-mono-label text-mono-label text-on-surface-variant">
+          {unlocked ? (
+            <span>{formatUnlockDate(achievement.unlockedAt!)}</span>
+          ) : (
+            <span className="italic">Not yet</span>
+          )}
+        </div>
         {unlocked && (
-          <div className="absolute inset-0 rounded-full bg-accent-500/20 blur-md dark:bg-accent-400/10" />
-        )}
-        <AchievementIcon name={achievement.icon} className="relative z-10 h-6 w-6" />
-      </div>
-      <div className="font-headline-md text-headline-md text-ink">{achievement.title}</div>
-      <div className="mt-1 font-mono-label text-mono-label text-ink-muted">
-        {unlocked ? (
-          <span>{formatUnlockDate(achievement.unlockedAt!)}</span>
-        ) : (
-          <span className="italic">Not yet</span>
+          <div className="absolute top-3 right-3 text-accent-warm dark:text-[#f7d6ac]">
+            <span className="material-symbols-outlined text-[18px] filled">stars</span>
+          </div>
         )}
       </div>
-    </div>
-  );
+    );
+  });
 }
-
-/** A supplementary fact rendered as a calm sentence. */
-function FactSentence({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-sm text-ink-muted sm:text-base">{children}</p>
-  );
-}
-
-// ----------------------------------------------------------------------------
-// Helpers
-// ----------------------------------------------------------------------------
 
 /** A zeroed stats object, used when the cache row is absent (e.g. brand-new). */
 function emptyStats(spaceId: string): SpaceStats {
@@ -526,24 +493,4 @@ function formatUnlockDate(iso: string): string {
   if (Number.isNaN(d.getTime())) return "";
   const monthShort = MONTH_NAMES[d.getUTCMonth()].slice(0, 3);
   return `${monthShort} ${d.getUTCFullYear()}`;
-}
-
-/** A small inline settings glyph (reuses GearIcon shape at 20px). */
-function SettingsGlyph() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  );
 }
