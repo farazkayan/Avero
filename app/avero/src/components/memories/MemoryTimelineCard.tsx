@@ -266,7 +266,7 @@ export default function MemoryTimelineCard({
                     onKeyDown={handleMenuClose}
                     className="block px-4 py-2 text-sm text-on-surface dark:text-surface-container-lowest w-full text-left"
                     role="menuitem"
-                    tabIndex="-1"
+                    tabIndex={-1}
                   >
                     Edit Memory
                   </button>
@@ -276,7 +276,7 @@ export default function MemoryTimelineCard({
                     onKeyDown={handleMenuClose}
                     className="block px-4 py-2 text-sm text-error dark:text-error w-full text-left"
                     role="menuitem"
-                    tabIndex="-1"
+                    tabIndex={-1}
                   >
                     Delete Memory
                   </button>
