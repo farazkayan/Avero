@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
-import GhostLink from "../components/ui/GhostLink";
+import BackLink from "../components/ui/BackLink";
 import Spinner from "../components/ui/Spinner";
 import EmptyState from "../components/ui/EmptyState";
 import { SparkleIcon } from "../components/ui/icons";
@@ -13,7 +13,7 @@ import {
 } from "../constants/routes";
 import type { Memory } from "../types/memory";
 import type { Space } from "../types/space";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -38,33 +38,42 @@ export default function SpaceMapPage() {
 
   const mapRef = useRef<L.Map | null>(null);
 
-  // Custom marker icon using Avero's accent color
+  // Custom marker icon - Stitch design: circular with center dot and pin stem
   const customMarkerIcon = useMemo(() => {
     return L.divIcon({
       className: "avero-marker",
       html: `
-        <div style="
-          width: 28px;
-          height: 28px;
-          border-radius: 50% 50% 50% 0;
-          background: #9c7d52;
-          transform: rotate(-45deg);
-          border: 2px solid white;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        ">
-          <div style="
-            width: 12px;
-            height: 12px;
+        <div class="marker-wrapper">
+          <div class="marker-circle" style="
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            background: white;
-            margin: 6px auto 0;
-            transform: rotate(45deg);
+            background: #806540;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <div style="
+              width: 4px;
+              height: 4px;
+              border-radius: 50%;
+              background: white;
+            "></div>
+          </div>
+          <div class="marker-stem" style="
+            width: 2px;
+            height: 16px;
+            background: #806540;
+            margin-top: -1px;
+            opacity: 0.8;
           "></div>
         </div>
       `,
-      iconSize: [28, 28],
-      iconAnchor: [14, 28],
-      popupAnchor: [0, -28],
+      iconSize: [16, 32],
+      iconAnchor: [8, 32],
+      popupAnchor: [0, -32],
     });
   }, []);
 
@@ -188,148 +197,253 @@ export default function SpaceMapPage() {
 
   if (!spaceId) return null;
 
-  return (
-    <>
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        {/* Back link */}
-        <div className="mb-6">
-          <GhostLink to={spaceDetailPath(spaceId)}>Back to timeline</GhostLink>
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex flex-col gap-8">
+        <BackLink to={spaceDetailPath(spaceId)} className="mb-8" />
+        <div className="flex items-center justify-center py-24 flex-1">
+          <Spinner size={28} />
         </div>
+      </div>
+    );
+  }
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-24">
-            <Spinner size={28} />
+  // Not found state
+  if (notFound) {
+    return (
+      <div className="flex-1 flex flex-col gap-8">
+        <BackLink to={spaceDetailPath(spaceId)} className="mb-8" />
+        <div className="rounded-xl border border-outline-variant/20 dark:border-inverse-surface bg-surface-container-low dark:bg-card-dark p-8 text-center flex-1 flex items-center justify-center">
+          <p className="text-sm text-on-surface-variant dark:text-secondary-fixed-dim">
+            We couldn't find this Space, or you don't have access to it.
+          </p>
+          <div className="mt-6">
+            <BackLink to={AUTHENTICATED_HOME_PATH} />
           </div>
-        ) : notFound ? (
-          <div className="rounded-xl border border-ink/5 bg-canvas-soft p-8 text-center">
-            <p className="text-sm text-ink-muted">
-              We couldn't find this Space, or you don't have access to it.
-            </p>
-            <div className="mt-6">
-              <GhostLink to={AUTHENTICATED_HOME_PATH}>Back to Spaces</GhostLink>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (loadError) {
+    return (
+      <div className="flex-1 flex flex-col gap-8">
+        <BackLink to={spaceDetailPath(spaceId)} className="mb-8" />
+        <div className="rounded-xl border border-outline-variant/20 dark:border-inverse-surface bg-surface-container-low dark:bg-card-dark p-6 text-center flex-1 flex items-center justify-center">
+          <p className="text-sm text-error">{loadError}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No space data
+  if (!space) {
+    return null;
+  }
+
+  // Main content with space data
+  return (
+    <div className="flex-1 flex flex-col gap-8">
+      {/* Back link - using BackLink component which matches Stitch design */}
+      <BackLink to={spaceDetailPath(spaceId)} className="mb-8" />
+
+      {/* Header - matches Stitch: headline-lg-mobile md:headline-lg, body-md */}
+      <section className="mb-8">
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-surface-container-lowest tracking-tight">
+          {space.name}
+        </h1>
+        <p className="mt-2 font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">
+          {memories.length === 0
+            ? "No memories pinned yet"
+            : `${memories.length} memory${memories.length === 1 ? "" : "s"} on the map`}
+        </p>
+      </section>
+
+      {/* Map or Empty State */}
+      {memories.length === 0 ? (
+        <EmptyState
+          icon={<SparkleIcon />}
+          title="No memories pinned yet"
+          titleAs="h2"
+          description="Add a location next time you create a Memory to see it on the map."
+        >
+          <Link
+            to={spaceDetailPath(space.id) + "/memories/new"}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-accent-warm dark:bg-primary-fixed text-canvas-warm dark:text-on-primary-fixed font-body-sm text-body-sm font-medium px-6 py-3 transition-colors hover:bg-opacity-90 hover:-translate-y-0.5 shadow-sm active:scale-95"
+          >
+            Create your first memory
+          </Link>
+        </EmptyState>
+      ) : (
+        <div className={[
+          "relative w-full min-h-[500px] md:min-h-[600px]",
+          "rounded-xl overflow-hidden",
+          "bg-card-warm dark:bg-card-dark",
+          "border border-outline-variant/50 dark:border-white/10",
+          "shadow-[0_4px_20px_-2px_rgba(28,25,23,0.05)] dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.2)]",
+          "transition-all duration-300 isolate group",
+        ].join(" ")}>
+          {/* Map */}
+          <div className="relative h-[500px] md:h-[600px] w-full">
+            <MapContainer
+              center={mapCenter}
+              zoom={memories.length === 1 ? 14 : 10}
+              scrollWheelZoom={true}
+              zoomControl={false}
+              ref={mapRef}
+              whenReady={() => {
+                if (mapRef.current && mapBounds) {
+                  mapRef.current.fitBounds(mapBounds, { padding: [50, 50] });
+                }
+              }}
+              className="h-full w-full"
+            >
+              <TileLayer
+                url={tileConfig.url}
+                attribution={tileConfig.attribution}
+                subdomains={tileConfig.subdomains}
+                maxZoom={19}
+              />
+              {memories.map((memory) => (
+                <Marker
+                  key={memory.id}
+                  position={[memory.latitude!, memory.longitude!]}
+                  icon={customMarkerIcon}
+                >
+                  <Tooltip
+                    content={memory.title}
+                    direction="top"
+                    offset={[0, -20]}
+                    opacity={0.9}
+                    className="avero-tooltip"
+                  />
+                  <Popup
+                    className="avero-popup"
+                    closeButton={false}
+                    autoClose={false}
+                    closeOnClick={false}
+                  >
+                    <div className="p-2 min-w-[200px]">
+                      <Link
+                        to={memoryDetailPath(spaceId, memory.id)}
+                        className="block"
+                      >
+                        <h3 className="font-semibold text-ink truncate">
+                          {memory.title}
+                        </h3>
+                        <p className="mt-1 text-xs text-ink-muted font-mono">
+                          {new Date(memory.memory_date).toLocaleDateString(
+                            undefined,
+                            { month: "short", day: "numeric", year: "numeric" }
+                          )}
+                        </p>
+                        {memory.memory_type && (
+                          <span className="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded bg-accent-soft text-accent-600">
+                            {memory.memory_type.replace("_", " ")}
+                          </span>
+                        )}
+                      </Link>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+
+            {/* Custom Zoom Controls - Stitch design */}
+            <div className={[
+              "absolute top-6 left-6 flex flex-col",
+              "bg-surface/80 dark:bg-canvas-dark/80",
+              "backdrop-blur-md rounded-full",
+              "border border-outline-variant/50 dark:border-white/10",
+              "shadow-sm overflow-hidden z-10",
+            ].join(" ")}>
+              <button
+                type="button"
+                aria-label="Zoom in"
+                onClick={() => mapRef.current?.zoomIn()}
+                className={[
+                  "w-10 h-10 flex items-center justify-center",
+                  "text-on-surface dark:text-surface-container-lowest",
+                  "hover:bg-surface-variant/50 dark:hover:bg-white/5",
+                  "transition-colors",
+                ].join(" ")}
+              >
+                <span className="material-symbols-outlined text-[20px]">add</span>
+              </button>
+              <div className="h-px w-full bg-outline-variant/50 dark:bg-white/10" />
+              <button
+                type="button"
+                aria-label="Zoom out"
+                onClick={() => mapRef.current?.zoomOut()}
+                className={[
+                  "w-10 h-10 flex items-center justify-center",
+                  "text-on-surface dark:text-surface-container-lowest",
+                  "hover:bg-surface-variant/50 dark:hover:bg-white/5",
+                  "transition-colors",
+                ].join(" ")}
+              >
+                <span className="material-symbols-outlined text-[20px]">remove</span>
+              </button>
             </div>
           </div>
-        ) : loadError ? (
-          <div className="rounded-xl border border-ink/5 bg-canvas-soft p-6 text-center">
-            <p className="text-sm text-error">{loadError}</p>
-          </div>
-        ) : space ? (
-          <>
-            {/* Header */}
-            <section className="mb-8">
-              <h1 className="text-2xl font-bold leading-tight text-ink sm:text-3xl">
-                {space.name}
-              </h1>
-              <p className="mt-2 text-sm text-ink-muted sm:text-base">
-                {memories.length === 0
-                  ? "No memories pinned yet"
-                  : `${memories.length} memory${memories.length === 1 ? "" : "s"} on the map`}
-              </p>
-            </section>
 
-            {/* Map or Empty State */}
-            {memories.length === 0 ? (
-              <EmptyState
-                icon={<SparkleIcon />}
-                title="No memories pinned yet"
-                titleAs="h2"
-                description="Add a location next time you create a Memory to see it on the map."
-              >
-                <Link
-                  to={spaceDetailPath(space.id).replace("/spaces/", "/spaces/") + "/memories/new"}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-accent-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-accent-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+          {/* Attribution - LocationIQ + OSM (required) + Avero Cartography (Stitch) */}
+          <div className="absolute bottom-4 right-4 flex flex-col items-end gap-2 z-10">
+            {/* Avero Cartography attribution - Stitch style */}
+            <div className={[
+              "bg-surface/60 dark:bg-canvas-dark/60 backdrop-blur-sm",
+              "px-2 py-1 rounded",
+              "border border-outline-variant/50 dark:border-white/10",
+            ].join(" ")}>
+              <span className="font-mono-label text-[10px] uppercase tracking-wider text-on-surface-variant/80 dark:text-secondary-fixed-dim">
+                © Avero Cartography
+              </span>
+            </div>
+            {/* LocationIQ + OSM attribution - Required by ToS */}
+            <div className={[
+              "bg-surface/60 dark:bg-canvas-dark/60 backdrop-blur-sm",
+              "px-3 py-1.5 rounded",
+              "border border-outline-variant/50 dark:border-white/10",
+            ].join(" ")}>
+              <p className="text-xs text-on-surface-variant dark:text-secondary-fixed-dim">
+                Location data by{" "}
+                <a
+                  href="https://locationiq.com/?ref=maps"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-accent-warm dark:hover:text-primary-fixed-dim"
                 >
-                  Create your first memory
-                </Link>
-              </EmptyState>
-            ) : (
-              <div className="rounded-xl border border-ink/5 bg-canvas-soft overflow-hidden">
-                <div className="relative h-[600px] w-full">
-                    <MapContainer
-                      center={mapCenter}
-                      zoom={memories.length === 1 ? 14 : 10}
-                      scrollWheelZoom={true}
-                      ref={mapRef}
-                      whenReady={() => {
-                        if (mapRef.current && mapBounds) {
-                          mapRef.current.fitBounds(mapBounds, { padding: [50, 50] });
-                        }
-                      }}
-                      className="h-full w-full"
-                    >
-                    <TileLayer
-                      url={tileConfig.url}
-                      attribution={tileConfig.attribution}
-                      subdomains={tileConfig.subdomains}
-                      maxZoom={19}
-                    />
-                    {memories.map((memory) => (
-                      <Marker
-                        key={memory.id}
-                        position={[memory.latitude!, memory.longitude!]}
-                        icon={customMarkerIcon}
-                      >
-                        <Popup
-                          className="avero-popup"
-                          closeButton={false}
-                          autoClose={false}
-                          closeOnClick={false}
-                        >
-                          <div className="p-2 min-w-[200px]">
-                            <Link
-                              to={memoryDetailPath(spaceId, memory.id)}
-                              className="block"
-                            >
-                              <h3 className="font-semibold text-ink truncate">
-                                {memory.title}
-                              </h3>
-                              <p className="mt-1 text-xs text-ink-muted font-mono">
-                                {new Date(memory.memory_date).toLocaleDateString(
-                                  undefined,
-                                  { month: "short", day: "numeric", year: "numeric" }
-                                )}
-                              </p>
-                              {memory.memory_type && (
-                                <span className="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider rounded bg-accent-soft text-accent-600">
-                                  {memory.memory_type.replace("_", " ")}
-                                </span>
-                              )}
-                            </Link>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    ))}
-                  </MapContainer>
-                </div>
-
-                {/* LocationIQ Attribution - per LocationIQ ToS/docs (https://locationiq.com/attribution, https://docs.locationiq.com/docs/examples-leaflet) */}
-                <div className="px-4 py-2 text-center">
-                  <p className="text-xs text-ink-muted">
-                    Location data by{" "}
-                    <a
-                      href="https://locationiq.com/?ref=maps"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:text-accent-500"
-                    >
-                      © LocationIQ
-                    </a>
+                  © LocationIQ
+                </a>
+                {" | "}
+                <a
+                  href="https://www.openstreetmap.org/copyright"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-accent-warm dark:hover:text-primary-fixed-dim"
+                >
+                  © OpenStreetMap
+                </a>
+                {theme === "dark" && (
+                  <>
                     {" | "}
                     <a
-                      href="https://www.openstreetmap.org/copyright"
+                      href="https://carto.com/attributions"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline hover:text-accent-500"
+                      className="underline hover:text-accent-warm dark:hover:text-primary-fixed-dim"
                     >
-                      © OpenStreetMap
+                      © CARTO
                     </a>
-                  </p>
-                </div>
-              </div>
-            )}
-          </>
-        ) : null}
-      </div>
-    </>
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

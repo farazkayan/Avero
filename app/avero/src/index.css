@@ -164,6 +164,113 @@ body::before {
   box-shadow: 0 12px 24px -10px rgba(229, 193, 144, 0.2);
 }
 
+/* Map Marker Styles - Stitch design */
+@keyframes pinBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.avero-marker .marker-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avero-marker .marker-wrapper:hover {
+  animation: pinBounce 0.6s ease infinite;
+}
+
+.avero-marker .marker-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.avero-marker .marker-tooltip .tooltip-text {
+  background-color: rgb(var(--color-surface-container-low) / 0.95);
+  color: rgb(var(--color-on-surface));
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgb(var(--color-outline-variant) / 0.5);
+  box-shadow: 0 4px 12px -4px rgba(28, 25, 23, 0.15);
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.dark .avero-marker .marker-tooltip .tooltip-text {
+  background-color: rgba(26, 28, 28, 0.95);
+  color: rgb(var(--color-surface-container-lowest));
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.3);
+}
+
+.avero-marker .marker-wrapper:hover .marker-tooltip {
+  opacity: 1;
+}
+
+/* Leaflet Tooltip customization for Avero - Stitch style hover tooltip */
+.avero-tooltip.leaflet-tooltip {
+  background-color: rgb(var(--color-surface-container-low)) !important;
+  color: rgb(var(--color-on-surface)) !important;
+  border: 1px solid rgb(var(--color-outline-variant) / 0.8) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 16px -4px rgba(28, 25, 23, 0.25) !important;
+  padding: 6px 12px !important;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+}
+
+.dark .avero-tooltip.leaflet-tooltip {
+  background-color: rgba(26, 28, 28, 0.98) !important;
+  color: rgb(var(--color-surface-container-lowest)) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.4) !important;
+}
+
+.avero-tooltip.leaflet-tooltip::before {
+  border-top-color: rgb(var(--color-surface-container-low)) !important;
+}
+
+.dark .avero-tooltip.leaflet-tooltip::before {
+  border-top-color: rgba(26, 28, 28, 0.98) !important;
+}
+
+/* Leaflet popup customization for Avero */
+.avero-popup .leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 8px 32px -8px rgba(28, 25, 23, 0.15);
+  padding: 0;
+}
+
+.dark .avero-popup .leaflet-popup-content-wrapper {
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.3);
+}
+
+.avero-popup .leaflet-popup-content {
+  margin: 0;
+  width: auto !important;
+}
+
+.avero-popup .leaflet-popup-tip {
+  background: white;
+}
+
+.dark .avero-popup .leaflet-popup-tip {
+  background: rgb(var(--color-card-dark));
+}
+
 /* One-time discoverability hint for the timeline reaction pill (Design System
     S7 - "Motion should explain change, not distract"). A single, calm accent
     glow that plays once on the first Memory card a user ever sees, then never
