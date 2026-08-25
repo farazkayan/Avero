@@ -242,6 +242,8 @@ export default function AvatarCropDialog({
       // We still stop propagation here to prevent clicks inside the modal
       // from bubbling to any parent click handlers.
       onClick={(event) => event.stopPropagation()}
+      // Prevent page scroll when wheeling anywhere in the dialog (backdrop, panel, crop stage)
+      onWheel={(event) => event.preventDefault()}
     >
       {/* Backdrop */}
       <button
