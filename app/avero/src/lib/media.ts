@@ -1301,6 +1301,7 @@ export async function fetchMemoryMosaicThumbnailsBatch(
     }
   }
 
+  console.log('[fetchMemoryMosaicThumbnailsBatch] Before final map, map size:', Object.keys(map).length, 'keys:', Object.keys(map));
   console.log('[fetchMemoryMosaicThumbnailsBatch] Final map:', Object.fromEntries(
     Object.entries(map).map(([k, v]) => [k, v.length])
   ));
