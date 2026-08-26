@@ -5,6 +5,7 @@ import { getMediaDownloadUrl } from "../../lib/media";
 import { memoryDetailPath } from "../../constants/routes";
 import { PhotoIcon } from "../../components/ui/icons";
 import { deleteMemory } from "../../lib/memories";
+import MultiPhotoMosaic from "../ui/MultiPhotoMosaic";
 import type { Memory, MemoryType } from "../../types/memory";
 import type { Media } from "../../types/media";
 import type { MemoryReactionSummary } from "../../lib/reactions";
@@ -39,9 +40,7 @@ export default function MemoryTimelineCard({
   onToggleReaction,
 }: MemoryTimelineCardProps) {
   const navigate = useNavigate();
-  const useMosaicLayout = thumbnails.length >= 3;
-  
-  // Resolved URLs for thumbnails - we need to resolve the B2 object keys to presigned URLs
+// Resolved URLs for thumbnails - we need to resolve the B2 object keys to presigned URLs
   const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]);
 
   // Resolve thumbnail URLs to presigned URLs for display
@@ -51,8 +50,9 @@ export default function MemoryTimelineCard({
       return;
     }
     
-    // For mosaic layout (3+ photos), we need up to 3 thumbnails and use thumbnail_grid_path (smaller, optimized for grid)
-    // For single image layout (≤2 photos), we need 1 thumbnail and use thumbnail_detail_path (larger, for hero display)
+    // For mosaic layout (2+ photos), we need up to 3 thumbnails and use thumbnail_grid_path (smaller, optimized for grid)
+    // For single image layout (1 photo), we need 1 thumbnail and use thumbnail_detail_path (larger, for hero display)
+    const useMosaicLayout = thumbnails.length >= 2;
     const maxThumbnailsNeeded = useMosaicLayout ? 3 : 1;
     const thumbnailsToResolve = thumbnails.slice(0, maxThumbnailsNeeded);
     
@@ -61,7 +61,7 @@ export default function MemoryTimelineCard({
       const urlPromises = thumbnailsToResolve.map(thumbnail =>
         getMediaDownloadUrl(
           // For mosaic layout, use thumbnail_grid_path (smaller thumbnails for grid display)
-          // For single image layout, use thumbnail_detail_path (larger thumbnails[0]?.thumbnail_detail_path ?? thumbnail.thumbnail_grid_path ?? thumbnail.thumbnail_path ?? thumbnail.url
+          // For single image layout, use thumbnail_detail_path (larger, for hero display)
           useMosaicLayout
             ? (thumbnail.thumbnail_grid_path ?? thumbnail.thumbnail_path ?? thumbnail.url)
             : (thumbnail.thumbnail_detail_path ?? thumbnail.thumbnail_grid_path ?? thumbnail.thumbnail_path ?? thumbnail.url)
@@ -75,7 +75,7 @@ export default function MemoryTimelineCard({
       // If URL resolution fails, set empty strings so images don't load
       setThumbnailUrls(thumbnailsToResolve.map(() => ""));
     }
-  }, [thumbnails, useMosaicLayout]);
+  }, [thumbnails]);
 
   useEffect(() => {
     resolveThumbnailUrls();
@@ -120,64 +120,35 @@ export default function MemoryTimelineCard({
     }
   };
 
-  return (
+return (
     <article className={`bg-card-warm dark:bg-card-dark border border-outline-variant/30 dark:border-inverse-surface rounded-2xl p-4 sm:p-5 shadow-stone hover:-translate-y-[2px] transition-all duration-300 group${thumbnails.length === 0 ? ' border-t-2 border-accent-warm/20 dark:border-primary-fixed-dim/20' : ''}`}>
 {/* Image Header Area */}
-       {thumbnails.length > 0 ? (
-         useMosaicLayout ? (
-           // Mosaic-header card (3+ photos): 2x2 grid photo collage
-           <div className="grid grid-cols-2 grid-rows-2 gap-2 h-[260px] sm:h-[300px] mb-5">
-             <div className="col-span-1 row-span-2 relative overflow-hidden rounded-xl">
-               {thumbnailUrls[0] ? (
-                 <img
-                   alt=""
-                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                   src={thumbnailUrls[0]}
-                 />
-               ) : (
-                 // Placeholder for loading thumbnail
-                 <div className="absolute inset-0 flex items-center justify-center text-[28px] text-on-surface-variant/50">
-                   <PhotoIcon />
-                 </div>
-               )}
-             </div>
-             <div className="relative overflow-hidden rounded-xl">
-               {thumbnailUrls[1] && (
-                 <img
-                   alt=""
-                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out delay-75"
-                   src={thumbnailUrls[1]}
-                 />
-               )}
-             </div>
-             <div className="relative overflow-hidden rounded-xl">
-               {thumbnailUrls[2] && (
-                 <img
-                   alt=""
-                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out delay-150"
-                   src={thumbnailUrls[2]}
-                 />
-               )}
-             </div>
-           </div>
-         ) : (
-           // Single-image card (≤2 photos): single full-width image header
-           <div className="relative h-[220px] sm:h-[260px] overflow-hidden bg-surface-container-low dark:bg-inverse-surface rounded-xl mb-5 transition-colors duration-300">
-             {thumbnailUrls[0] ? (
-               <img
-                 alt=""
-                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                 src={thumbnailUrls[0]}
-               />
-             ) : (
-               // Placeholder for loading thumbnail
-               <div className="absolute inset-0 flex items-center justify-center text-[28px] text-on-surface-variant/50">
-                 <PhotoIcon />
-               </div>
-             )}
-           </div>
-         )
-       ) : null}
+        {thumbnails.length > 0 ? (
+          thumbnails.length >= 2 ? (
+            // Multi-photo mosaic (2+ photos): use MultiPhotoMosaic component
+            <MultiPhotoMosaic
+              media={thumbnails.slice(0, 3)}
+              aspectRatio="landscape"
+              className="mb-5"
+            />
+          ) : (
+            // Single-image card (1 photo): single full-width image header
+            <div className="relative h-[220px] sm:h-[260px] overflow-hidden bg-surface-container-low dark:bg-inverse-surface rounded-xl mb-5 transition-colors duration-300">
+              {thumbnailUrls[0] ? (
+                <img
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                  src={thumbnailUrls[0]}
+                />
+              ) : (
+                // Placeholder for loading thumbnail
+                <div className="absolute inset-0 flex items-center justify-center text-[28px] text-on-surface-variant/50">
+                  <PhotoIcon />
+                </div>
+              )}
+            </div>
+          )
+        ) : null}
 
       {/* Content Area */}
       <div>
