@@ -248,7 +248,6 @@ export default function SpaceDetailPage() {
       }
       try {
         const result = await fetchMemoryMosaicThumbnailsBatch(memoryIds);
-        console.log('[SpaceDetailPage] Mosaic result:', result);
         if (!cancelled) {
           setMosaicByMemoryId(result);
         }

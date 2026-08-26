@@ -114,7 +114,7 @@ function SinglePhoto({
     if (inFlight.current) return;
     inFlight.current = true;
 
-    const fileKey = media.thumbnail_grid_path ?? media.thumbnail_path ?? media.url;
+    const fileKey = media.thumbnail_detail_path ?? media.thumbnail_path ?? media.url;
     getMediaDownloadUrl(fileKey).then((result) => {
       if (!inFlight.current) return;
       setState(
@@ -127,7 +127,7 @@ function SinglePhoto({
   }, [media]);
 
   const type = asMediaType(media.type);
-  const renderAsImage = type === "image" || Boolean(media.thumbnail_grid_path ?? media.thumbnail_path);
+  const renderAsImage = type === "image" || Boolean(media.thumbnail_detail_path ?? media.thumbnail_path);
 
   if (state.status === "error" || type === null) {
     return (
@@ -286,7 +286,7 @@ function MosaicPhoto({
     if (inFlight.current) return;
     inFlight.current = true;
 
-    const fileKey = media.thumbnail_grid_path ?? media.thumbnail_path ?? media.url;
+    const fileKey = media.thumbnail_detail_path ?? media.thumbnail_path ?? media.url;
     getMediaDownloadUrl(fileKey).then((result) => {
       if (!inFlight.current) return;
       setState(
@@ -299,7 +299,7 @@ function MosaicPhoto({
   }, [media]);
 
   const type = asMediaType(media.type);
-  const renderAsImage = type === "image" || Boolean(media.thumbnail_grid_path ?? media.thumbnail_path);
+  const renderAsImage = type === "image" || Boolean(media.thumbnail_detail_path ?? media.thumbnail_path);
 
   if (state.status === "error" || type === null) {
     return (

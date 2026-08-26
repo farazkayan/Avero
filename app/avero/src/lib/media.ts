@@ -1268,12 +1268,10 @@ export async function fetchSpaceMosaicThumbnailsBatch(
 export async function fetchMemoryMosaicThumbnailsBatch(
   memoryIds: string[],
 ): Promise<Record<string, Media[]>> {
-  console.log('[fetchMemoryMosaicThumbnailsBatch] Called with memoryIds:', memoryIds, 'length:', memoryIds.length);
   const map: Record<string, Media[]> = {};
   for (const id of memoryIds) {
     map[id] = [];
   }
-  console.log('[fetchMemoryMosaicThumbnailsBatch] Map after init:', Object.keys(map).length, 'keys:', Object.keys(map));
 
   if (memoryIds.length === 0) {
     return map;
@@ -1287,25 +1285,15 @@ export async function fetchMemoryMosaicThumbnailsBatch(
     throw error;
   }
 
-  console.log('[fetchMemoryMosaicThumbnailsBatch] RPC returned:', data?.length ?? 0, 'rows');
   for (const row of (data ?? []) as Media[]) {
-    console.log('[fetchMemoryMosaicThumbnailsBatch] Row:', row.memory_id, row.id, row.type, row.thumbnail_grid_path ? 'has_grid' : 'no_grid');
     if (asMediaType(row.type) === null) {
       continue;
     }
     const bucket = map[row.memory_id];
     if (bucket && bucket.length < 3) {
       bucket.push(row);
-    } else if (!bucket) {
-      console.log('[fetchMemoryMosaicThumbnailsBatch] WARNING: Row memory_id not in map:', row.memory_id);
     }
   }
-
-  console.log('[fetchMemoryMosaicThumbnailsBatch] Before final map, map size:', Object.keys(map).length, 'keys:', Object.keys(map));
-  console.log('[fetchMemoryMosaicThumbnailsBatch] Full map contents:', map);
-  console.log('[fetchMemoryMosaicThumbnailsBatch] Final map:', Object.fromEntries(
-    Object.entries(map).map(([k, v]) => [k, v.length])
-  ));
 
   return map;
 }
