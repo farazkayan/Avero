@@ -77,9 +77,10 @@ export default function SpacesDashboardPage() {
       setError(undefined);
 
       try {
-        const { data, error: fetchError } = await supabase
+        // Step 1: Fetch memberships with spaces
+        const { data: membershipsData, error: fetchError } = await supabase
           .from("space_members")
-          .select("*, spaces(*, space_stats_cache(total_memories))")
+          .select("*, spaces(*)")
           .eq("user_id", userId)
           .order("joined_at", { ascending: false });
 
@@ -92,7 +93,34 @@ export default function SpacesDashboardPage() {
           return;
         }
 
-        setMemberships((data ?? []) as SpaceMembershipWithSpace[]);
+        const memberships = (membershipsData ?? []) as SpaceMembershipWithSpace[];
+        setMemberships(memberships);
+
+        // Step 2: Fetch stats cache for these spaces (separate query avoids
+        // PostgREST nested select issues with space_stats_cache)
+        if (memberships.length > 0) {
+          const spaceIds = memberships.map((m) => m.spaces.id);
+          const { data: statsData, error: statsError } = await supabase
+            .from("space_stats_cache")
+            .select("space_id, total_memories")
+            .in("space_id", spaceIds);
+
+          if (!cancelled && !statsError && statsData) {
+            // Merge stats into memberships
+            const statsMap = new Map(statsData.map((s) => [s.space_id, s.total_memories]));
+            setMemberships((prev) =>
+              prev.map((m) => ({
+                ...m,
+                spaces: {
+                  ...m.spaces,
+                  space_stats_cache: [
+                    { total_memories: statsMap.get(m.spaces.id) ?? 0 },
+                  ],
+                },
+              }))
+            );
+          }
+        }
       } catch {
         if (cancelled) {
           return;
@@ -105,7 +133,7 @@ export default function SpacesDashboardPage() {
           setIsLoading(false);
         }
       }
-    }
+    };
 
     void fetchSpaces(user.id);
 
