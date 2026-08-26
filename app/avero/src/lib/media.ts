@@ -1268,11 +1268,12 @@ export async function fetchSpaceMosaicThumbnailsBatch(
 export async function fetchMemoryMosaicThumbnailsBatch(
   memoryIds: string[],
 ): Promise<Record<string, Media[]>> {
-  console.log('[fetchMemoryMosaicThumbnailsBatch] Called with memoryIds:', memoryIds);
+  console.log('[fetchMemoryMosaicThumbnailsBatch] Called with memoryIds:', memoryIds, 'length:', memoryIds.length);
   const map: Record<string, Media[]> = {};
   for (const id of memoryIds) {
     map[id] = [];
   }
+  console.log('[fetchMemoryMosaicThumbnailsBatch] Map after init:', Object.keys(map).length, 'keys:', Object.keys(map));
 
   if (memoryIds.length === 0) {
     return map;
