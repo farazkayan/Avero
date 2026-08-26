@@ -487,7 +487,7 @@ export default function SpaceDetailPage() {
                         memory={memory}
                         spaceId={space.id}
                         thumbnails={
-                          (mosaicByMemoryId[memory.id]?.length ?? 0) >= 3
+                          (mosaicByMemoryId[memory.id]?.length ?? 0) >= 2
                             ? mosaicByMemoryId[memory.id]
                             : thumbnailsByMemoryId[memory.id] ?? []
                         }
