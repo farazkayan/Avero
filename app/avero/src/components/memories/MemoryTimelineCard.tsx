@@ -129,6 +129,7 @@ return (
             <MultiPhotoMosaic
               media={thumbnails.slice(0, 3)}
               aspectRatio="landscape"
+              height="h-[220px] sm:h-[260px]"
               className="mb-5"
             />
           ) : (

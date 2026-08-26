@@ -17,6 +17,8 @@ type MultiPhotoMosaicProps = {
   className?: string;
   /** Aspect ratio of the mosaic area. Default: square. */
   aspectRatio?: "square" | "landscape";
+  /** Fixed height for the mosaic (like single photo). Overrides aspectRatio if provided. */
+  height?: string;
 };
 
 /**
@@ -37,20 +39,24 @@ export default function MultiPhotoMosaic({
   media,
   className = "",
   aspectRatio = "square",
+  height,
 }: MultiPhotoMosaicProps) {
   // Clamp to max 3 photos
   const displayMedia = media.slice(0, 3);
   const photoCount = displayMedia.length;
 
+  // Build container classes - use fixed height if provided, otherwise aspect-ratio
+  const containerClasses = [
+    "relative overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised w-full max-w-full",
+    height ? height : (aspectRatio === "landscape" ? "aspect-[4/3]" : "aspect-square"),
+    className,
+  ].join(" ");
+
   // 0 photos → calm placeholder
   if (photoCount === 0) {
     return (
       <div
-        className={[
-          "relative overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised",
-          aspectRatio === "landscape" ? "aspect-[4/3]" : "aspect-square",
-          className,
-        ].join(" ")}
+        className={containerClasses}
         aria-hidden="true"
       >
         <div className="absolute inset-0 flex items-center justify-center">
@@ -73,7 +79,7 @@ export default function MultiPhotoMosaic({
 
   // 1 photo → single image fills area
   if (photoCount === 1) {
-    return <SinglePhoto media={displayMedia[0]} aspectRatio={aspectRatio} className={className} />;
+    return <SinglePhoto media={displayMedia[0]} aspectRatio={aspectRatio} height={height} className={className} />;
   }
 
   // 2 photos → split layout
@@ -82,6 +88,7 @@ export default function MultiPhotoMosaic({
       <SplitLayout
         media={displayMedia}
         aspectRatio={aspectRatio}
+        height={height}
         className={className}
       />
     );
@@ -92,6 +99,7 @@ export default function MultiPhotoMosaic({
     <MosaicLayout
       media={displayMedia}
       aspectRatio={aspectRatio}
+      height={height}
       className={className}
     />
   );
@@ -101,10 +109,12 @@ export default function MultiPhotoMosaic({
 function SinglePhoto({
   media,
   aspectRatio,
+  height,
   className,
 }: {
   media: Media;
   aspectRatio: "square" | "landscape";
+  height?: string;
   className: string;
 }) {
   const [state, setState] = useState<MosaicThumbState>({ status: "loading" });
@@ -133,8 +143,8 @@ function SinglePhoto({
     return (
       <div
         className={[
-          "relative overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised",
-          aspectRatio === "landscape" ? "aspect-[4/3]" : "aspect-square",
+          "relative overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised w-full max-w-full",
+          height ? height : (aspectRatio === "landscape" ? "aspect-[4/3]" : "aspect-square"),
           className,
         ].join(" ")}
         aria-hidden="true"
@@ -160,8 +170,8 @@ function SinglePhoto({
   return (
     <div
       className={[
-        "relative overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised",
-        aspectRatio === "landscape" ? "aspect-[4/3]" : "aspect-square",
+        "relative overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised w-full max-w-full",
+        height ? height : (aspectRatio === "landscape" ? "aspect-[4/3]" : "aspect-square"),
         className,
       ].join(" ")}
       aria-hidden="true"
@@ -197,17 +207,19 @@ function SinglePhoto({
 function SplitLayout({
   media,
   aspectRatio,
+  height,
   className,
 }: {
   media: Media[];
   aspectRatio: "square" | "landscape";
+  height?: string;
   className: string;
 }) {
   return (
     <div
       className={[
-        "relative overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised",
-        aspectRatio === "landscape" ? "aspect-[4/3]" : "aspect-square",
+        "relative overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised w-full max-w-full",
+        height ? height : (aspectRatio === "landscape" ? "aspect-[4/3]" : "aspect-square"),
         className,
       ].join(" ")}
       aria-hidden="true"
@@ -230,10 +242,12 @@ function SplitLayout({
 function MosaicLayout({
   media,
   aspectRatio,
+  height,
   className,
 }: {
   media: Media[];
   aspectRatio: "square" | "landscape";
+  height?: string;
   className: string;
 }) {
   const [main, ...rest] = media;
@@ -241,8 +255,8 @@ function MosaicLayout({
   return (
     <div
       className={[
-        "relative overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised",
-        aspectRatio === "landscape" ? "aspect-[4/3]" : "aspect-square",
+        "relative overflow-hidden rounded-lg border border-ink/5 bg-canvas-raised w-full max-w-full",
+        height ? height : (aspectRatio === "landscape" ? "aspect-[4/3]" : "aspect-square"),
         className,
       ].join(" ")}
       aria-hidden="true"
