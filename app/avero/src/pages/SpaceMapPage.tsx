@@ -257,7 +257,7 @@ export default function SpaceMapPage() {
         <p className="mt-2 font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">
           {memories.length === 0
             ? "No memories pinned yet"
-            : `${memories.length} memory${memories.length === 1 ? "" : "s"} on the map`}
+            : `${memories.length} memor${memories.length === 1 ? "y" : "ies"} on the map`}
         </p>
       </section>
 

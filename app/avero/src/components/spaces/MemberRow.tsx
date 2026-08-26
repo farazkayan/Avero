@@ -32,14 +32,14 @@ export default function MemberRow({
   const { avatarVersion } = useAuth();
 
   return (
-    <li className="flex items-center justify-between gap-4 py-3">
+    <li className="flex items-center justify-between p-4 hover:-translate-y-[1px] transition-transform">
       <div className="flex min-w-0 items-center gap-3">
         <Avatar name={displayName} avatarUrl={member.profiles?.avatar_url} avatarVersion={avatarVersion} />
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-ink">
+          <p className="truncate font-body-md text-body-md text-on-surface dark:text-surface-container-lowest">
             {displayName}
             {isCurrentUser && (
-              <span className="ml-2 text-xs font-normal text-ink-muted">
+              <span className="ml-2 font-body-sm text-body-sm text-on-surface-variant dark:text-surface-container-lowest/60">
                 (you)
               </span>
             )}
@@ -67,7 +67,7 @@ export default function MemberRow({
  * the source key changes, an effect to fetch the presigned URL, a loading
  * pulse while pending, and the `AvatarFallback` otherwise.
  */
-const MEMBER_AVATAR_SIZE = 36; // h-9 w-9
+const MEMBER_AVATAR_SIZE = 40; // h-10 w-10
 
 function Avatar({
   name,
@@ -128,7 +128,7 @@ function Avatar({
       <img
         src={downloadUrl}
         alt=""
-        className="shrink-0 rounded-full object-cover"
+        className="shrink-0 rounded-full object-cover border border-outline-variant/30 dark:border-outline-variant/20"
         style={{ width: MEMBER_AVATAR_SIZE, height: MEMBER_AVATAR_SIZE }}
         loading="lazy"
       />
@@ -141,13 +141,13 @@ function Avatar({
 function RoleBadge({ role }: { role: SpaceRole }) {
   if (role === "owner") {
     return (
-      <span className="shrink-0 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent-400">
+      <span className="shrink-0 font-mono-label text-mono-label px-2.5 py-1 rounded-full bg-accent-warm/10 dark:bg-primary-fixed-dim/10 text-accent-warm dark:text-primary-fixed-dim border border-accent-warm/20 dark:border-primary-fixed-dim/20">
         Owner
       </span>
     );
   }
   return (
-    <span className="shrink-0 rounded-full bg-ink/5 px-2.5 py-0.5 text-xs font-medium text-ink-muted">
+    <span className="shrink-0 font-mono-label text-mono-label px-2.5 py-1 rounded-full bg-surface-variant dark:bg-inverse-surface text-on-surface-variant dark:text-surface-container-lowest/80 border border-outline-variant/30 dark:border-outline-variant/20">
       Member
     </span>
   );

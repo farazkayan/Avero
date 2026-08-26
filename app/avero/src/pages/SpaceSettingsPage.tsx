@@ -6,6 +6,7 @@ import GhostLink from "../components/ui/GhostLink";
 import Spinner from "../components/ui/Spinner";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import MemberRow from "../components/spaces/MemberRow";
+import StitchTextField from "../components/ui/StitchTextField";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import {
@@ -573,15 +574,47 @@ export default function SpaceSettingsPage() {
           <p className="text-sm text-error">{loadError}</p>
         </div>
       ) : space ? (
-        <>
-          {/* Header / Edit form */}
-          {isEditing ? (
+        <main className="w-full max-w-[600px] mx-auto px-4 md:px-0 py-8 md:py-12 flex flex-col gap-8 md:gap-12">
+          {/* Page Header */}
+          <div className="flex flex-col gap-6">
+            <a
+              className="inline-flex items-center gap-2 text-on-surface-variant dark:text-surface-container-lowest/80 hover:text-accent-warm dark:hover:text-primary-fixed-dim transition-colors font-body-sm text-body-sm w-fit group"
+              href={spaceId ? spaceDetailPath(spaceId) : AUTHENTICATED_HOME_PATH}
+            >
+              <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">
+                arrow_back
+              </span>
+              Back to Space
+            </a>
+            <div className="flex items-center justify-between">
+              {isEditing ? (
+                <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-surface-container-lowest">
+                  Edit Space
+                </h1>
+              ) : (
+                <>
+                  <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-surface-container-lowest">
+                    {space.name}
+                  </h1>
+                  {isOwner && (
+                    <button
+                      type="button"
+                      onClick={handleStartEdit}
+                      className="text-accent-warm dark:text-primary-fixed-dim hover:opacity-80 transition-opacity font-body-sm text-body-sm font-medium"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Edit Mode Form */}
+          {isEditing && (
             <section>
-              <h1 className="text-2xl font-bold leading-tight text-ink sm:text-3xl">
-                Edit Space
-              </h1>
               <form
-                className="mt-6 max-w-[420px] space-y-5 rounded-xl border border-ink/5 bg-canvas-soft p-6"
+                className="max-w-[420px] space-y-5 rounded-xl border border-outline-variant/30 dark:border-outline-variant/20 bg-card-warm dark:bg-card-dark p-6 shadow-stone transition-colors duration-300"
                 onSubmit={handleSaveEdit}
                 noValidate
                 aria-describedby={
@@ -644,135 +677,124 @@ export default function SpaceSettingsPage() {
                 </div>
               </form>
             </section>
-          ) : (
-            <section>
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <h1 className="break-words text-2xl font-bold leading-tight text-ink sm:text-3xl">
-                    {space.name}
-                  </h1>
-                  {space.description && (
-                    <p className="mt-2 text-sm text-ink-muted sm:text-base">
-                      {space.description}
-                    </p>
-                  )}
-                </div>
-                {isOwner && (
-                  <button
-                    type="button"
-                    onClick={handleStartEdit}
-                    className="inline-flex shrink-0 items-center rounded-md text-sm font-medium text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
-                  >
-                    Edit
-                  </button>
-                )}
-              </div>
-            </section>
           )}
 
-          {/* Members */}
-          <section className="mt-10">
-            <div className="flex items-baseline gap-2">
-              <h2 className="text-lg font-semibold text-ink">Members</h2>
-              <span className="font-mono text-xs text-ink-muted px-2 py-0.5 rounded-full bg-ink/5">
+          {/* View Mode - Space Description */}
+          {!isEditing && space.description && (
+            <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-surface-container-lowest/80">
+              {space.description}
+            </p>
+          )}
+
+          {/* Members Section */}
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <h2 className="font-headline-md text-headline-md text-on-surface dark:text-surface-container-lowest font-medium">
+                Members
+              </h2>
+              <span className="font-mono-label text-mono-label bg-surface-container-highest dark:bg-inverse-surface text-on-surface-variant dark:text-surface-container-lowest/80 px-2 py-0.5 rounded-full">
                 {members.length}
               </span>
             </div>
-            <ul className="mt-4 divide-y divide-ink/5">
-              {members.map((member) => (
-                <MemberRow
-                  key={member.id}
-                  member={member}
-                  isCurrentUser={member.user_id === user?.id}
-                />
-              ))}
-            </ul>
+            <div className="bg-card-warm dark:bg-card-dark rounded-lg shadow-stone border border-outline-variant/30 dark:border-outline-variant/20 overflow-hidden transition-colors duration-300">
+              <ul className="divide-y divide-outline-variant/30 dark:divide-outline-variant/20">
+                {members.map((member) => (
+                  <MemberRow
+                    key={member.id}
+                    member={member}
+                    isCurrentUser={member.user_id === user?.id}
+                  />
+                ))}
+              </ul>
+            </div>
           </section>
 
-          {/* Invite (owner only — spaces-design §6.4) */}
+          {/* Invite Section (owner only) */}
           {isOwner && (
-            <section className="mt-10">
-              <h2 className="text-lg font-semibold text-ink">Invite</h2>
-              <p className="mt-1 text-sm text-ink-muted">
-                Create a link to invite someone to this Space by email. Links
-                expire after 7 days.
-              </p>
+            <section className="flex flex-col gap-6 pt-4">
+              <div className="flex flex-col gap-2">
+                <h2 className="font-headline-md text-headline-md text-on-surface dark:text-surface-container-lowest font-medium">
+                  Invite
+                </h2>
+                <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-surface-container-lowest/80 max-w-md">
+                  Create a link to invite someone to this Space by email. Links
+                  expire after 7 days.
+                </p>
+              </div>
 
               <form
-                className="mt-4 max-w-[420px] space-y-4 rounded-xl border border-ink/5 bg-canvas-soft p-6"
+                className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-start"
                 onSubmit={handleCreateInvite}
                 noValidate
                 aria-describedby={
                   inviteFormError ? "invite-form-error" : undefined
                 }
               >
-                <TextField
-                  id="invite-email"
-                  name="email"
-                  type="email"
-                  label="Invite by email"
-                  autoComplete="off"
-                  inputMode="email"
-                  placeholder="you@example.com"
-                  value={inviteEmail}
-                  disabled={isCreatingInvite}
-                  error={inviteEmailError}
-                  onChange={(event) => setInviteEmail(event.target.value)}
-                  onBlur={() =>
-                    setInviteEmailError(validateInviteEmail(inviteEmail))
-                  }
-                />
-
-                {inviteFormError && (
-                  <p
-                    id="invite-form-error"
-                    role="alert"
-                    className="text-sm text-error"
-                  >
-                    {inviteFormError}
-                  </p>
-                )}
-
-                <PrimaryButton
+                <div className="flex-grow flex flex-col gap-1">
+                  <input
+                    id="invite-email"
+                    name="email"
+                    type="email"
+                    autoComplete="off"
+                    inputMode="email"
+                    placeholder="you@example.com"
+                    required
+                    value={inviteEmail}
+                    disabled={isCreatingInvite}
+                    onChange={(event) => setInviteEmail(event.target.value)}
+                    onBlur={() =>
+                      setInviteEmailError(validateInviteEmail(inviteEmail))
+                    }
+                    className="w-full bg-card-warm dark:bg-inverse-surface border-b-2 border-transparent focus:border-accent-warm dark:focus:border-primary-fixed-dim rounded-t-DEFAULT shadow-stone px-4 py-3 font-body-md text-body-md text-on-surface dark:text-surface-container-lowest placeholder-on-surface-variant/50 dark:placeholder:text-surface-container-lowest/40 focus:outline-none transition-all duration-200"
+                  />
+                  {inviteEmailError && (
+                    <p className="text-sm text-error">{inviteEmailError}</p>
+                  )}
+                </div>
+                <button
                   type="submit"
-                  loading={isCreatingInvite}
                   disabled={isCreatingInvite}
-                  className="w-full"
+                  className="bg-accent-warm dark:bg-primary-fixed-dim text-canvas-warm dark:text-on-primary-fixed px-6 py-3 rounded hover:opacity-90 active:scale-95 transition-all duration-200 font-body-md text-body-md whitespace-nowrap shadow-sm hover:-translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isCreatingInvite ? "Creating…" : "Create Invite Link"}
-                </PrimaryButton>
+                </button>
               </form>
 
-              {/* Generated invite link — shown after a successful insert.
-                  Copyable via the Clipboard API. */}
+              {inviteFormError && (
+                <p id="invite-form-error" role="alert" className="text-sm text-error">
+                  {inviteFormError}
+                </p>
+              )}
+
+              {/* Generated invite link — shown after a successful insert. */}
               {createdInviteLink && (
-                <div className="mt-5 max-w-[420px] rounded-lg border border-ink/10 bg-canvas-soft p-4">
-                  <p className="text-sm font-medium text-ink">
+                <div className="mt-5 max-w-[420px] rounded-lg border border-outline-variant/30 dark:border-outline-variant/20 bg-card-warm dark:bg-card-dark p-4 shadow-stone transition-colors duration-300">
+                  <p className="font-body-sm text-body-sm font-medium text-on-surface dark:text-surface-container-lowest">
                     Invite link ready
                   </p>
-                  <p className="mt-1 text-sm text-ink-muted">
+                  <p className="mt-1 font-body-sm text-body-sm text-on-surface-variant dark:text-surface-container-lowest/80">
                     Share this link with the person you invited. They can use
                     it to accept the invitation.
                   </p>
-                  <code className="mt-3 block break-all rounded-md bg-canvas px-3 py-2 text-xs text-ink-muted">
+                  <code className="mt-3 block break-all rounded-md bg-canvas dark:bg-canvas-raised px-3 py-2 text-xs text-on-surface-variant dark:text-surface-container-lowest/80 font-mono">
                     {createdInviteLink}
                   </code>
                   <div className="mt-3 flex items-center gap-3">
-                    <PrimaryButton
+                    <button
                       type="button"
                       onClick={handleCopyInviteLink}
                       disabled={isInviteLinkCopied}
-                      className="w-full sm:w-auto"
+                      className="bg-accent-warm dark:bg-primary-fixed-dim text-canvas-warm dark:text-on-primary-fixed px-4 py-2 rounded hover:opacity-90 active:scale-95 transition-all duration-200 font-body-md text-body-sm whitespace-nowrap shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isInviteLinkCopied ? "Copied!" : "Copy Link"}
-                    </PrimaryButton>
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
                         setCreatedInviteLink(null);
                         setIsInviteLinkCopied(false);
                       }}
-                      className="rounded-md text-sm font-medium text-ink-muted transition-colors duration-200 hover:text-accent-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
+                      className="rounded-md font-body-sm text-body-sm font-medium text-on-surface-variant dark:text-surface-container-lowest/80 transition-colors duration-200 hover:text-accent-warm dark:hover:text-primary-fixed-dim focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"
                     >
                       Dismiss
                     </button>
@@ -781,27 +803,27 @@ export default function SpaceSettingsPage() {
               )}
 
               {/* Pending invites already sent for this Space. */}
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold text-ink-muted">
+              <div className="pt-4 border-t border-outline-variant/30 dark:border-outline-variant/20">
+                <h3 className="font-body-sm text-body-sm font-medium text-on-surface dark:text-surface-container-lowest">
                   Pending invites
                 </h3>
                 {invitations.length === 0 ? (
-                  <p className="mt-2 text-sm text-ink-muted">
+                  <p className="mt-2 font-body-sm text-body-sm text-on-surface-variant dark:text-surface-container-lowest/60 italic">
                     No pending invites for this Space.
                   </p>
                 ) : (
-                  <ul className="mt-2 divide-y divide-ink/5">
+                  <ul className="mt-2 divide-y divide-outline-variant/30 dark:divide-outline-variant/20">
                     {invitations.map((invitation) => (
                       <li
                         key={invitation.id}
                         className="flex flex-wrap items-center justify-between gap-2 py-3"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-ink">
+                          <p className="truncate font-body-sm text-body-sm font-medium text-on-surface dark:text-surface-container-lowest">
                             {invitation.email}
                           </p>
-                          <p className="text-xs text-ink-muted">
-                            Expires {formatExpiry(invitation.expires_at)}
+                          <p className="font-mono-data text-mono-data text-on-surface-variant dark:text-surface-container-lowest/60">
+                            {formatExpiry(invitation.expires_at)}
                           </p>
                         </div>
                       </li>
@@ -813,19 +835,23 @@ export default function SpaceSettingsPage() {
           )}
 
           {/* Danger zone */}
-          <section className="mt-10 rounded-xl border border-error/20 bg-error-soft p-5">
-            <h2 className="text-lg font-semibold text-ink">Danger zone</h2>
-            <p className="mt-1 text-sm text-ink-muted">
-              {isOwner
-                ? "Deleting a Space permanently removes it and all of its memories. This can't be undone."
-                : "Leaving a Space removes your access to it and its memories. This can't be undone."}
-            </p>
-            <div className="mt-4">
+          <section className="mt-8 pt-8 border-t border-error/20 dark:border-error-container/20">
+            <div className="bg-surface-bright dark:bg-card-dark rounded-lg border border-error/30 dark:border-error-container/30 p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between shadow-stone transition-colors duration-300">
+              <div className="flex flex-col gap-2 flex-grow">
+                <h2 className="font-headline-md text-headline-md text-error dark:text-error-container font-medium">
+                  Danger zone
+                </h2>
+                <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-surface-container-lowest/80 max-w-sm">
+                  {isOwner
+                    ? "Deleting a Space permanently removes it and all of its memories. This can't be undone."
+                    : "Leaving a Space removes your access to it and its memories. This can't be undone."}
+                </p>
+              </div>
               {isOwner ? (
                 <button
                   type="button"
                   onClick={() => setIsDeleteDialogOpen(true)}
-                  className="inline-flex items-center justify-center rounded-lg border border-error/40 bg-error-soft px-4 py-2 text-sm font-semibold text-error transition-colors duration-200 hover:border-error/60 hover:bg-error/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
+                  className="px-5 py-2.5 rounded border border-error dark:border-error-container text-error dark:text-error-container hover:bg-error/5 dark:hover:bg-error-container/10 active:scale-95 transition-all duration-200 font-body-sm text-body-sm font-medium whitespace-nowrap"
                 >
                   Delete Space
                 </button>
@@ -833,17 +859,18 @@ export default function SpaceSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setIsLeaveDialogOpen(true)}
-                  className="inline-flex items-center justify-center rounded-lg border border-error/40 bg-error-soft px-4 py-2 text-sm font-semibold text-error transition-colors duration-200 hover:border-error/60 hover:bg-error/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
+                  className="px-5 py-2.5 rounded border border-error dark:border-error-container text-error dark:text-error-container hover:bg-error/5 dark:hover:bg-error-container/10 active:scale-95 transition-all duration-200 font-body-sm text-body-sm font-medium whitespace-nowrap"
                 >
                   Leave Space
                 </button>
               )}
             </div>
           </section>
-        </>
+        </main>
+
       ) : null}
 
-      {/* Leave confirmation (member) */}
+      {/* Leave confirmation (member) - uses default ConfirmDialog variant */}
       {isLeaveDialogOpen && (
         <ConfirmDialog
           title="Leave Space?"
@@ -861,22 +888,23 @@ export default function SpaceSettingsPage() {
         </ConfirmDialog>
       )}
 
-      {/* Delete confirmation (owner) — typed-name confirmation */}
+      {/* Delete confirmation (owner) — typed-name confirmation with Stitch delete variant */}
       {isDeleteDialogOpen && space && (
         <ConfirmDialog
           title="Delete Space?"
-          description="This permanently deletes the Space and all of its memories, media, comments, reactions, and tags. This can't be undone."
+          description="This permanently deletes this Space and all of its memories. This action cannot be undone."
           confirmLabel="Delete Space"
           loading={isDeleting}
           confirmDisabled={!isDeleteNameMatched}
           onConfirm={handleDelete}
           onCancel={closeDeleteDialog}
+          variant="delete"
         >
-          <TextField
+          <StitchTextField
             id="delete-confirm-name"
             name="delete-confirm-name"
             type="text"
-            label="Type the Space name to confirm"
+            label="Type the space name to confirm"
             autoComplete="off"
             placeholder={space.name}
             value={deleteConfirmName}
@@ -901,7 +929,7 @@ export default function SpaceSettingsPage() {
  */
 function mapLeaveError(error: { code?: string }): string {
   switch (error.code) {
-    case "55000": // object_not_in_prerequisite_state — last owner or last member
+    case "55000": // object_not_prerequisite_state — last owner or last member
       return "You're the only member of this Space, so it can't be left empty.";
     case "P0002": // no_data_found — not a member of this space
       return "You're not a member of this Space.";
@@ -998,9 +1026,9 @@ function formatExpiry(expiresAt: string): string {
     return "on an unknown date";
   }
   if (expiry.getTime() <= Date.now()) {
-    return "expired";
+    return "Expired";
   }
-  return `on ${expiry.toLocaleDateString(undefined, {
+  return `Expires on ${expiry.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
     year: "numeric",
