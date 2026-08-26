@@ -1285,7 +1285,9 @@ export async function fetchMemoryMosaicThumbnailsBatch(
     throw error;
   }
 
+  console.log('[fetchMemoryMosaicThumbnailsBatch] RPC returned:', data?.length ?? 0, 'rows');
   for (const row of (data ?? []) as Media[]) {
+    console.log('[fetchMemoryMosaicThumbnailsBatch] Row:', row.memory_id, row.id, row.type, row.thumbnail_grid_path ? 'has_grid' : 'no_grid');
     if (asMediaType(row.type) === null) {
       continue;
     }
@@ -1294,6 +1296,10 @@ export async function fetchMemoryMosaicThumbnailsBatch(
       bucket.push(row);
     }
   }
+
+  console.log('[fetchMemoryMosaicThumbnailsBatch] Final map:', Object.fromEntries(
+    Object.entries(map).map(([k, v]) => [k, v.length])
+  ));
 
   return map;
 }
