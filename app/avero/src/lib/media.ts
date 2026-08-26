@@ -1268,6 +1268,7 @@ export async function fetchSpaceMosaicThumbnailsBatch(
 export async function fetchMemoryMosaicThumbnailsBatch(
   memoryIds: string[],
 ): Promise<Record<string, Media[]>> {
+  console.log('[fetchMemoryMosaicThumbnailsBatch] Called with memoryIds:', memoryIds);
   const map: Record<string, Media[]> = {};
   for (const id of memoryIds) {
     map[id] = [];
@@ -1294,6 +1295,8 @@ export async function fetchMemoryMosaicThumbnailsBatch(
     const bucket = map[row.memory_id];
     if (bucket && bucket.length < 3) {
       bucket.push(row);
+    } else if (!bucket) {
+      console.log('[fetchMemoryMosaicThumbnailsBatch] WARNING: Row memory_id not in map:', row.memory_id);
     }
   }
 
