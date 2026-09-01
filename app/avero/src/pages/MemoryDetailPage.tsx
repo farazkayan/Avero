@@ -190,16 +190,19 @@ export default function MemoryDetailPage() {
     let cancelled = false;
 
     async function fetchMembers() {
+      // Minimal select: we only need (user_id, role) to determine if the
+      // current user is a Space owner (M-21 — avoid fetching every column
+      // of every member just to find one row).
       const { data } = await supabase
         .from("space_members")
-        .select("*")
+        .select("user_id, role")
         .eq("space_id", spaceId!);
 
       if (cancelled) {
         return;
       }
 
-      setMembers((data ?? []) as SpaceMember[]);
+      setMembers(((data ?? []) as SpaceMember[]));
     }
 
     void fetchMembers();

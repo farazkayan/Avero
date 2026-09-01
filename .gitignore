@@ -5,7 +5,23 @@ dist/
 build/
 .supabase/
 .aider*
-.kilo/ 
-.playwright-mcp/ 
- 
- 
+.kilo/
+.playwright-mcp/
+
+# Build/analysis output
+.vite/
+.bundle-analysis.html
+bundle-analysis.html
+
+# Other local AI-tool state (each dev has their own config)
+.roo/
+
+# Supabase CLI runtime state
+supabase/.temp/
+
+# One-off debug scripts accidentally left in app/avero root. Legitimate
+# tooling lives in app/avero/scripts/. If you genuinely need a one-off
+# script there, prefer a properly-named file in scripts/ instead.
+app/avero/check_rpc*
+app/avero/measure-*.mjs
+app/avero/query_*.mjs

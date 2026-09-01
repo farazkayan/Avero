@@ -154,6 +154,18 @@ function ThumbnailStack({ media }: { media: Media[] }) {
     const fileKey = row.thumbnail_grid_path ?? row.thumbnail_path ?? row.url;
     const result = await getMediaDownloadUrl(fileKey);
 
+    // The component may have unmounted while this fetch was in flight
+    // (e.g. the parent timeline unmounted the card during navigation). The
+    // effect owns the lifecycle; if it has cleaned up, our row id is no
+    // longer "ours" and we must not mutate state or the in-flight set
+    // (M-24 — avoids React's "setState on unmounted component" warning
+    // and prevents a later remount from being told the row is still
+    // fetching).
+    if (!inFlight.current.has(row.id)) {
+      return;
+    }
+    inFlight.current.delete(row.id);
+
     setStates((prev) => {
       const current = prev[row.id];
       // Unlike MediaGallery (which pre-seeds every tile as { status: "loading"
@@ -172,8 +184,6 @@ function ThumbnailStack({ media }: { media: Media[] }) {
           : { status: "error" },
       };
     });
-
-    inFlight.current.delete(row.id);
   };
 
   // Resolve presigned URLs for any row still `loading`. Depends on `media`
@@ -202,6 +212,20 @@ function ThumbnailStack({ media }: { media: Media[] }) {
     // `isVisible` are the stable triggers.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [media, isVisible]);
+
+  // On unmount, drop any in-flight ids from the set. resolveOne checks the set
+  // after the awaited fetch and bails if the row id has been removed (M-24 —
+  // prevents a stale resolution from setting state on an unmounted component
+  // or leaking the in-flight marker across remounts).
+  useEffect(() => {
+    return () => {
+      // `inFlight` is a `useRef` whose `.current` is the same Set object
+      // across the component's lifetime; we don't need to copy it into a
+      // local because the ref itself never changes identity. The cleanup
+      // mutates the Set (clearing it) on unmount.
+      inFlight.current.clear();
+    };
+  }, [inFlight]);
 
   // The first row is the visible thumbnail; a second row (if present) is the
   // "peeking" edge behind it. Both are square, object-cover, rounded to match

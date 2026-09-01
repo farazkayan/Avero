@@ -77,7 +77,10 @@ export default function SpacesDashboardPage() {
       setError(undefined);
 
       try {
-        // Step 1: Fetch memberships with spaces
+        // Step 1: Fetch memberships with spaces. The dependent data
+        // (stats, members, thumbnails) is fetched in parallel inside a
+        // separate effect (M-23 — was previously chained here, stretching
+        // the dashboard's first paint).
         const { data: membershipsData, error: fetchError } = await supabase
           .from("space_members")
           .select("*, spaces(*)")
@@ -95,32 +98,6 @@ export default function SpacesDashboardPage() {
 
         const memberships = (membershipsData ?? []) as SpaceMembershipWithSpace[];
         setMemberships(memberships);
-
-        // Step 2: Fetch stats cache for these spaces (separate query avoids
-        // PostgREST nested select issues with space_stats_cache)
-        if (memberships.length > 0) {
-          const spaceIds = memberships.map((m) => m.spaces.id);
-          const { data: statsData, error: statsError } = await supabase
-            .from("space_stats_cache")
-            .select("space_id, total_memories")
-            .in("space_id", spaceIds);
-
-          if (!cancelled && !statsError && statsData) {
-            // Merge stats into memberships
-            const statsMap = new Map(statsData.map((s) => [s.space_id, s.total_memories]));
-            setMemberships((prev) =>
-              prev.map((m) => ({
-                ...m,
-                spaces: {
-                  ...m.spaces,
-                  space_stats_cache: [
-                    { total_memories: statsMap.get(m.spaces.id) ?? 0 },
-                  ],
-                },
-              }))
-            );
-          }
-        }
       } catch {
         if (cancelled) {
           return;
@@ -142,101 +119,91 @@ export default function SpacesDashboardPage() {
     };
   }, [user]);
 
-  // Fetch members for each space when the memberships list changes.
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchMembers() {
-      if (memberships.length === 0) {
-        if (!cancelled) {
-          setMembersBySpaceId({});
-        }
-        return;
-      }
-
-      const spaceIds = memberships.map((m) => m.space_id);
-      if (spaceIds.length === 0) {
-        if (!cancelled) {
-          setMembersBySpaceId({});
-        }
-        return;
-      }
-
-      try {
-        const { data, error: membersError } = await supabase
-          .from("space_members")
-          .select("*, profiles!space_members_user_id_fkey(avatar_url, name)")
-          .in("space_id", spaceIds);
-
-        if (cancelled) {
-          return;
-        }
-
-        if (membersError) {
-          console.error("We couldn't load the members for your Spaces. Please try again.");
-          setMembersBySpaceId({});
-          return;
-        }
-
-        // Group by space_id
-        const grouped: Record<string, (SpaceMembershipWithSpace & { profiles: SpaceMemberProfile })[]> = {};
-        (data ?? []).forEach((member) => {
-          const spaceId = member.space_id;
-          if (!grouped[spaceId]) {
-            grouped[spaceId] = [];
-          }
-          grouped[spaceId].push(member as unknown as SpaceMembershipWithSpace & { profiles: SpaceMemberProfile });
-        });
-
-        setMembersBySpaceId(grouped);
-      } catch {
-        if (cancelled) {
-          return;
-        }
-        console.error("We couldn't load the members for your Spaces. Please try again.");
-        setMembersBySpaceId({});
-      }
-    }
-
-    void fetchMembers();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [memberships]);
-
-  // Mosaic thumbnails batch — a single RPC round trip fetches up to 3 most
-  // recent media rows across ALL Memories in each Space (ordered by
-  // created_at DESC), avoiding N+1 per-card queries. Re-runs when the
-  // memberships list changes (no `user` dep — RLS via JWT context in the RPC,
-  // same as the Space timeline's thumbnails effect). A batch failure is calm:
-  // the map clears to `{}` and the cards still render, just without thumbnails
-  // (mirrors the timeline's "render the rest of the page" failure mode).
+  // Fetch dependent data (stats, members, thumbnails) for the current set of
+  // memberships in parallel. Replaces the previous design where these were
+  // serialized across three effects (M-23 — sequential round-trips stretched
+  // the dashboard's first paint by ~3×).
   useEffect(() => {
     if (memberships.length === 0) {
       return;
     }
 
-    let cancelled = false;
     const spaceIds = memberships.map((m) => m.space_id);
+    if (spaceIds.length === 0) return;
 
-    async function fetchThumbnails() {
+    let cancelled = false;
+
+    async function fetchAll() {
       try {
-        const result = await fetchSpaceMosaicThumbnailsBatch(spaceIds);
-        if (!cancelled) {
-          setThumbnailsBySpaceId(result);
+        // Members + stats + thumbnails fetch in parallel — three independent
+        // round trips rather than three sequential ones.
+        const [membersRes, statsRes, thumbnailsResult] = await Promise.all([
+          supabase
+            .from("space_members")
+            .select("*, profiles!space_members_user_id_fkey(avatar_url, name)")
+            .in("space_id", spaceIds),
+          supabase
+            .from("space_stats_cache")
+            .select("space_id, total_memories")
+            .in("space_id", spaceIds),
+          fetchSpaceMosaicThumbnailsBatch(spaceIds).catch(
+            () => ({}) as Record<string, Media[]>,
+          ),
+        ]);
+
+        if (cancelled) return;
+
+        // Members — group by space_id
+        if (!membersRes.error && membersRes.data) {
+          const grouped: Record<string, (SpaceMembershipWithSpace & { profiles: SpaceMemberProfile })[]> = {};
+          (membersRes.data as unknown as Array<SpaceMembershipWithSpace & { profiles: SpaceMemberProfile }>).forEach(
+            (member) => {
+              const id = member.space_id;
+              if (!grouped[id]) {
+                grouped[id] = [];
+              }
+              grouped[id].push(member);
+            },
+          );
+          setMembersBySpaceId(grouped);
+        } else {
+          // Calm failure: the cards still render, just without avatars.
+          console.error("Members fetch failed:", membersRes.error);
+          setMembersBySpaceId({});
         }
+
+        // Stats — fold into the existing memberships so SpaceCard sees the
+        // memory count.
+        if (!statsRes.error && statsRes.data) {
+          const statsMap = new Map(
+            (statsRes.data as Array<{ space_id: string; total_memories: number }>).map(
+              (s) => [s.space_id, s.total_memories] as const,
+            ),
+          );
+          setMemberships((prev) =>
+            prev.map((m) => ({
+              ...m,
+              spaces: {
+                ...m.spaces,
+                space_stats_cache: [
+                  { total_memories: statsMap.get(m.spaces.id) ?? 0 },
+                ],
+              },
+            })),
+          );
+        }
+
+        // Thumbnails
+        setThumbnailsBySpaceId(thumbnailsResult);
       } catch {
-        // Calm failure: clear the map so cards render without thumbnails
-        // rather than crashing the dashboard. The Spaces themselves already
-        // loaded; thumbnails are decorative, not primary content.
         if (!cancelled) {
           setThumbnailsBySpaceId({});
+          setMembersBySpaceId({});
         }
       }
     }
 
-    void fetchThumbnails();
+    void fetchAll();
 
     return () => {
       cancelled = true;

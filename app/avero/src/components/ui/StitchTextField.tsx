@@ -42,7 +42,7 @@ const StitchTextField = forwardRef<HTMLInputElement, StitchTextFieldProps>(
             }
             aria-invalid={hasError || undefined}
             className={[
-              "w-full bg-surface-container-highest dark:bg-[#0c0f0f] border-b-2 border-transparent dark:border-[#3f3f46] focus:border-error rounded-t-DEFAULT shadow-sm px-4 py-3 font-body-md text-body-md text-on-surface dark:text-[#f4f4f5] placeholder:text-on-surface-variant/40 dark:placeholder:text-[#a1a1aa]/40 focus:outline-none transition-all duration-200",
+              "w-full bg-surface-container-highest dark:bg-[#0c0f0f] border-b-2 border-transparent dark:border-[#3f3f46] focus:border-error rounded-t-md shadow-sm px-4 py-3 font-body-md text-body-md text-on-surface dark:text-[#f4f4f5] placeholder:text-on-surface-variant/40 dark:placeholder:text-[#a1a1aa]/40 focus:outline-none transition-all duration-200",
             ].join(" ")}
             {...inputProps}
           />

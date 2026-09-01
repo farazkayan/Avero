@@ -129,6 +129,16 @@ export default function MediaLightbox({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
+      // Add safe-area insets so notched / pill-cutout phones in landscape
+      // don't clip the close / prev / next controls under the notch.
+      // (audit HR-4.) Min: the existing `p-4` plus the larger of the
+      // safe-area insets on each side.
+      style={{
+        paddingTop: "max(1rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))",
+        paddingLeft: "max(1rem, env(safe-area-inset-left, 0px))",
+        paddingRight: "max(1rem, env(safe-area-inset-right, 0px))",
+      }}
       // Backdrop click closes; clicks that start on the media and end on the
       // backdrop are ignored via the onMouseDown/onMouseUp pair below.
       onMouseDown={(event) => {

@@ -68,8 +68,16 @@ type AvatarCropDialogProps = {
 };
 
 /** Display size of the crop frame (px). The output is 256×256; this is just
- *  the on-screen preview size. A fixed, comfortable size that fits mobile. */
+ *  the on-screen preview size. A fixed, comfortable size that fits mobile.
+ *
+ *  The rendered frame uses `min(FRAME_SIZE, calc(100vw - 96px))` so that on
+ *  very narrow viewports (≤320px, where the modal panel is `p-6` and the
+ *  outer page is `px-4`) the frame shrinks instead of overflowing the
+ *  panel (responsive fix — audit HR-5). All source-image math (coverScale,
+ *  maxPan, sourceSize) continues to use the constant — the on-screen frame
+ *  is purely a preview. */
 const FRAME_SIZE = 280;
+const FRAME_SIZE_INLINE = `min(${FRAME_SIZE}px, calc(100vw - 96px))`;
 
 /** Minimum zoom: 1 = "cover" (shorter side exactly fills the frame, the
  *  smallest scale where the image still fully covers the circle — no gaps). */
@@ -234,6 +242,14 @@ export default function AvatarCropDialog({
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{
+        // Honor notched / pill-cutout safe areas so the crop dialog
+        // doesn't underlap the status bar in landscape (audit HR-4).
+        paddingTop: "max(1rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))",
+        paddingLeft: "max(1rem, env(safe-area-inset-left, 0px))",
+        paddingRight: "max(1rem, env(safe-area-inset-right, 0px))",
+      }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="avatar-crop-title"
@@ -280,7 +296,7 @@ export default function AvatarCropDialog({
         <div className="mt-5 flex justify-center">
           <div
             className="relative touch-none select-none overflow-hidden rounded-full"
-            style={{ width: FRAME_SIZE, height: FRAME_SIZE }}
+            style={{ width: FRAME_SIZE_INLINE, height: FRAME_SIZE_INLINE }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -321,8 +337,8 @@ export default function AvatarCropDialog({
               <div
                 className="absolute left-1/2 top-1/2 rounded-full"
                 style={{
-                  width: FRAME_SIZE,
-                  height: FRAME_SIZE,
+                  width: FRAME_SIZE_INLINE,
+                  height: FRAME_SIZE_INLINE,
                   transform: "translate(-50%, -50%)",
                   // A huge spread shadow paints the dim color everywhere
                   // outside the circle; the circle itself is transparent.
@@ -334,8 +350,8 @@ export default function AvatarCropDialog({
             <div
               className="pointer-events-none absolute left-1/2 top-1/2 rounded-full ring-1 ring-inset ring-white/20"
               style={{
-                width: FRAME_SIZE,
-                height: FRAME_SIZE,
+                width: FRAME_SIZE_INLINE,
+                height: FRAME_SIZE_INLINE,
                 transform: "translate(-50%, -50%)",
               }}
               aria-hidden="true"

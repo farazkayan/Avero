@@ -267,10 +267,21 @@ export function LocationAutocomplete({
           event.preventDefault();
           if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
             const selected = suggestions[highlightedIndex];
+            // Defensive: a malformed row from the geocoder could yield NaN,
+            // which the app would persist into the memory row and silently
+            // break later map rendering (audit L-15). Treat such rows as
+            // unselectable rather than silently propagating NaN.
+            const lat = parseFloat(selected.latitude);
+            const lon = parseFloat(selected.longitude);
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+              setApiError("This location can't be pinned on the map.");
+              closeDropdown();
+              return;
+            }
             const geocoded: GeocodedLocation = {
               text: selected.address,
-              latitude: parseFloat(selected.latitude),
-              longitude: parseFloat(selected.longitude),
+              latitude: lat,
+              longitude: lon,
             };
             onSelect(geocoded);
             onChange(selected.address);
@@ -292,10 +303,18 @@ export function LocationAutocomplete({
 
   const handleSuggestionClick = useCallback(
     (result: BarikoiAutocompleteResult) => {
+      // Same NaN guard as the Enter handler (audit L-15).
+      const lat = parseFloat(result.latitude);
+      const lon = parseFloat(result.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        setApiError("This location can't be pinned on the map.");
+        closeDropdown();
+        return;
+      }
       const geocoded: GeocodedLocation = {
         text: result.address,
-        latitude: parseFloat(result.latitude),
-        longitude: parseFloat(result.longitude),
+        latitude: lat,
+        longitude: lon,
       };
       onSelect(geocoded);
       onChange(result.address);

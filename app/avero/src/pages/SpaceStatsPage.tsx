@@ -25,6 +25,7 @@ export default function SpaceStatsPage() {
 
   const [space, setSpace] = useState<Space | null>(null);
   const [stats, setStats] = useState<SpaceStats | null>(null);
+  const [statsError, setStatsError] = useState<string | undefined>(undefined);
   const [achievements, setAchievements] = useState<AchievementWithState[]>([]);
   const [histogram, setHistogram] = useState<MonthBucket[]>([]);
 
@@ -33,11 +34,25 @@ export default function SpaceStatsPage() {
     let cancelled = false;
 
     async function load(id: string) {
+      // Reset the stats error for the new space; otherwise a previous failure
+      // would linger after the user navigates to a different Space
+      // (audit L-33).
+      setStatsError(undefined);
+
+      // Wrap the stats fetch alone so a failure is distinguishable from
+      // "no cache row yet" (legitimate, brand-new Space — render zeros).
+      // The prior code used `.catch(() => null)` which conflated the two
+      // cases and silently rendered zeros for both.
+      const statsPromise = fetchSpaceStats(id).then(
+        (row) => ({ ok: true as const, row }),
+        (err: unknown) => ({ ok: false as const, err }),
+      );
+
       try {
         // Fetch the Space (for the header) in parallel with the stats data.
-        const [spaceRes, statsRow, ach, hist] = await Promise.all([
+        const [spaceRes, statsResult, ach, hist] = await Promise.all([
           supabase.from("spaces").select("*").eq("id", id).maybeSingle(),
-          fetchSpaceStats(id).catch(() => null),
+          statsPromise,
           fetchAchievementsWithState(id).catch(() => [] as AchievementWithState[]),
           fetchMemoryMonthHistogram(id).catch(() => [] as MonthBucket[]),
         ]);
@@ -52,12 +67,23 @@ export default function SpaceStatsPage() {
           return;
         }
 
+        if (statsResult.ok) {
+          setStats(statsResult.row ?? emptyStats(id));
+        } else {
+          // Stats fetch failed — surface a calm notice, but still render the
+          // rest of the page using the zeroed stats row so the layout stays
+          // intact (audit L-33 — previously this case rendered as zeros
+          // with no UI signal).
+          setStats(emptyStats(id));
+          setStatsError("We couldn't load stats for this Space. Please try again.");
+        }
         setSpace(spaceRes.data as Space);
-        setStats(statsRow ?? emptyStats(id));
         setAchievements(ach);
         setHistogram(hist);
       } catch {
-        return;
+        if (!cancelled) {
+          setStatsError("We couldn't load this Space. Please try again.");
+        }
       }
     }
 
@@ -79,6 +105,14 @@ export default function SpaceStatsPage() {
     [achievements],
   );
 
+  // Pre-compute the histogram max once per histogram change, instead of
+  // recomputing it inside every bucket's render loop (M-22 — previously O(N²)
+  // per render on Spaces with many monthly buckets).
+  const histogramMax = useMemo(
+    () => (histogram.length === 0 ? 1 : Math.max(...histogram.map((b) => b.count))),
+    [histogram],
+  );
+
   if (!spaceId) {
     return null;
   }
@@ -92,6 +126,16 @@ export default function SpaceStatsPage() {
         
         {/* Main Content */}
         <main className="flex-grow max-w-[1280px] mx-auto w-full px-6 md:px-12 py-8 md:py-12 flex flex-col gap-12">
+          {/* Calm notice when stats failed to load — the page still renders
+              zeros (audit L-33). The user can refresh / retry. */}
+          {statsError && (
+            <p
+              className="rounded-xl border border-outline-variant/30 dark:border-white/10 bg-surface-container-low dark:bg-[#1a1c1c] px-4 py-3 text-sm text-error"
+              role="alert"
+            >
+              {statsError}
+            </p>
+          )}
           {/* Page Header - Back link, Space name, Stats subtitle, Settings */}
           <div className="flex flex-col gap-4">
             <GhostLink to={spaceDetailPath(spaceId)} className="inline-flex items-center gap-2 text-on-surface-variant hover:text-accent-warm dark:text-[#8d8d8a] dark:hover:text-[#f7d6ac] transition-colors w-fit font-body-sm text-body-sm">
@@ -231,7 +275,7 @@ export default function SpaceStatsPage() {
                       <g className="dark:hidden">
                         {histogram.map((bucket, index) => {
                           const x = 100 + (index * (800 / Math.max(histogram.length - 1, 1)));
-                          const y = 200 - (bucket.count * 180 / Math.max(...histogram.map(b => b.count), 1));
+                          const y = 200 - (bucket.count * 180 / histogramMax);
                           return (
                             <circle
                               key={index}
@@ -248,7 +292,7 @@ export default function SpaceStatsPage() {
                       <g className="hidden dark:block">
                         {histogram.map((bucket, index) => {
                           const x = 100 + (index * (800 / Math.max(histogram.length - 1, 1)));
-                          const y = 200 - (bucket.count * 180 / Math.max(...histogram.map(b => b.count), 1));
+                          const y = 200 - (bucket.count * 180 / histogramMax);
                           return (
                             <circle
                               key={index}
@@ -410,8 +454,8 @@ function renderAchievementCards(
         className={
           "flex h-full flex-col rounded-xl border p-5 transition-colors duration-300 hover:-translate-y-1 duration-[300ms] " +
           (unlocked
-            ? "border-accent-500/30 bg-card-warm"
-            : "border-outline-variant/30 bg-surface-container-low opacity-80 border-dashed")
+            ? "border-accent-500/30 bg-card-warm dark:bg-[#1a1c1c] dark:border-white/10"
+            : "border-outline-variant/30 bg-surface-container-low dark:bg-[#1a1c1c] dark:border-white/10 opacity-80 border-dashed")
         }
       >
         <div
@@ -434,8 +478,8 @@ function renderAchievementCards(
             className="relative z-10 h-6 w-6"
           />
         </div>
-        <div className="font-headline-md text-headline-md text-on-surface">{achievement.title}</div>
-        <div className="mt-1 font-mono-label text-mono-label text-on-surface-variant">
+        <div className="font-headline-md text-headline-md text-on-surface dark:text-ink">{achievement.title}</div>
+        <div className="mt-1 font-mono-label text-mono-label text-on-surface-variant dark:text-ink-muted">
           {unlocked ? (
             <span>{formatUnlockDate(achievement.unlockedAt!)}</span>
           ) : (

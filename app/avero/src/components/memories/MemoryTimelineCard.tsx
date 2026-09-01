@@ -2,10 +2,11 @@ import { Link, useNavigate } from "react-router";
 import { useCallback, useEffect, useState } from "react";
 import TimelineReactionControl from "../reactions/TimelineReactionControl";
 import { getMediaDownloadUrl } from "../../lib/media";
-import { memoryDetailPath } from "../../constants/routes";
+import { memoryDetailPath, memoryEditPath } from "../../constants/routes";
 import { PhotoIcon } from "../../components/ui/icons";
 import { deleteMemory } from "../../lib/memories";
 import MultiPhotoMosaic from "../ui/MultiPhotoMosaic";
+import ConfirmDialog from "../ui/ConfirmDialog";
 import type { Memory, MemoryType } from "../../types/memory";
 import type { Media } from "../../types/media";
 import type { MemoryReactionSummary } from "../../lib/reactions";
@@ -28,6 +29,13 @@ type MemoryTimelineCardProps = {
   currentUserId: string;
   isPending: ReactionType | null;
   onToggleReaction: (type: ReactionType) => void;
+  /**
+   * Called after a Memory has been successfully deleted, so the parent can
+   * remove the card from its list and refetch any dependent batches (e.g.
+   * reactions, thumbnails). Required to keep the timeline in sync with the DB
+   * — without it, the card would remain visible until the next full refresh.
+   */
+  onDeleted?: (memoryId: string) => void;
 };
 
 export default function MemoryTimelineCard({
@@ -38,6 +46,7 @@ export default function MemoryTimelineCard({
   currentUserId,
   isPending,
   onToggleReaction,
+  onDeleted,
 }: MemoryTimelineCardProps) {
   const navigate = useNavigate();
 // Resolved URLs for thumbnails - we need to resolve the B2 object keys to presigned URLs
@@ -86,6 +95,12 @@ export default function MemoryTimelineCard({
   const open = Boolean(anchorEl);
   const id = open ? "more-options-menu" : undefined;
 
+  // Delete confirmation (uses the shared ConfirmDialog instead of the
+  // blocking window.confirm + alert pattern; see H-2 in the audit report).
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | undefined>(undefined);
+
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -96,28 +111,40 @@ export default function MemoryTimelineCard({
 
   const handleEditClick = () => {
     handleMenuClose();
-    // Navigate to the edit memory page
-    navigate(memoryDetailPath(spaceId, memory.id).replace("/memories/", "/memories/") + "/edit");
+    navigate(memoryEditPath(spaceId, memory.id));
   };
 
-  const handleDeleteClick = async () => {
+  const handleDeleteRequest = () => {
     handleMenuClose();
-    if (window.confirm("Are you sure you want to delete this memory? This action cannot be undone.")) {
-      try {
-        const result = await deleteMemory(memory.id);
-        if (result.ok) {
-          // In a real implementation, we would remove this memory from the list
-          // For now, we'll just log the success
-          console.log("Memory deleted successfully:", memory.id);
-          // Note: In a full implementation, we would trigger a state update or refetch
-          // to remove this card from the UI
-        } else {
-          alert(`Failed to delete memory: ${result.error}`);
-        }
-      } catch (error) {
-        alert("An error occurred while deleting the memory. Please try again.");
-      }
+    setDeleteError(undefined);
+    setConfirmingDelete(true);
+  };
+
+  const handleDeleteCancel = () => {
+    if (isDeleting) return;
+    setConfirmingDelete(false);
+    setDeleteError(undefined);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    setDeleteError(undefined);
+    const result = await deleteMemory(memory.id);
+    if (result.ok) {
+      // Close the dialog and let the parent drop the card from its list and
+      // refetch dependent batches. Doing it here (rather than relying on a
+      // future refetch) means the user sees the card disappear immediately,
+      // matching the rest of the app's optimistic-UI pattern.
+      setConfirmingDelete(false);
+      setIsDeleting(false);
+      onDeleted?.(memory.id);
+      return;
     }
+    // Failed: keep the dialog open with an inline error so the user can read
+    // it and retry (auth-design §7 voice).
+    setDeleteError(result.error);
+    setIsDeleting(false);
   };
 
 return (
@@ -244,7 +271,7 @@ return (
                   </button>
                   {/* Delete option */}
                   <button
-                    onClick={handleDeleteClick}
+                    onClick={handleDeleteRequest}
                     onKeyDown={handleMenuClose}
                     className="block px-4 py-2 text-sm text-error dark:text-error w-full text-left"
                     role="menuitem"
@@ -258,6 +285,23 @@ return (
           </div>
         </div>
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Delete this Memory?"
+          description="This permanently removes the Memory, its media, and all comments and reactions. This cannot be undone."
+          confirmLabel={isDeleting ? "Deleting…" : "Delete"}
+          loading={isDeleting}
+          onCancel={handleDeleteCancel}
+          onConfirm={handleDeleteConfirm}
+        >
+          {deleteError && (
+            <p className="text-sm text-error" role="alert">
+              {deleteError}
+            </p>
+          )}
+        </ConfirmDialog>
+      )}
     </article>
   );
 }

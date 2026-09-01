@@ -454,6 +454,12 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
       {lightboxIndex !== null && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+          style={{
+            paddingTop: "max(1rem, env(safe-area-inset-top, 0px))",
+            paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))",
+            paddingLeft: "max(1rem, env(safe-area-inset-left, 0px))",
+            paddingRight: "max(1rem, env(safe-area-inset-right, 0px))",
+          }}
           role="dialog"
           aria-modal="true"
           aria-label="Media viewer"
@@ -494,11 +500,11 @@ export default function MediaGallery({ memoryId, spaceId, canUpload, canDelete }
           {/* Media content */}
           <div className="relative max-w-[90vw] max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
             {lightboxLoading ? (
-              <div className="flex items-center justify-center w-[600px] h-[400px]">
+              <div className="flex items-center justify-center w-[min(600px,90vw)] h-[min(400px,60vh)]">
                 <Spinner size={32} className="text-white" />
               </div>
             ) : lightboxError ? (
-              <div className="flex items-center justify-center w-[600px] h-[400px] text-white/60">
+              <div className="flex items-center justify-center w-[min(600px,90vw)] h-[min(400px,60vh)] text-white/60">
                 <p>Couldn't load this media.</p>
               </div>
             ) : lightboxSrc ? (

@@ -55,9 +55,15 @@ export default function SpaceDetailPage() {
 
   const [sortOption, setSortOption] = useState<SortOption>(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("avero:timeline:sort");
-      if (stored === "newest" || stored === "oldest" || stored === "location") {
-        return stored;
+      // try/catch guards against private-mode browsers / disabled storage,
+      // which throw on access (audit L-29).
+      try {
+        const stored = localStorage.getItem("avero:timeline:sort");
+        if (stored === "newest" || stored === "oldest" || stored === "location") {
+          return stored;
+        }
+      } catch {
+        // fall through to the default below
       }
     }
     return "newest";
@@ -66,7 +72,12 @@ export default function SpaceDetailPage() {
   const handleSortChange = useCallback((value: SortOption) => {
     setSortOption(value);
     if (typeof window !== "undefined") {
-      localStorage.setItem("avero:timeline:sort", value);
+      try {
+        localStorage.setItem("avero:timeline:sort", value);
+      } catch {
+        // storage unavailable; the in-memory state is still updated so the
+        // user's selection works for the rest of the session.
+      }
     }
   }, []);
 
@@ -370,6 +381,50 @@ export default function SpaceDetailPage() {
     [pendingByMemoryId, reactionsByMemoryId, user],
   );
 
+  /**
+   * Drop a deleted Memory from local state. The Memory's dependent batches
+   * (reactions, thumbnails, mosaic) are refetched so the timeline stays in
+   * sync with the DB. We do NOT close the page or refetch the full timeline —
+   * local removal + a single dependent-batch refetch is enough to keep the
+   * UI consistent without a visible reload.
+   */
+  const handleMemoryDeleted = useCallback(
+    (memoryId: string) => {
+      setMemories((prev) => prev.filter((m) => m.id !== memoryId));
+      setReactionsByMemoryId((prev) => {
+        if (!(memoryId in prev)) return prev;
+        const next = { ...prev };
+        delete next[memoryId];
+        return next;
+      });
+      setPendingByMemoryId((prev) => {
+        if (!(memoryId in prev)) return prev;
+        const next = { ...prev };
+        delete next[memoryId];
+        return next;
+      });
+      setThumbnailsByMemoryId((prev) => {
+        if (!(memoryId in prev)) return prev;
+        const next = { ...prev };
+        delete next[memoryId];
+        return next;
+      });
+      setMosaicByMemoryId((prev) => {
+        if (!(memoryId in prev)) return prev;
+        const next = { ...prev };
+        delete next[memoryId];
+        return next;
+      });
+      setTagsByMemoryId((prev) => {
+        if (!(memoryId in prev)) return prev;
+        const next = { ...prev };
+        delete next[memoryId];
+        return next;
+      });
+    },
+    [],
+  );
+
   const filteredMemories = useMemo(
     () => filterMemories(memories, tagsByMemoryId, searchQuery),
     [memories, tagsByMemoryId, searchQuery],
@@ -489,7 +544,7 @@ export default function SpaceDetailPage() {
                         thumbnails={
                           (mosaicByMemoryId[memory.id]?.length ?? 0) >= 2
                             ? mosaicByMemoryId[memory.id]
-                            : thumbnailsByMemoryId[memory.id] ?? []
+                            : thumbnailsByMemoryId[memory.id] ?? NO_THUMBNAILS
                         }
                         summary={reactionsByMemoryId[memory.id]}
                         currentUserId={user?.id ?? ""}
@@ -497,6 +552,7 @@ export default function SpaceDetailPage() {
                         onToggleReaction={(type) =>
                           handleToggleReaction(memory.id, type)
                         }
+                        onDeleted={handleMemoryDeleted}
                       />
                     ))}
                     <EndOfTimelineIndicator />
@@ -529,3 +585,11 @@ function buildTagsByMemoryId(
   }
   return map;
 }
+
+/**
+ * Stable empty Media[] reference used as a fallback when neither the mosaic
+ * nor the timeline thumbnails batch has populated for a memory. Without this,
+ * `?? []` would mint a new array per render and invalidate the thumbnail
+ * resolution effect inside MemoryTimelineCard (M-25).
+ */
+const NO_THUMBNAILS: Media[] = [];

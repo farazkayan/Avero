@@ -1,4 +1,0 @@
-- generic [ref=e1]:
-  - heading "file.type diagnostic" [level=1] [ref=e2]
-  - button "Choose File" [active] [ref=e3]
-  - generic [ref=e4]: name=test-file.pdf | type="application/pdf" | size=14

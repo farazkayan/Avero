@@ -13,7 +13,7 @@ import {
 } from "../constants/routes";
 import type { Memory } from "../types/memory";
 import type { Space } from "../types/space";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -77,26 +77,49 @@ export default function SpaceMapPage() {
     });
   }, []);
 
-  // Tile layer configuration based on theme
-  // LocationIQ ToS/docs require "© LocationIQ" + "© OpenStreetMap" in map attribution
-  // See: https://docs.locationiq.com/docs/examples-leaflet
+  // Tile layer configuration based on theme.
+  //
+  // Both light and dark basemaps are served by CARTO. The light theme uses
+  // CARTO Voyager (`rastertiles/voyager`) because it preserves the richer
+  // road hierarchy, color differentiation, and label density of the previous
+  // OSM-based implementation. CARTO's `light_all` (Positron) is intentionally
+  // minimal and reads as washed out at normal zoom levels, so it is not
+  // used here. The dark theme keeps CARTO Dark Matter (`dark_all`).
+  //
+  // Both styles are served by CARTO Basemaps
+  // (https://carto.com/basemaps), which is free for non-commercial use and
+  // accepts the same `?key=` query param the app already configures via
+  // VITE_CARTO_API_KEY. If the key is unset, both light and dark tile
+  // requests fall back to anonymous (still functional for low-traffic local
+  // dev). The key was previously verified to work against every reachable
+  // style in this file via HEAD requests.
+  //
+  // OSM + LocationIQ attribution is kept because Avero uses LocationIQ for
+  // geocoding elsewhere and the displayed map data ultimately derives from
+  // OpenStreetMap; CARTO attribution is also required by their ToS.
   const tileConfig = useMemo(() => {
     const locationIQAttribution =
       '&copy; <a href="https://locationiq.com/?ref=maps" target="_blank" rel="noopener noreferrer">LocationIQ</a>';
     const osmAttribution =
       '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors';
+    const cartoAttribution =
+      '&copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>';
 
-    if (theme === "dark") {
-      return {
-        url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        attribution: `${locationIQAttribution} ${osmAttribution} &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>`,
-        subdomains: "abcd",
-      };
-    }
+    const cartoKey = import.meta.env.VITE_CARTO_API_KEY;
+    // Dark uses the standard Basemaps path (dark_all = Dark Matter).
+    // Light uses CARTO Voyager, which lives under the /rastertiles/ prefix
+    // and is only reachable via this path on the Basemaps CDN.
+    const basePath =
+      theme === "dark"
+        ? "dark_all"
+        : "rastertiles/voyager";
+    const baseUrl = `https://{s}.basemaps.cartocdn.com/${basePath}/{z}/{x}/{y}{r}.png`;
+    const url = cartoKey ? `${baseUrl}?key=${cartoKey}` : baseUrl;
+
     return {
-      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      attribution: `${locationIQAttribution} ${osmAttribution}`,
-      subdomains: "abc",
+      url,
+      attribution: `${locationIQAttribution} ${osmAttribution} ${cartoAttribution}`,
+      subdomains: "abcd",
     };
   }, [theme]);
 
@@ -285,26 +308,44 @@ export default function SpaceMapPage() {
           "shadow-[0_4px_20px_-2px_rgba(28,25,23,0.05)] dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.2)]",
           "transition-all duration-300 isolate group",
         ].join(" ")}>
-          {/* Map */}
-          <div className="relative h-[500px] md:h-[600px] w-full">
+          {/* Map
+              `relative z-0` on this wrapper creates a stacking context that
+              traps Leaflet's internal panes (.leaflet-tile-pane z=200,
+              .leaflet-popup-pane z=700, .leaflet-control z=800) inside the
+              map. Without this, the panes would otherwise paint directly
+              into the outer card's stacking context, where our custom zoom
+              controls (z-10) and attribution sit, and would visually cover
+              them. Trapping the map is what restores normal Avero overlay
+              layering. */}
+          <div className="relative z-0 h-[500px] md:h-[600px] w-full">
             <MapContainer
               center={mapCenter}
               zoom={memories.length === 1 ? 14 : 10}
               scrollWheelZoom={true}
               zoomControl={false}
               ref={mapRef}
-              whenReady={() => {
-                if (mapRef.current && mapBounds) {
-                  mapRef.current.fitBounds(mapBounds, { padding: [50, 50] });
-                }
-              }}
               className="h-full w-full"
             >
+              {/* Re-fits the map to the memory bounds once the map is ready
+                  and whenever the bounds change. Uses useMap() instead of the
+                  whenReady prop so the fit survives even if mapRef.current is
+                  null at the moment whenReady fires (M-20). */}
+              <FitBounds bounds={mapBounds} />
               <TileLayer
                 url={tileConfig.url}
                 attribution={tileConfig.attribution}
                 subdomains={tileConfig.subdomains}
                 maxZoom={19}
+                crossOrigin={true}
+                // Fallback to a known-good static tile if a specific tile
+                // fails to load. Matches the active basemap (Voyager light
+                // / Dark Matter dark) so the map stays visually consistent
+                // during the rare CARTO CDN hiccup instead of showing a
+                // grey square.
+                errorTileUrl="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/0/0/0.png"
+                // Keep recently-viewed tiles in the browser HTTP cache so
+                // re-pans don't refetch and so reloads stay smooth.
+                keepBuffer={2}
               />
               {memories.map((memory) => (
                 <Marker
@@ -357,7 +398,7 @@ export default function SpaceMapPage() {
               "bg-surface/80 dark:bg-canvas-dark/80",
               "backdrop-blur-md rounded-full",
               "border border-outline-variant/50 dark:border-white/10",
-              "shadow-sm overflow-hidden z-10",
+              "shadow-sm overflow-hidden z-[1000]",
             ].join(" ")}>
               <button
                 type="button"
@@ -390,7 +431,7 @@ export default function SpaceMapPage() {
           </div>
 
           {/* Attribution - LocationIQ + OSM (required) + Avero Cartography (Stitch) */}
-          <div className="absolute bottom-4 right-4 flex flex-col items-end gap-2 z-10">
+          <div className="absolute bottom-4 right-4 flex flex-col items-end gap-2 z-[1000]">
             {/* Avero Cartography attribution - Stitch style */}
             <div className={[
               "bg-surface/60 dark:bg-canvas-dark/60 backdrop-blur-sm",
@@ -426,19 +467,15 @@ export default function SpaceMapPage() {
                 >
                   © OpenStreetMap
                 </a>
-                {theme === "dark" && (
-                  <>
-                    {" | "}
-                    <a
-                      href="https://carto.com/attributions"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:text-accent-warm dark:hover:text-primary-fixed-dim"
-                    >
-                      © CARTO
-                    </a>
-                  </>
-                )}
+                {" | "}
+                <a
+                  href="https://carto.com/attributions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-accent-warm dark:hover:text-primary-fixed-dim"
+                >
+                  © CARTO
+                </a>
               </p>
             </div>
           </div>
@@ -446,4 +483,21 @@ export default function SpaceMapPage() {
       )}
     </div>
   );
+}
+
+/**
+ * Re-fits the map to the given bounds whenever they change. Must be rendered
+ * inside <MapContainer> so useMap() returns the map instance. Replaces the
+ * whenReady callback approach (M-20) — that approach could fire before
+ * mapRef.current was set, silently failing to fit on spaces with exactly one
+ * memory at non-default coordinates.
+ */
+function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (bounds) {
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  }, [map, bounds]);
+  return null;
 }

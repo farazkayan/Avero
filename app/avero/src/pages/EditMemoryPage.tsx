@@ -276,10 +276,12 @@ export default function EditMemoryPage() {
 
       // Otherwise the user must be an owner of the Space. Fetch the Space's
       // members (RLS restricts this to members; a non-member receives an empty
-      // list, which correctly resolves to "not authorized").
+      // list, which correctly resolves to "not authorized"). We only need
+      // (user_id, role) to determine if the current user is an owner — avoid
+      // fetching every column of every member (M-21).
       const { data, error } = await supabase
         .from("space_members")
-        .select("*")
+        .select("user_id, role")
         .eq("space_id", spaceId!);
 
       if (cancelled) {
@@ -545,20 +547,32 @@ export default function EditMemoryPage() {
               onBlur={handleTitleBlur}
             />
 
-            <TextField
-              id="description"
-              name="description"
-              type="text"
-              label="Description"
-              helperText="Optional"
-              placeholder="What happened?"
-              maxLength={MAX_DESCRIPTION_LENGTH}
-              value={description}
-              disabled={isSubmitting}
-              error={descriptionError}
-              onChange={(event) => setDescription(event.target.value)}
-              onBlur={handleDescriptionBlur}
-            />
+            {/* Description — multi-line textarea (M-6). Styled to match the
+                v2.0 auth-input so the rest of the form looks identical. */}
+            <div>
+              <label htmlFor="description" className="sr-only">
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                placeholder="What happened?"
+                maxLength={MAX_DESCRIPTION_LENGTH}
+                value={description}
+                disabled={isSubmitting}
+                aria-describedby={descriptionError ? "description-describe" : undefined}
+                aria-invalid={Boolean(descriptionError) || undefined}
+                onChange={(event) => setDescription(event.target.value)}
+                onBlur={handleDescriptionBlur}
+                rows={4}
+                className="auth-input w-full rounded-md py-3 px-4 text-base transition-all resize-y min-h-[96px]"
+              />
+              {descriptionError && (
+                <p id="description-describe" className="auth-helper mt-2 text-sm auth-helper-error">
+                  {descriptionError}
+                </p>
+              )}
+            </div>
 
             {/* Memory type — a native <select> styled to match TextField. */}
             <div>

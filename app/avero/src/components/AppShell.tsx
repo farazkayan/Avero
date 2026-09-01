@@ -68,7 +68,10 @@ export default function AppShell({ children }: AppShellProps) {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <h2 className="text-on-surface dark:text-surface-container-lowest text-lg font-bold leading-tight tracking-[0.1em] uppercase">
+              {/* Hide the wordmark below 360px so the header doesn't overflow
+                  the viewport on narrow phones. The wordmark reappears
+                  alongside the avatar on wider viewports (audit CR-1). */}
+              <h2 className="hidden min-[360px]:block text-on-surface dark:text-surface-container-lowest text-lg font-bold leading-tight tracking-[0.1em] uppercase">
                 AVERO
               </h2>
             </div>
@@ -105,14 +108,16 @@ export default function AppShell({ children }: AppShellProps) {
                  <span className="hidden md:block text-sm font-medium text-on-surface dark:text-surface-container-lowest">
                    {displayName}
                  </span>
-                 {isAvatarLoading ? (
-                   // Avatar loading state
-                   <div
-                     className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline"
-                     style={{ width: 10, height: 10 }}
-                     aria-hidden="true"
-                   />
-                 ) : (
+{isAvatarLoading ? (
+                    // Avatar loading state — same 40×40 footprint as the
+                    // loaded avatar so the header layout is stable.
+                    // (audit M-2: a previous inline width/height of 10
+                    // produced a tiny dot skeleton.)
+                    <div
+                      className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline animate-pulse"
+                      aria-hidden="true"
+                    />
+                  ) : (
                    resolvedAvatarUrl ? (
                      // Avatar image
                      <div

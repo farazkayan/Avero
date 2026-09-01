@@ -121,12 +121,17 @@ function SinglePhoto({
   const inFlight = useRef(false);
 
   useEffect(() => {
+    // Reset on every effect run so a remount with the same `media` after an
+    // earlier unmount-mid-fetch can still resolve (see M-18 in the audit).
+    inFlight.current = false;
+
     if (inFlight.current) return;
     inFlight.current = true;
 
+    let cancelled = false;
     const fileKey = media.thumbnail_detail_path ?? media.thumbnail_path ?? media.url;
     getMediaDownloadUrl(fileKey).then((result) => {
-      if (!inFlight.current) return;
+      if (cancelled || !inFlight.current) return;
       setState(
         result.ok
           ? { status: "ready", url: result.url }
@@ -134,6 +139,10 @@ function SinglePhoto({
       );
       inFlight.current = false;
     });
+    return () => {
+      cancelled = true;
+      inFlight.current = false;
+    };
   }, [media]);
 
   const type = asMediaType(media.type);
@@ -297,12 +306,15 @@ function MosaicPhoto({
   const inFlight = useRef(false);
 
   useEffect(() => {
+    inFlight.current = false;
+
     if (inFlight.current) return;
     inFlight.current = true;
 
+    let cancelled = false;
     const fileKey = media.thumbnail_detail_path ?? media.thumbnail_path ?? media.url;
     getMediaDownloadUrl(fileKey).then((result) => {
-      if (!inFlight.current) return;
+      if (cancelled || !inFlight.current) return;
       setState(
         result.ok
           ? { status: "ready", url: result.url }
@@ -310,6 +322,10 @@ function MosaicPhoto({
       );
       inFlight.current = false;
     });
+    return () => {
+      cancelled = true;
+      inFlight.current = false;
+    };
   }, [media]);
 
   const type = asMediaType(media.type);

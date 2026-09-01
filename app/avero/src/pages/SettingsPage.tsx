@@ -266,15 +266,30 @@ export default function SettingsPage() {
         <h3 className="font-headline-md text-headline-md mb-2 text-on-surface dark:text-surface-container-lowest pb-4 border-b border-outline-variant/30 dark:border-white/10">Theme</h3>
         <p className="text-body-sm font-body-sm text-on-surface-variant dark:text-secondary-fixed-dim/70 mb-6 mt-4">Choose how Avero looks. Your choice is remembered on this device.</p>
         <div className="bg-surface-container-highest dark:bg-[#1a1c1e] p-1 rounded-lg inline-flex shadow-inner">
+          {/* Theme selector — the active button's styling was previously
+              hardcoded to the Dark button regardless of the actual theme,
+              so opening Settings in light mode showed "Dark" as selected.
+              Derive the selected state from `theme` so both options can
+              render the "selected" pill when they are active (M-5). */}
           <button
-            className="px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 text-on-surface-variant dark:text-secondary-fixed-dim hover:text-accent-warm dark:hover:text-primary-fixed-dim"
+            className={
+              theme === "light"
+                ? "px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 bg-[#2a2c2c] text-white shadow-sm border border-white/10"
+                : "px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 text-on-surface-variant dark:text-secondary-fixed-dim hover:text-accent-warm dark:hover:text-primary-fixed-dim"
+            }
+            aria-pressed={theme === "light"}
             onClick={() => handleSelectTheme('light')}
           >
             <span className="material-symbols-outlined text-[18px]">light_mode</span>
             Light
           </button>
           <button
-            className="px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 bg-[#2a2c2c] text-white shadow-sm border border-white/10"
+            className={
+              theme === "dark"
+                ? "px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 bg-[#2a2c2c] text-white shadow-sm border border-white/10"
+                : "px-6 py-2 rounded-DEFAULT text-sm font-medium transition-colors w-24 flex items-center justify-center gap-2 text-on-surface-variant dark:text-secondary-fixed-dim hover:text-accent-warm dark:hover:text-primary-fixed-dim"
+            }
+            aria-pressed={theme === "dark"}
             onClick={() => handleSelectTheme('dark')}
           >
             <span className="material-symbols-outlined text-[18px]">dark_mode</span>

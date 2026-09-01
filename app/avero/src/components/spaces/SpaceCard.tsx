@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import MultiPhotoMosaic from "../ui/MultiPhotoMosaic";
 import { spaceDetailPath } from "../../constants/routes";
+import { getAvatarDownloadUrl } from "../../lib/avatar";
 import type { Space, SpaceRole, SpaceMembershipWithSpace, SpaceMemberProfile } from "../../types/space";
 import type { Media } from "../../types/media";
 
@@ -146,14 +148,9 @@ export default function SpaceCard({ space, role, thumbnails, members, memoryCoun
           {/* Member avatar stack */}
           <div className="flex -space-x-2">
             {members.slice(0, 3).map((member) => (
-              <div
+              <MemberAvatar
                 key={member.id}
-                className="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-cover bg-center"
-                style={{
-                  backgroundImage: member.profiles.avatar_url
-                    ? `url(${member.profiles.avatar_url})`
-                    : undefined
-                }}
+                avatarKey={member.profiles.avatar_url ?? null}
               />
             ))}
             {members.length > 3 && (
@@ -175,5 +172,54 @@ export default function SpaceCard({ space, role, thumbnails, members, memoryCoun
         </div>
       </div>
     </Link>
+  );
+}
+
+/**
+ * Renders a single member avatar in the SpaceCard avatar stack.
+ *
+ * `avatarKey` is the durable B2 object key stored in `profiles.avatar_url`
+ * (e.g. `avatars/{user_id}/avatar.webp`) — it is NOT a fetchable URL. We
+ * resolve it to a short-lived presigned URL via `getAvatarDownloadUrl`, which
+ * is the same path used by {@link MemberRow}, the app shell, and Settings.
+ * Without this resolution the avatar renders as a broken image (the browser
+ * treats the B2 key as a relative URL and 404s).
+ *
+ * The hook is cancelled on unmount so a slow avatar resolution cannot
+ * `setState` after the card has been removed from the DOM (H-5 fix; audit
+ * item M-18 pattern).
+ */
+function MemberAvatar({ avatarKey }: { avatarKey: string | null }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [prevAvatarKey, setPrevAvatarKey] = useState(avatarKey);
+
+  // Reset the cached download URL when the source avatar key changes —
+  // during render, not in an effect (matches the Avatar.tsx pattern and
+  // avoids the react-hooks/set-state-in-effect lint rule).
+  if (avatarKey !== prevAvatarKey) {
+    setPrevAvatarKey(avatarKey);
+    setUrl(null);
+  }
+
+  useEffect(() => {
+    if (!avatarKey) {
+      return;
+    }
+    let cancelled = false;
+    getAvatarDownloadUrl(avatarKey).then((result) => {
+      if (!cancelled) {
+        setUrl(result.ok ? result.url : null);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [avatarKey]);
+
+  return (
+    <div
+      className="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-cover bg-center"
+      style={url ? { backgroundImage: `url(${url})` } : undefined}
+    />
   );
 }
