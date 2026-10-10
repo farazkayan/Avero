@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#0b0b0c" />
+    <title>Why Avero is under maintenance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      // Pre-paint theme check — mirrors index.html.
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.remove('light');
+      } else {
+        document.documentElement.classList.add('light');
+      }
+    </script>
+    <style>
+      /* Design tokens mirrored from src/index.css (Design System v2.0 §2). */
+      :root {
+        --color-canvas: 11 11 12;        /* #0b0b0c */
+        --color-ink: 236 236 236;        /* #ececec */
+        --color-ink-muted: 141 141 138;  /* #8d8d8a */
+        --color-accent-400: 184 150 104; /* #b89668 */
+        --color-accent-500: 156 125 82;  /* #9c7d52 */
+        color-scheme: dark;
+      }
+      :root.light {
+        --color-canvas: 251 249 245;     /* #fbf9f5 */
+        --color-ink: 33 31 26;           /* #211f1a */
+        --color-ink-muted: 107 105 99;   /* #6b6963 */
+        --color-accent-400: 107 85 53;   /* #6b5535 */
+        --color-accent-500: 128 101 64;  /* #806540 */
+        color-scheme: light;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+      }
+
+      body {
+        background-color: rgb(var(--color-canvas));
+        color: rgb(var(--color-ink));
+        font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Grain texture — same fixed SVG noise overlay as the app (§2), 3.5%. */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.035;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        min-height: 100svh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 24px;
+      }
+
+      .card {
+        max-width: 36rem;
+      }
+
+      .wordmark {
+        display: block;
+        height: 32px;
+        width: auto;
+        margin-bottom: 40px;
+      }
+
+      h1 {
+        margin: 0 0 24px;
+        font-size: clamp(1.5rem, 3vw + 0.75rem, 2rem);
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+      }
+
+      h2 {
+        margin: 32px 0 8px;
+        font-size: 1.0625rem;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      p {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.7;
+        color: rgb(var(--color-ink-muted));
+      }
+
+      hr {
+        margin: 40px 0 0;
+        border: 0;
+        border-top: 1px solid rgb(var(--color-accent-500) / 0.25);
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-top: 32px;
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: rgb(var(--color-accent-400));
+        text-decoration: underline;
+        text-decoration-color: rgb(var(--color-accent-500) / 0.45);
+        text-underline-offset: 4px;
+        border-radius: 4px;
+        padding: 4px 2px;
+      }
+
+      .back-link:hover {
+        text-decoration-color: rgb(var(--color-accent-400));
+      }
+
+      .back-link:focus-visible {
+        outline: 2px solid rgb(var(--color-accent-500));
+        outline-offset: 3px;
+      }
+
+      @media (max-width: 480px) {
+        main { padding: 32px 20px; }
+        .wordmark { height: 28px; margin-bottom: 32px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="card">
+        <img class="wordmark" src="/avero-logo.png" alt="Avero" />
+        <h1>Why Avero is under maintenance</h1>
+
+        <h2>Why Avero is unavailable</h2>
+        <p>
+          We have temporarily paused access to Avero while we complete a major
+          security upgrade. This is a deliberate step to protect what you have
+          entrusted to us.
+        </p>
+
+        <h2>What we're working on</h2>
+        <p>
+          We are strengthening the security of Avero and improving how your
+          data is encrypted. The goal is simple: your private memories should
+          stay private, and be protected by stronger safeguards than ever.
+        </p>
+
+        <h2>What this means for your data</h2>
+        <p>
+          Your memories and data remain protected and private. Access is
+          restricted to everyone — including signed-in users — while this work
+          is underway, so that improvements can be made safely.
+        </p>
+
+        <h2>When Avero will return</h2>
+        <p>
+          Avero will remain unavailable until maintenance is complete. We will
+          restore access as soon as the upgrade has been finished and verified.
+        </p>
+
+        <hr />
+        <a class="back-link" href="/maintenance">← Back</a>
+      </div>
+    </main>
+  </body>
+</html>
