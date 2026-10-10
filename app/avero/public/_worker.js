@@ -19,12 +19,19 @@
  *   cannot influence it.
  *
  * Behavior when maintenance is ENABLED:
- *   - Only the maintenance page, the Learn More page, and the small set of
- *     assets they reference are served (via the ASSETS binding, so the
- *     correct HTML files are returned — never the SPA shell).
- *   - Every other request — all SPA routes, sign-in routes, hashed JS/CSS
- *     bundles, public assets, unknown paths, and non-GET/HEAD methods —
- *     receives `503 Service Unavailable` with `Cache-Control: no-store`.
+ *   - Browser document navigations (GET/HEAD whose Accept header allows
+ *     HTML) to ANY path — `/`, `/signin`, `/spaces`, `/settings`, unknown
+ *     routes — receive the actual designed maintenance page
+ *     (`/maintenance/index.html`, fetched through the ASSETS binding, never
+ *     the SPA shell) with `503 Service Unavailable` and
+ *     `Cache-Control: no-store`.
+ *   - `/maintenance` and `/maintenance/learn-more` remain directly
+ *     accessible as clean 200 HTML pages, plus the small set of assets they
+ *     reference.
+ *   - Everything else — JS/CSS bundles, normal application assets, API and
+ *     non-document requests, and non-GET/HEAD methods — receives a generic
+ *     `503` stub (never HTML substituted for JS/CSS/API responses), with
+ *     `Cache-Control: no-store`.
  *   - All served responses during maintenance carry `Cache-Control: no-store`
  *     so browsers and CDNs do not retain app or maintenance content.
  *
@@ -79,22 +86,37 @@ function blockedResponse() {
   });
 }
 
-/** Wraps an ASSETS response with no-store caching headers. */
-function withNoStore(response) {
+/** Wraps an ASSETS response with no-store headers, optionally overriding the status. */
+function withNoStore(response, statusOverride) {
   const headers = new Headers(response.headers);
   headers.set("Cache-Control", "no-store");
   return new Response(response.body, {
-    status: response.status,
+    status: statusOverride ?? response.status,
     statusText: response.statusText,
     headers,
   });
 }
 
 /** Fetches a specific asset path from the ASSETS binding. */
-async function fetchAsset(env, request, assetPath) {
+async function fetchAsset(env, request, assetPath, statusOverride) {
   const assetUrl = new URL(assetPath, request.url);
   const response = await env.ASSETS.fetch(assetUrl);
-  return withNoStore(response);
+  return withNoStore(response, statusOverride);
+}
+
+/**
+ * True for browser document navigations: GET/HEAD requests whose Accept
+ * header allows HTML. Script/CSS/fetch/API requests do not accept HTML as a
+ * document and keep receiving the generic stub.
+ */
+function isDocumentNavigation(request) {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return false;
+  }
+  const accept = request.headers.get("Accept") ?? "";
+  return (
+    accept.includes("text/html") || accept.includes("application/xhtml+xml")
+  );
 }
 
 /**
@@ -146,6 +168,19 @@ export default {
 
       const assetPath = resolveMaintenanceRequest(url.pathname);
       if (assetPath === null) {
+        // Document navigations to any application route show the real
+        // maintenance page (with 503), never the SPA shell — and never a
+        // redirect, so `/` renders the maintenance UI immediately.
+        if (isDocumentNavigation(request)) {
+          return await fetchAsset(
+            env,
+            request,
+            "/maintenance/index.html",
+            503,
+          );
+        }
+        // Non-document requests (JS/CSS bundles, API calls, fetch/XHR) get
+        // the generic 503 stub — HTML is never substituted for them.
         return blockedResponse();
       }
 
