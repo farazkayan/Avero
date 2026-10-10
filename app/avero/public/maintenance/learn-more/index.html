@@ -23,6 +23,7 @@
         --color-ink-muted: 141 141 138;  /* #8d8d8a */
         --color-accent-400: 184 150 104; /* #b89668 */
         --color-accent-500: 156 125 82;  /* #9c7d52 */
+        --accent-rgb: var(--color-accent-400);
         color-scheme: dark;
       }
       :root.light {
@@ -31,6 +32,7 @@
         --color-ink-muted: 107 105 99;   /* #6b6963 */
         --color-accent-400: 107 85 53;   /* #6b5535 */
         --color-accent-500: 128 101 64;  /* #806540 */
+        --accent-rgb: var(--color-accent-400);
         color-scheme: light;
       }
 
@@ -48,6 +50,7 @@
         font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
       }
 
       /* Grain texture — same fixed SVG noise overlay as the app (§2), 3.5%. */
@@ -61,19 +64,66 @@
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
       }
 
+      /* Ambient glow — same faint brass wash as the maintenance page. */
+      .glow {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(46rem 30rem at 50% 24%, rgb(var(--accent-rgb) / 0.055), transparent 72%);
+        animation: glow-drift 22s ease-in-out infinite alternate;
+      }
+
+      @keyframes glow-drift {
+        from {
+          transform: translate3d(-2%, -1.5%, 0) scale(1);
+          opacity: 0.75;
+        }
+        to {
+          transform: translate3d(2%, 1.5%, 0) scale(1.06);
+          opacity: 1;
+        }
+      }
+
       main {
         position: relative;
         z-index: 1;
         min-height: 100svh;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
-        padding: 48px 24px;
+        padding: 64px 24px 48px;
       }
 
+      /* Calm editorial measure: ~60-70 characters per line. */
       .card {
         max-width: 36rem;
       }
+
+      /*
+        Entrance motion — the same quiet rise with a short stagger, so the
+        two pages feel like one experience. Fully visible once settled and
+        immediately visible under prefers-reduced-motion.
+      */
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .rise {
+        animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .rise-2 { animation-delay: 0.15s; }
+      .rise-3 { animation-delay: 0.28s; }
+      .rise-4 { animation-delay: 0.4s; }
 
       .wordmark {
         display: block;
@@ -83,15 +133,22 @@
       }
 
       h1 {
-        margin: 0 0 24px;
+        margin: 0 0 16px;
         font-size: clamp(1.5rem, 3vw + 0.75rem, 2rem);
         font-weight: 700;
         line-height: 1.2;
         letter-spacing: -0.02em;
       }
 
+      .lede {
+        margin: 0;
+        font-size: 1.0625rem;
+        line-height: 1.7;
+        color: rgb(var(--color-ink-muted));
+      }
+
       h2 {
-        margin: 32px 0 8px;
+        margin: 36px 0 10px;
         font-size: 1.0625rem;
         font-weight: 600;
         line-height: 1.4;
@@ -105,7 +162,7 @@
       }
 
       hr {
-        margin: 40px 0 0;
+        margin: 44px 0 0;
         border: 0;
         border-top: 1px solid rgb(var(--color-accent-500) / 0.25);
       }
@@ -121,10 +178,12 @@
         text-underline-offset: 4px;
         border-radius: 4px;
         padding: 4px 2px;
+        transition: color 0.18s ease, text-decoration-color 0.18s ease, filter 0.18s ease;
       }
 
       .back-link:hover {
         text-decoration-color: rgb(var(--color-accent-400));
+        filter: brightness(1.1);
       }
 
       .back-link:focus-visible {
@@ -132,47 +191,66 @@
         outline-offset: 3px;
       }
 
+      /* Reduced motion: static page, all content immediately visible. */
+      @media (prefers-reduced-motion: reduce) {
+        .rise,
+        .glow {
+          animation: none;
+        }
+        .back-link {
+          transition: none;
+        }
+      }
+
       @media (max-width: 480px) {
-        main { padding: 32px 20px; }
+        main { padding: 40px 20px 32px; }
         .wordmark { height: 28px; margin-bottom: 32px; }
       }
     </style>
   </head>
   <body>
+    <div class="glow" aria-hidden="true"></div>
     <main>
       <div class="card">
-        <img class="wordmark" src="/avero-logo.png" alt="Avero" />
-        <h1>Why Avero is under maintenance</h1>
-
-        <h2>Why Avero is unavailable</h2>
-        <p>
-          We have temporarily paused access to Avero while we complete a major
-          security upgrade. This is a deliberate step to protect what you have
-          entrusted to us.
+        <img class="wordmark rise" src="/avero-logo.png" alt="Avero" />
+        <h1 class="rise rise-2">Why Avero is under maintenance</h1>
+        <p class="lede rise rise-2">
+          Avero is temporarily unavailable while we strengthen how it protects
+          your private memories and personal data. Here's a little more about
+          what's happening, and why.
         </p>
 
-        <h2>What we're working on</h2>
-        <p>
-          We are strengthening the security of Avero and improving how your
-          data is encrypted. The goal is simple: your private memories should
-          stay private, and be protected by stronger safeguards than ever.
+        <h2 class="rise rise-3">Why access is paused</h2>
+        <p class="rise rise-3">
+          We've temporarily paused access so this work can be done thoroughly
+          and safely. While Avero is in maintenance, no one — including
+          signed-in members — can reach the application.
         </p>
 
-        <h2>What this means for your data</h2>
-        <p>
-          Your memories and data remain protected and private. Access is
-          restricted to everyone — including signed-in users — while this work
-          is underway, so that improvements can be made safely.
+        <h2 class="rise rise-3">What we're working on</h2>
+        <p class="rise rise-3">
+          We're strengthening Avero's security and improving how your data is
+          protected, including work on encryption — the practice of securing
+          data so only the people meant to see it can. The goal is simple:
+          your private memories should stay private.
         </p>
 
-        <h2>When Avero will return</h2>
-        <p>
-          Avero will remain unavailable until maintenance is complete. We will
-          restore access as soon as the upgrade has been finished and verified.
+        <h2 class="rise rise-4">Why we're taking our time</h2>
+        <p class="rise rise-4">
+          Care matters more than speed here. You've entrusted your memories to
+          us, and we'd rather take the time to complete this work properly
+          than reopen Avero before it's ready.
         </p>
 
-        <hr />
-        <a class="back-link" href="/maintenance">← Back</a>
+        <h2 class="rise rise-4">When Avero will return</h2>
+        <p class="rise rise-4">
+          Avero will become accessible again once the improvements are
+          complete. We'll share more as the work progresses — we won't reopen
+          in a rush.
+        </p>
+
+        <hr class="rise rise-4" />
+        <a class="back-link rise rise-4" href="/maintenance">← Back</a>
       </div>
     </main>
   </body>
