@@ -6,11 +6,11 @@ import {
   type CommentReactionSummary,
 } from "../../lib/comment-reactions";
 import {
-  REACTION_EMOJI,
   REACTION_LABELS,
   REACTION_TYPES,
   type ReactionType,
 } from "../../types/reaction";
+import ReactionIcon from "../reactions/ReactionIcon";
 
 type CommentReactionControlProps = {
   /** The Comment whose reactions should be loaded. */
@@ -237,7 +237,6 @@ function CommentReactionPill({
   onToggle,
 }: CommentReactionPillProps) {
   const label = REACTION_LABELS[type];
-  const emoji = REACTION_EMOJI[type];
 
   // Accessible name conveys the toggle direction so a screen reader user
   // knows whether the next click adds or removes their reaction.
@@ -255,7 +254,7 @@ function CommentReactionPill({
       title={ariaLabel}
       className={[
         "inline-flex items-center gap-1 rounded-full border px-2 py-0.5",
-        "text-xs transition-colors duration-200",
+        "text-xs transition-colors duration-200 cursor-pointer",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60",
         hasReacted
           ? "border-accent-500/60 bg-accent-soft text-ink"
@@ -263,9 +262,7 @@ function CommentReactionPill({
         "disabled:cursor-not-allowed disabled:opacity-60",
       ].join(" ")}
     >
-      <span aria-hidden="true" className="text-sm leading-none">
-        {emoji}
-      </span>
+      <ReactionIcon type={type} size={14} className="shrink-0" />
       {count > 0 && (
         <span
           className="text-xs font-medium tabular-nums"

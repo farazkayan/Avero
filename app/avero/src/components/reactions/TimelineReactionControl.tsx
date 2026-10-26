@@ -8,12 +8,12 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { HeartIcon } from "../ui/icons";
+import ReactionIcon from "./ReactionIcon";
 import { useLongPress } from "../../hooks/useLongPress";
 import { usePopoverPosition } from "../../hooks/usePopoverPosition";
 import { useReactionHint } from "../../hooks/useReactionHint";
 import type { MemoryReactionSummary } from "../../lib/reactions";
 import {
-  REACTION_EMOJI,
   REACTION_LABELS,
   REACTION_TYPES,
   type ReactionType,
@@ -315,10 +315,6 @@ export default function TimelineReactionControl({
 
   const ariaLabel = buildAriaLabel(myReaction, totalCount);
 
-  // The emoji shown on the pill: the user's specific reaction, or the outline
-  // heart when they haven't reacted.
-  const pillEmoji = myReaction ? REACTION_EMOJI[myReaction] : null;
-
   return (
     <div className="relative inline-block">
       <button
@@ -349,10 +345,8 @@ export default function TimelineReactionControl({
         ].join(" ")}
         {...longPressHandlers}
       >
-        {pillEmoji ? (
-          <span aria-hidden="true" className="text-base leading-none">
-            {pillEmoji}
-          </span>
+        {myReaction ? (
+          <ReactionIcon type={myReaction} size={16} className="shrink-0" />
         ) : (
           <HeartIcon className="text-ink-muted" />
         )}
@@ -485,14 +479,13 @@ const ReactionPickerPopup = forwardRef<HTMLDivElement, ReactionPickerPopupProps>
         onMouseLeave={onMouseLeave}
         onKeyDown={handleKeyDown}
         className={[
-          "z-50 flex items-center gap-1 rounded-full border border-ink/10",
-          "bg-canvas-raised p-1.5 shadow-lg",
+          "z-50 flex items-center gap-1.5 rounded-full border border-ink/15 dark:border-white/10",
+          "bg-canvas-raised/95 dark:bg-canvas-raised/95 p-1.5 shadow-2xl backdrop-blur-md",
           "reaction-popup-enter",
         ].join(" ")}
       >
         {REACTION_TYPES.map((type, index) => {
           const label = REACTION_LABELS[type];
-          const emoji = REACTION_EMOJI[type];
           const isActive = activeIndex === index;
           const isChecked = myReaction === type;
           return (
@@ -506,17 +499,23 @@ const ReactionPickerPopup = forwardRef<HTMLDivElement, ReactionPickerPopupProps>
               tabIndex={isActive ? 0 : -1}
               onClick={() => onSelect(type)}
               className={[
-                "flex h-9 w-9 items-center justify-center rounded-full text-xl",
-                "transition-transform duration-150",
-                "hover:bg-ink/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60",
+                "group relative flex h-9 w-9 items-center justify-center rounded-full",
+                "transition-all duration-200 ease-out cursor-pointer",
+                "hover:bg-ink/10 hover:scale-125 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60",
                 isActive ? "scale-125 bg-ink/10" : "",
+                isChecked ? "ring-2 ring-accent-500/60 bg-accent-soft/30" : "",
               ].join(" ")}
             >
-              <span aria-hidden="true">{emoji}</span>
+              <ReactionIcon
+                type={type}
+                size={20}
+                className="shrink-0 transition-transform duration-150 group-hover:scale-110"
+              />
             </button>
           );
         })}
       </div>,
+
       document.body,
     );
   },

@@ -7,11 +7,11 @@ import {
   type MemoryReactionSummary,
 } from "../../lib/reactions";
 import {
-  REACTION_EMOJI,
   REACTION_LABELS,
   REACTION_TYPES,
   type ReactionType,
 } from "../../types/reaction";
+import ReactionIcon from "./ReactionIcon";
 
 type ReactionBarProps = {
   /** The Memory whose reactions should be loaded. */
@@ -252,7 +252,6 @@ function ReactionPill({
   onToggle,
 }: ReactionPillProps) {
   const label = REACTION_LABELS[type];
-  const emoji = REACTION_EMOJI[type];
 
   // Accessible name conveys the toggle direction so a screen reader user
   // knows whether the next click adds or removes their reaction.
@@ -270,7 +269,7 @@ function ReactionPill({
       title={ariaLabel}
       className={[
         "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5",
-        "text-sm transition-colors duration-200",
+        "text-sm transition-colors duration-200 cursor-pointer",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60",
         hasReacted
           ? "border-accent-500/60 bg-accent-soft text-ink"
@@ -278,9 +277,7 @@ function ReactionPill({
         "disabled:cursor-not-allowed disabled:opacity-60",
       ].join(" ")}
     >
-      <span aria-hidden="true" className="text-base leading-none">
-        {emoji}
-      </span>
+      <ReactionIcon type={type} size={16} className="shrink-0" />
       {count > 0 && (
         <span
           className="text-xs font-medium tabular-nums"

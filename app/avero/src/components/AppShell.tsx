@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { SETTINGS_PATH } from "../constants/routes";
 import { getAvatarDownloadUrl } from "../lib/avatar";
 import ThemeSwitch from "./ui/theme-switch-button";
+import { Settings } from "lucide-react";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -82,10 +83,10 @@ export default function AppShell({ children }: AppShellProps) {
               {/* Settings - circular button */}
               <Link
                 to={SETTINGS_PATH}
-                className="flex cursor-pointer items-center justify-center rounded-full size-10 bg-surface-container hover:bg-surface-container-high dark:bg-inverse-surface dark:hover:bg-outline transition-colors text-on-surface-variant dark:text-surface-container-lowest"
+                className="group flex cursor-pointer items-center justify-center rounded-full size-10 bg-surface-container hover:bg-surface-container-high dark:bg-inverse-surface dark:hover:bg-outline transition-colors text-on-surface-variant dark:text-surface-container-lowest"
                 aria-label="Settings"
               >
-                <span className="material-symbols-outlined">settings</span>
+                <Settings className="size-5 transition-transform duration-300 group-hover:rotate-45" />
               </Link>
 
 {/* Vertical divider + Avatar + Name */}
