@@ -202,7 +202,7 @@ return (
         </div>
 
         {/* Metadata Row */}
-        <div className="flex items-center gap-3 font-mono-data text-mono-data text-on-surface-variant dark:text-secondary-fixed-dim mb-4 opacity-80 transition-colors duration-300">
+        <div className="flex items-center gap-3 font-mono-data text-mono-data tabular-nums text-on-surface-variant dark:text-secondary-fixed-dim mb-4 opacity-80 transition-colors duration-300">
           <span className="flex items-center gap-1.5">
             <span className="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
             {formatMemoryDate(memory.memory_date)}
@@ -218,9 +218,9 @@ return (
           )}
         </div>
 
-        {/* Body Text - multiple paragraphs supported */}
+        {/* Body Text - multiple paragraphs supported with optimal typographic measure */}
         {memory.description && (
-          <div className="font-body-md text-body-md text-on-surface-variant dark:text-surface-container-highest leading-relaxed space-y-4 transition-colors duration-300">
+          <div className="font-body-md text-body-md text-on-surface-variant dark:text-surface-container-highest leading-relaxed space-y-4 max-w-prose transition-colors duration-300">
             {memory.description.split("\n\n").map((paragraph, index) => (
               <p key={index} className="">{paragraph}</p>
             ))}

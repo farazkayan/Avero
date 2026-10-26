@@ -299,7 +299,7 @@ export default function MemoryDetailPage() {
         </div>
       ) : notFound ? (
         <div className="py-16 text-center">
-          <h1 className="text-2xl font-bold leading-tight text-ink sm:text-3xl">
+          <h1 className="font-serif text-2xl font-medium leading-tight text-ink sm:text-3xl text-balance">
             Memory not found
           </h1>
           <p className="mx-auto mt-3 max-w-sm text-sm text-ink-muted sm:text-base">
@@ -319,22 +319,15 @@ export default function MemoryDetailPage() {
         </div>
       ) : memory ? (
         <article>
-          {/* Header — title, type badge, formatted date, and location.
-               "Edit" and "Delete" actions are shown only to authorized users
-               (the Memory's creator or a Space owner), mirroring the
-               role-based permission pattern used by Space settings/delete
-               (spaces-design §6.3) and the `memories_update` /
-               `memories_delete` RLS policies (both: creator OR owner). Delete
-               is a destructive, irreversible action, so it opens a confirm
-               dialog rather than acting on a single tap. */}
+          {/* Header — title, type badge, formatted date, and location. */}
           <header>
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <h1 className="break-words text-2xl font-bold leading-tight text-ink sm:text-3xl">
+                <h1 className="break-words font-serif text-3xl sm:text-4xl font-medium leading-[1.2] tracking-tight text-ink text-balance">
                   {memory.title}
                 </h1>
                 {memory.memory_type && (
-                  <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent-400">
+                  <span className="rounded-full bg-accent-soft px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider font-medium text-accent-400">
                     {formatMemoryType(memory.memory_type)}
                   </span>
                 )}
@@ -362,24 +355,23 @@ export default function MemoryDetailPage() {
                 </div>
               )}
             </div>
-            <p className="mt-1 text-xs text-ink-muted">
-              {formatMemoryDate(memory.memory_date)}
-            </p>
-            {memory.location && (
-              <p className="mt-1 text-sm text-ink-muted">{memory.location}</p>
-            )}
+            <div className="mt-2 flex flex-wrap items-center gap-2 font-mono text-xs text-ink-muted tracking-wide tabular-nums">
+              <span>{formatMemoryDate(memory.memory_date)}</span>
+              {memory.location && (
+                <>
+                  <span className="opacity-50" aria-hidden="true">·</span>
+                  <span className="font-sans text-xs tracking-normal">{memory.location}</span>
+                </>
+              )}
+            </div>
 
-            {/* Tags — small pill/chip badges (feature-specs §6). Styled as a
-                muted sibling of the memory_type badge above: same rounded-full
-                pill family, but bg-canvas-raised/text-ink-muted to read as
-                secondary (plural, organizational) rather than the primary
-                accent type badge. Sorted alphabetically by fetchMemoryTags. */}
+            {/* Tags — small pill/chip badges */}
             {tags.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {tags.map((tag) => (
                   <span
                     key={tag.id}
-                    className="rounded-full bg-canvas-raised px-2.5 py-0.5 text-xs font-medium text-ink-muted"
+                    className="rounded-full bg-canvas-raised px-2.5 py-0.5 font-mono text-[11px] tracking-wide font-medium text-ink-muted"
                   >
                     {tag.name}
                   </span>
@@ -388,10 +380,10 @@ export default function MemoryDetailPage() {
             )}
           </header>
 
-          {/* Description — the story behind the Memory */}
+          {/* Description — the story behind the Memory with optimal typographic measure */}
           {memory.description && (
-            <section className="mt-6">
-              <p className="whitespace-pre-line text-sm text-ink-muted sm:text-base">
+            <section className="mt-6 max-w-prose">
+              <p className="whitespace-pre-line text-[15px] sm:text-base leading-relaxed text-ink-muted font-sans">
                 {memory.description}
               </p>
             </section>

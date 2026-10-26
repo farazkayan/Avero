@@ -128,16 +128,16 @@ export default function SpaceCard({ space, role, thumbnails, members, memoryCoun
       )}
 
       <div className="p-6 flex flex-col gap-4">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-3">
           <h3 
-            className="text-headline-md font-headline-md text-on-surface dark:text-surface-container-lowest group-hover:text-accent-warm dark:group-hover:text-primary-fixed-dim transition-colors"
+            className="text-headline-md font-headline-md text-on-surface dark:text-surface-container-lowest group-hover:text-accent-warm dark:group-hover:text-primary-fixed-dim transition-colors text-balance"
           >
             {space.name}
           </h3>
           <span 
             className={role === "owner" 
-              ? "px-2.5 py-1 rounded-full bg-accent-warm/20 text-accent-warm dark:text-primary-fixed-dim text-xs font-semibold tracking-wide uppercase"
-              : "px-2.5 py-1 rounded-full bg-surface-container-high dark:bg-inverse-surface text-on-surface-variant dark:text-secondary-fixed-dim text-xs font-semibold tracking-wide uppercase"
+              ? "px-2.5 py-0.5 rounded-full bg-accent-warm/20 text-accent-warm dark:text-primary-fixed-dim font-mono-label text-mono-label uppercase tracking-wider shrink-0"
+              : "px-2.5 py-0.5 rounded-full bg-surface-container-high dark:bg-inverse-surface text-on-surface-variant dark:text-secondary-fixed-dim font-mono-label text-mono-label uppercase tracking-wider shrink-0"
             }
           >
             {role === "owner" ? "Owner" : "Member"}
@@ -155,7 +155,7 @@ export default function SpaceCard({ space, role, thumbnails, members, memoryCoun
             ))}
             {members.length > 3 && (
               <div
-                className="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-surface-container dark:bg-inverse-surface flex items-center justify-center text-xs font-medium text-on-surface-variant dark:text-surface-container-lowest"
+                className="size-8 rounded-full border-2 border-surface-container-low dark:border-card-dark bg-surface-container dark:bg-inverse-surface flex items-center justify-center font-mono-label text-mono-label text-on-surface-variant dark:text-surface-container-lowest"
               >
                 +{members.length - 3}
               </div>
@@ -164,7 +164,7 @@ export default function SpaceCard({ space, role, thumbnails, members, memoryCoun
           
           {/* Memory count + updated timestamp */}
           <span 
-            className="font-mono-data text-mono-data text-on-surface-variant dark:text-secondary-fixed-dim text-right"
+            className="font-mono-data text-mono-data tabular-nums text-on-surface-variant dark:text-secondary-fixed-dim text-right"
           >
             {memoryCount} memories<br />
             {formatTimeAgo(space.updated_at)}

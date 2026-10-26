@@ -81,6 +81,9 @@
 @layer base {
   html {
     color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   html.light {
     color-scheme: light;
@@ -91,6 +94,23 @@
     /* Lift body content above the grain layer (see body::before). */
     position: relative;
     z-index: 1;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Typographic Artistry: Balance headlines & prevent orphan trailing words */
+  h1, h2, h3, h4, .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Optical size & ligatures for Fraunces editorial serif */
+  .font-serif, .font-display, [class*="headline-"] {
+    font-feature-settings: "kern" 1, "liga" 1;
+    font-optical-sizing: auto;
+  }
+
+  /* Tabular figures for dates, timestamps, memory counts, coordinates */
+  .tabular-nums, .font-mono, [class*="mono-"] {
+    font-variant-numeric: tabular-nums;
   }
 }
 
@@ -415,7 +435,7 @@ html.light .focus-brass:focus {
   /* Dark (default) — canvas-dark = #0b0b0c */
   background-color: #0b0b0c;
   color: #ececec;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   transition: background-color 0.5s cubic-bezier(0.23, 1, 0.32, 1),
               color 0.5s cubic-bezier(0.23, 1, 0.32, 1),
               border-color 0.5s cubic-bezier(0.23, 1, 0.32, 1);
@@ -517,7 +537,7 @@ html.light .auth-polaroid-top {
 
 /* Headline (emotional H1) */
 .auth-headline {
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Fraunces', Georgia, serif;
   font-size: 24px;
   line-height: 1.2;
   letter-spacing: -0.02em;
@@ -537,7 +557,7 @@ html.light .auth-headline {
 
 /* Subhead (emotional paragraph) */
 .auth-subhead {
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 16px;
   line-height: 1.6;
   font-weight: 400;
@@ -567,7 +587,7 @@ html.light .auth-right-panel {
   background-color: #131314; /* card-dark (dark theme input bg) */
   border: 1px solid rgba(255, 255, 255, 0.10);
   color: #ffffff;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -672,7 +692,7 @@ html.light .auth-google-button {
 
 .auth-google-label {
   color: #ececec; /* dark on-surface */
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -692,7 +712,7 @@ html.light .auth-divider {
 
 .auth-divider-text {
   color: #8d8d8a; /* dark muted */
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -704,7 +724,7 @@ html.light .auth-divider-text {
 /* Submit button (Create account) — brass solid */
 .auth-submit-button {
   background-color: #886548; /* dark brass */
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 16px;
   line-height: 1.6;
   font-weight: 500;
@@ -728,7 +748,7 @@ html.light .auth-submit-button {
 .auth-footnote {
   color: #8d8d8a; /* dark muted */
   opacity: 0.7;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -740,7 +760,7 @@ html.light .auth-footnote {
 /* Sign in link container */
 .auth-signin-link {
   color: #8d8d8a; /* dark muted */
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -752,7 +772,7 @@ html.light .auth-signin-link {
 /* Brass link (Sign in.) */
 .auth-brass-link {
   color: #b89668; /* dark brass link */
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -779,10 +799,10 @@ html.light .auth-brass-link {
 
 /* Auth heading (H2 + supporting line) — Stitch source: headline-md / body-md */
 .auth-heading-headline {
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 20px;
-  line-height: 1.4;
-  letter-spacing: -0.01em;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 22px;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
   font-weight: 500;
   color: #ffffff; /* dark on-surface */
 }
@@ -792,8 +812,8 @@ html.light .auth-heading-headline {
 }
 
 .auth-heading-supporting {
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 16px;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
   line-height: 1.6;
   font-weight: 400;
   color: #8d8d8a; /* dark muted */

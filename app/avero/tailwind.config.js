@@ -102,43 +102,52 @@ export default {
         "error-container": "#ffdad6",
       },
       fontFamily: {
-        // Primary sans-serif — titles + body copy.
+        // Primary sans-serif — interface & body copy (Plus Jakarta Sans)
         sans: [
+          "'Plus Jakarta Sans'",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
           "Roboto",
-          "Helvetica Neue",
-          "Arial",
           "sans-serif",
         ],
-        // Secondary mono accent — reserved for dates, counts, stat numbers,
-        // and metadata labels (Design System §3). NOT for body or titles.
+        // Editorial display serif — memory titles, space headings, narrative moments (Fraunces)
+        serif: [
+          "'Fraunces'",
+          "Georgia",
+          "serif",
+        ],
+        display: [
+          "'Fraunces'",
+          "Georgia",
+          "serif",
+        ],
+        // Monospace accent — timestamps, dates, counts, and archival tags (JetBrains Mono)
         mono: [
+          "'JetBrains Mono'",
           "ui-monospace",
           "SFMono-Regular",
-          "JetBrains Mono",
           "Menlo",
           "Consolas",
           "monospace",
         ],
-        // Stitch source font families
-        "headline-lg-mobile": ["Inter"],
-        "body-sm": ["Inter"],
-        "body-md": ["Inter"],
-        "headline-md": ["Inter"],
-        "mono-data": ["JetBrains Mono"],
-        "mono-label": ["JetBrains Mono"],
-        "headline-lg": ["Inter"],
+        // Custom token mapping to curated typographic roles
+        "headline-lg-mobile": ["'Fraunces'", "Georgia", "serif"],
+        "headline-lg": ["'Fraunces'", "Georgia", "serif"],
+        "headline-md": ["'Fraunces'", "Georgia", "serif"],
+        "body-sm": ["'Plus Jakarta Sans'", "sans-serif"],
+        "body-md": ["'Plus Jakarta Sans'", "sans-serif"],
+        "mono-data": ["'JetBrains Mono'", "monospace"],
+        "mono-label": ["'JetBrains Mono'", "monospace"],
       },
       fontSize: {
-        "headline-lg-mobile": ["24px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "600" }],
-        "body-sm": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
-        "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
-        "headline-md": ["20px", { lineHeight: "1.4", letterSpacing: "-0.01em", fontWeight: "500" }],
-        "mono-data": ["14px", { lineHeight: "1.4", fontWeight: "400" }],
-        "mono-label": ["12px", { lineHeight: "1.0", letterSpacing: "0.05em", fontWeight: "500" }],
-        "headline-lg": ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "600" }],
+        "headline-lg-mobile": ["24px", { lineHeight: "1.25", letterSpacing: "-0.02em", fontWeight: "600" }],
+        "body-sm": ["14px", { lineHeight: "1.55", letterSpacing: "0.005em", fontWeight: "400" }],
+        "body-md": ["16px", { lineHeight: "1.65", letterSpacing: "0em", fontWeight: "400" }],
+        "headline-md": ["21px", { lineHeight: "1.35", letterSpacing: "-0.015em", fontWeight: "500" }],
+        "mono-data": ["13px", { lineHeight: "1.45", letterSpacing: "0.02em", fontWeight: "400" }],
+        "mono-label": ["11px", { lineHeight: "1.2", letterSpacing: "0.08em", fontWeight: "500" }],
+        "headline-lg": ["32px", { lineHeight: "1.2", letterSpacing: "-0.025em", fontWeight: "600" }],
       },
       spacing: {
         unit: "4px",

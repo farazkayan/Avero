@@ -35,10 +35,10 @@ export default function EchoesCard({
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="font-mono-data text-mono-data text-accent-warm dark:text-primary-fixed-dim mb-1 transition-colors duration-300">
+        <p className="font-mono-data text-mono-data tabular-nums text-accent-warm dark:text-primary-fixed-dim mb-1 transition-colors duration-300">
           {intervalLabel}
         </p>
-        <p className="font-body-md text-body-md text-on-surface dark:text-surface-container-lowest font-medium truncate transition-colors duration-300">
+        <p className="font-serif text-[16px] text-on-surface dark:text-surface-container-lowest font-medium truncate transition-colors duration-300">
           <Link
             to={memoryDetailPath(spaceId, memory.id)}
             className="rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60"

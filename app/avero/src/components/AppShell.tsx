@@ -70,7 +70,7 @@ export default function AppShell({ children }: AppShellProps) {
               {/* Hide the wordmark below 360px so the header doesn't overflow
                   the viewport on narrow phones. The wordmark reappears
                   alongside the avatar on wider viewports (audit CR-1). */}
-              <h2 className="hidden min-[360px]:block text-on-surface dark:text-surface-container-lowest text-lg font-bold leading-tight tracking-[0.1em] uppercase">
+              <h2 className="hidden min-[360px]:block text-on-surface dark:text-surface-container-lowest text-lg font-serif font-semibold leading-tight tracking-[0.14em] uppercase">
                 AVERO
               </h2>
             </div>
