@@ -65,7 +65,7 @@ export default function Avatar({ size = 32 }: { size?: number }) {
     );
   }
 
-  if (downloadUrl) {
+  if (downloadUrl && downloadUrl.trim() !== "") {
     return (
       <img
         src={downloadUrl}

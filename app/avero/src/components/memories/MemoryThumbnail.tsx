@@ -218,12 +218,9 @@ function ThumbnailStack({ media }: { media: Media[] }) {
   // prevents a stale resolution from setting state on an unmounted component
   // or leaking the in-flight marker across remounts).
   useEffect(() => {
+    const flight = inFlight.current;
     return () => {
-      // `inFlight` is a `useRef` whose `.current` is the same Set object
-      // across the component's lifetime; we don't need to copy it into a
-      // local because the ref itself never changes identity. The cleanup
-      // mutates the Set (clearing it) on unmount.
-      inFlight.current.clear();
+      flight.clear();
     };
   }, [inFlight]);
 
@@ -337,7 +334,7 @@ function ThumbnailFace({
   // decorative, not primary content, so no retry/broken-icon — the card just
   // has no thumbnail. (The gallery shows a retry because its tiles ARE the
   // content; here they aren't.)
-  if (state.status === "error") {
+  if (state.status === "error" || !state.url || state.url.trim() === "") {
     return null;
   }
 
@@ -421,7 +418,7 @@ function ThumbnailFace({
 function PeekingEdge({ media, state }: { media: Media; state?: ThumbState }) {
   // Only show the peeking edge once its URL has resolved; while loading or on
   // error, render nothing so the front thumbnail stands alone cleanly.
-  if (!state || state.status !== "ready") {
+  if (!state || state.status !== "ready" || !state.url || state.url.trim() === "") {
     return null;
   }
 

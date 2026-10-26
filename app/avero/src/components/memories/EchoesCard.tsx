@@ -16,15 +16,24 @@ export default function EchoesCard({
   thumbnails,
   intervalLabel,
 }: EchoesCardProps) {
-  const thumbnailUrl = thumbnails[0]?.thumbnail_grid_path ?? thumbnails[0]?.thumbnail_path ?? thumbnails[0]?.url ?? "";
+  const thumbnailUrl =
+    thumbnails[0]?.thumbnail_grid_path ??
+    thumbnails[0]?.thumbnail_path ??
+    thumbnails[0]?.url;
 
   return (
     <div className="hover-lift min-w-[280px] md:min-w-[320px] bg-card-warm dark:bg-card-dark border border-outline-variant/40 dark:border-inverse-surface rounded-xl p-4 flex gap-4 items-center shadow-stone cursor-pointer snap-start group">
-      <img
-        alt=""
-        className="w-16 h-16 rounded-lg object-cover bg-surface-container dark:bg-inverse-surface opacity-90 group-hover:opacity-100 transition-opacity"
-        src={thumbnailUrl}
-      />
+      {thumbnailUrl ? (
+        <img
+          alt=""
+          className="w-16 h-16 rounded-lg object-cover bg-surface-container dark:bg-inverse-surface opacity-90 group-hover:opacity-100 transition-opacity shrink-0"
+          src={thumbnailUrl}
+        />
+      ) : (
+        <div className="w-16 h-16 rounded-lg bg-surface-container dark:bg-inverse-surface flex items-center justify-center text-on-surface-variant/50 shrink-0">
+          <span className="material-symbols-outlined text-2xl" data-icon="photo">photo</span>
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <p className="font-mono-data text-mono-data text-accent-warm dark:text-primary-fixed-dim mb-1 transition-colors duration-300">
           {intervalLabel}

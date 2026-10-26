@@ -123,7 +123,7 @@ function Avatar({
     );
   }
 
-  if (downloadUrl) {
+  if (downloadUrl && downloadUrl.trim() !== "") {
     return (
       <img
         src={downloadUrl}

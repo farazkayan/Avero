@@ -1,0 +1,8 @@
+{
+  "name": "avero",
+  "description": "Collaborative memory keeping and shared spaces",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ],
+  "permissions": []
+}

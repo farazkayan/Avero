@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import EmptyState from "../components/ui/EmptyState";
 import PrimaryButton from "../components/ui/PrimaryButton";
+import FlowButton from "../components/ui/flow-button";
 import Spinner from "../components/ui/Spinner";
 import { SparkleIcon } from "../components/ui/icons";
 import SpaceCard from "../components/spaces/SpaceCard";
@@ -221,13 +222,10 @@ export default function SpacesDashboardPage() {
             Shared albums and collaborative memory vaults.
           </p>
         </div>
-        <Link
+        <FlowButton
           to={SPACE_CREATE_PATH}
-          className="flex items-center gap-2 h-12 px-6 rounded-lg bg-accent-warm hover:bg-accent-dark dark:bg-primary-fixed-dim dark:hover:bg-primary-fixed text-on-primary dark:text-on-primary-fixed font-medium transition-colors shadow-sm"
-        >
-          <span className="material-symbols-outlined text-[20px]">add</span>
-          Create a Space
-        </Link>
+          text="Create a Space"
+        />
       </div>
 
       {isLoading ? (

@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { SETTINGS_PATH } from "../constants/routes";
-import { useTheme } from "../context/ThemeContext";
 import { getAvatarDownloadUrl } from "../lib/avatar";
+import ThemeSwitch from "./ui/theme-switch-button";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -11,7 +11,6 @@ type AppShellProps = {
 
 export default function AppShell({ children }: AppShellProps) {
   const { user, avatarUrl, avatarVersion } = useAuth();
-  const { theme, toggleTheme } = useTheme();
 
   // Prefer the profile name captured at sign-up (stored in user_metadata)
   // and fall back to the email — the canonical identity that is always
@@ -36,7 +35,6 @@ export default function AppShell({ children }: AppShellProps) {
   // Fetch avatar download URL when the avatar changes
   useEffect(() => {
     if (!avatarUrl) {
-      setResolvedAvatarUrl(null);
       return;
     }
 
@@ -78,21 +76,8 @@ export default function AppShell({ children }: AppShellProps) {
 
             {/* Right: Theme toggle, Settings, Divider, Avatar + Name */}
             <div className="flex items-center gap-6">
-              {/* Theme Toggle - circular button */}
-              <button
-                onClick={toggleTheme}
-                className="flex cursor-pointer items-center justify-center rounded-full size-10 bg-surface-container hover:bg-surface-container-high dark:bg-inverse-surface dark:hover:bg-outline transition-colors text-on-surface-variant dark:text-surface-container-lowest"
-                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              >
-                {/* Sun icon - show in light theme (dark:hidden) */}
-                <svg className="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                </svg>
-                {/* Moon icon - show in dark theme (hidden dark:block) */}
-                <svg className="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                </svg>
-              </button>
+              {/* Theme Toggle - animated Sun/Moon switch */}
+              <ThemeSwitch />
 
               {/* Settings - circular button */}
               <Link

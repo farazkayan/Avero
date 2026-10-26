@@ -1,0 +1,16 @@
+{
+  "name": "avero-workspace",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "app/avero"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=avero",
+    "build": "npm run build --workspace=avero",
+    "lint": "npm run lint --workspace=avero"
+  },
+  "dependencies": {
+    "lucide-react": "^1.61.0"
+  }
+}

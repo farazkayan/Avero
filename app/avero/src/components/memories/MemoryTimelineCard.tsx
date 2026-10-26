@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import TimelineReactionControl from "../reactions/TimelineReactionControl";
 import { getMediaDownloadUrl } from "../../lib/media";
 import { memoryDetailPath, memoryEditPath } from "../../constants/routes";
@@ -49,46 +49,50 @@ export default function MemoryTimelineCard({
   onDeleted,
 }: MemoryTimelineCardProps) {
   const navigate = useNavigate();
-// Resolved URLs for thumbnails - we need to resolve the B2 object keys to presigned URLs
+  // Resolved URLs for thumbnails - we need to resolve the B2 object keys to presigned URLs
   const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]);
 
   // Resolve thumbnail URLs to presigned URLs for display
-  const resolveThumbnailUrls = useCallback(async () => {
+  useEffect(() => {
     if (thumbnails.length === 0) {
-      setThumbnailUrls([]);
       return;
     }
-    
+
+    let cancelled = false;
+
     // For mosaic layout (2+ photos), we need up to 3 thumbnails and use thumbnail_grid_path (smaller, optimized for grid)
     // For single image layout (1 photo), we need 1 thumbnail and use thumbnail_detail_path (larger, for hero display)
     const useMosaicLayout = thumbnails.length >= 2;
     const maxThumbnailsNeeded = useMosaicLayout ? 3 : 1;
     const thumbnailsToResolve = thumbnails.slice(0, maxThumbnailsNeeded);
-    
-    try {
-      // Resolve URLs in parallel
-      const urlPromises = thumbnailsToResolve.map(thumbnail =>
-        getMediaDownloadUrl(
-          // For mosaic layout, use thumbnail_grid_path (smaller thumbnails for grid display)
-          // For single image layout, use thumbnail_detail_path (larger, for hero display)
-          useMosaicLayout
-            ? (thumbnail.thumbnail_grid_path ?? thumbnail.thumbnail_path ?? thumbnail.url)
-            : (thumbnail.thumbnail_detail_path ?? thumbnail.thumbnail_grid_path ?? thumbnail.thumbnail_path ?? thumbnail.url)
-        )
-      );
-      
-      const results = await Promise.all(urlPromises);
-      const resolvedUrls = results.map(result => result.ok ? result.url : "");
-      setThumbnailUrls(resolvedUrls);
-    } catch {
-      // If URL resolution fails, set empty strings so images don't load
-      setThumbnailUrls(thumbnailsToResolve.map(() => ""));
-    }
-  }, [thumbnails]);
 
-  useEffect(() => {
-    resolveThumbnailUrls();
-  }, [resolveThumbnailUrls]);
+    const urlPromises = thumbnailsToResolve.map((thumbnail) =>
+      getMediaDownloadUrl(
+        useMosaicLayout
+          ? (thumbnail.thumbnail_grid_path ?? thumbnail.thumbnail_path ?? thumbnail.url)
+          : (thumbnail.thumbnail_detail_path ??
+              thumbnail.thumbnail_grid_path ??
+              thumbnail.thumbnail_path ??
+              thumbnail.url)
+      )
+    );
+
+    Promise.all(urlPromises)
+      .then((results) => {
+        if (!cancelled) {
+          setThumbnailUrls(results.map((result) => (result.ok ? result.url : "")));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setThumbnailUrls(thumbnailsToResolve.map(() => ""));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [thumbnails]);
 
   // State for more options menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -162,7 +166,7 @@ return (
           ) : (
             // Single-image card (1 photo): single full-width image header
             <div className="relative h-[220px] sm:h-[260px] overflow-hidden bg-surface-container-low dark:bg-inverse-surface rounded-xl mb-5 transition-colors duration-300">
-              {thumbnailUrls[0] ? (
+              {thumbnailUrls[0] && thumbnailUrls[0].trim() !== "" ? (
                 <img
                   alt=""
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"

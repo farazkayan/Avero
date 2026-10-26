@@ -188,26 +188,25 @@ function SinglePhoto({
       {state.status === "loading" && (
         <div className="absolute inset-0 animate-pulse bg-canvas-raised/50" />
       )}
-      {renderAsImage ? (
-        <img
-          src={state.status === "ready" ? state.url : ""}
-          alt=""
-          loading="lazy"
-          className={[
-            "pointer-events-none h-full w-full select-none object-cover transition-opacity duration-300",
-            state.status === "ready" ? "opacity-100" : "opacity-0",
-          ].join(" ")}
-        />
-      ) : (
-        <video
-          src={state.status === "ready" ? state.url : ""}
-          preload="metadata"
-          muted
-          className="pointer-events-none h-full w-full object-cover"
-          tabIndex={-1}
-          aria-hidden="true"
-        />
-      )}
+      {state.status === "ready" && state.url ? (
+        renderAsImage ? (
+          <img
+            src={state.url}
+            alt=""
+            loading="lazy"
+            className="pointer-events-none h-full w-full select-none object-cover transition-opacity duration-300 opacity-100"
+          />
+        ) : (
+          <video
+            src={state.url}
+            preload="metadata"
+            muted
+            className="pointer-events-none h-full w-full object-cover"
+            tabIndex={-1}
+            aria-hidden="true"
+          />
+        )
+      ) : null}
     </div>
   );
 }
@@ -373,26 +372,25 @@ function MosaicPhoto({
       {state.status === "loading" && (
         <div className="absolute inset-0 animate-pulse bg-canvas-raised/50" />
       )}
-      {renderAsImage ? (
-        <img
-          src={state.status === "ready" ? state.url : ""}
-          alt=""
-          loading="lazy"
-          className={[
-            "pointer-events-none h-full w-full select-none object-cover transition-opacity duration-300",
-            state.status === "ready" ? "opacity-100" : "opacity-0",
-          ].join(" ")}
-        />
-      ) : (
-        <video
-          src={state.status === "ready" ? state.url : ""}
-          preload="metadata"
-          muted
-          className="pointer-events-none h-full w-full object-cover"
-          tabIndex={-1}
-          aria-hidden="true"
-        />
-      )}
+      {state.status === "ready" && state.url ? (
+        renderAsImage ? (
+          <img
+            src={state.url}
+            alt=""
+            loading="lazy"
+            className="pointer-events-none h-full w-full select-none object-cover transition-opacity duration-300 opacity-100"
+          />
+        ) : (
+          <video
+            src={state.url}
+            preload="metadata"
+            muted
+            className="pointer-events-none h-full w-full object-cover"
+            tabIndex={-1}
+            aria-hidden="true"
+          />
+        )
+      ) : null}
     </div>
   );
 }
