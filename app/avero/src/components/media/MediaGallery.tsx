@@ -740,8 +740,8 @@ function MediaTile({
           onLoad={() => setImageLoaded(true)}
         />
       )}
-      {/* Action buttons — appear on hover */}
-      <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      {/* Action buttons — visible on touch devices, appear on hover for desktop */}
+      <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
         {/* Download button — available to all Space members */}
         {onDownload && (
           <button

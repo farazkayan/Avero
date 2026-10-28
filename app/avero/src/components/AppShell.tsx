@@ -57,9 +57,9 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Top Nav Bar - matches Stitch source exactly */}
       <div className="w-full bg-surface-container-lowest dark:bg-card-dark border-b border-surface-variant dark:border-inverse-surface transition-colors duration-300">
         <div className="max-w-[1280px] mx-auto flex h-full grow flex-col">
-          <header className="flex items-center justify-between whitespace-nowrap px-6 py-4 lg:px-12">
+          <header className="flex items-center justify-between whitespace-nowrap px-4 sm:px-6 py-3.5 sm:py-4 lg:px-12">
             {/* Left: Logo + AVERO wordmark */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className="size-8">
                 <img
                   src="/avero-logo.png"
@@ -76,7 +76,7 @@ export default function AppShell({ children }: AppShellProps) {
             </div>
 
             {/* Right: Theme toggle, Settings, Divider, Avatar + Name */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2.5 sm:gap-4 md:gap-6">
               {/* Theme Toggle - animated Sun/Moon switch */}
               <ThemeSwitch />
 
@@ -89,45 +89,45 @@ export default function AppShell({ children }: AppShellProps) {
                 <Settings className="size-5 transition-transform duration-300 group-hover:rotate-45" />
               </Link>
 
-{/* Vertical divider + Avatar + Name */}
-               <div className="flex items-center gap-3 pl-4 border-l border-surface-variant dark:border-inverse-surface">
-                 <span className="hidden md:block text-sm font-medium text-on-surface dark:text-surface-container-lowest">
-                   {displayName}
-                 </span>
-{isAvatarLoading ? (
-                    // Avatar loading state — same 40×40 footprint as the
-                    // loaded avatar so the header layout is stable.
-                    // (audit M-2: a previous inline width/height of 10
-                    // produced a tiny dot skeleton.)
+              {/* Vertical divider + Avatar + Name */}
+              <div className="flex items-center gap-3 pl-2.5 sm:pl-4 border-l border-surface-variant dark:border-inverse-surface">
+                <span className="hidden md:block text-sm font-medium text-on-surface dark:text-surface-container-lowest">
+                  {displayName}
+                </span>
+                {isAvatarLoading ? (
+                  // Avatar loading state — same 40×40 footprint as the
+                  // loaded avatar so the header layout is stable.
+                  // (audit M-2: a previous inline width/height of 10
+                  // produced a tiny dot skeleton.)
+                  <div
+                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline animate-pulse"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  resolvedAvatarUrl ? (
+                    // Avatar image
                     <div
-                      className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline animate-pulse"
-                      aria-hidden="true"
+                      className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline"
+                      style={{
+                        backgroundImage: `url(${resolvedAvatarUrl})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
                     />
                   ) : (
-                   resolvedAvatarUrl ? (
-                     // Avatar image
-                     <div
-                       className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline"
-                       style={{
-                         backgroundImage: `url(${resolvedAvatarUrl})`,
-                         backgroundSize: "cover",
-                         backgroundPosition: "center",
-                       }}
-                     />
-                   ) : (
-                     // No avatar - fallback to initials or default avatar
-                     <div
-                       className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline"
-                     />
-                   )
-                 )}
-               </div>
+                    // No avatar - fallback to initials or default avatar
+                    <div
+                      className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-outline-variant dark:border-outline"
+                    />
+                  )
+                )}
+              </div>
             </div>
           </header>
         </div>
       </div>
 
-      <main className="flex-1 max-w-[1280px] mx-auto w-full px-6 py-10 lg:px-12 flex flex-col gap-8">
+      <main className="flex-1 max-w-[1280px] mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 lg:px-12 lg:py-10 flex flex-col gap-6 sm:gap-8">
         {children}
       </main>
     </div>

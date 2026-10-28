@@ -127,10 +127,10 @@ export default function SpaceCard({ space, role, thumbnails, members, memoryCoun
         </div>
       )}
 
-      <div className="p-6 flex flex-col gap-4">
+      <div className="p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
         <div className="flex justify-between items-start gap-3">
           <h3 
-            className="text-headline-md font-headline-md text-on-surface dark:text-surface-container-lowest group-hover:text-accent-warm dark:group-hover:text-primary-fixed-dim transition-colors text-balance"
+            className="text-headline-sm sm:text-headline-md font-headline-md text-on-surface dark:text-surface-container-lowest group-hover:text-accent-warm dark:group-hover:text-primary-fixed-dim transition-colors text-balance break-words"
           >
             {space.name}
           </h3>

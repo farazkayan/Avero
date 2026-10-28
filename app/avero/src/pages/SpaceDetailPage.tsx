@@ -432,17 +432,17 @@ export default function SpaceDetailPage() {
 
   return (
     <>
-      <div className="mb-12">
-        <BackLink to={AUTHENTICATED_HOME_PATH} className="mb-8" />
+      <div className="mb-6 sm:mb-8 md:mb-12">
+        <BackLink to={AUTHENTICATED_HOME_PATH} className="mb-4 sm:mb-6 md:mb-8" />
 
         {space && (
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 md:gap-6">
             <div>
               <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface dark:text-surface-container-lowest tracking-tight">
                 {space.name}
               </h1>
             </div>
-            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+            <div className="flex items-center gap-2.5 sm:gap-4 flex-wrap w-full sm:w-auto justify-between sm:justify-start">
               <SegmentedControl spaceId={space.id} />
               <CreateMemoryButton spaceId={space.id} />
             </div>
@@ -485,7 +485,7 @@ export default function SpaceDetailPage() {
             />
           )}
 
-          <section className="mt-10">
+          <section className="mt-6 sm:mt-10">
             {memories.length === 0 ? (
               <EmptyState
                 icon={<SparkleIcon />}
@@ -502,7 +502,7 @@ export default function SpaceDetailPage() {
               </EmptyState>
             ) : (
               <>
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8 border-b border-outline-variant/20 dark:border-inverse-surface pb-4 transition-colors duration-300">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6 mb-6 sm:mb-8 border-b border-outline-variant/20 dark:border-inverse-surface pb-4 transition-colors duration-300">
                   <SortControl
                     value={sortOption}
                     onChange={handleSortChange}
@@ -535,7 +535,7 @@ export default function SpaceDetailPage() {
                     </button>
                   </EmptyState>
                 ) : (
-                  <div className="flex flex-col gap-8 sm:gap-12 max-w-3xl mx-auto">
+                  <div className="flex flex-col gap-6 sm:gap-8 md:gap-12 max-w-3xl mx-auto w-full">
                     {filteredMemories.map((memory) => (
                       <MemoryTimelineCard
                         key={memory.id}

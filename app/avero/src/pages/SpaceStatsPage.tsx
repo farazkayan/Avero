@@ -164,43 +164,42 @@ export default function SpaceStatsPage() {
             <h2 className="font-mono-label text-mono-label text-on-surface-variant dark:text-[#8d8d8a] tracking-wider uppercase">
               THE STORY SO FAR
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-[24px]">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-[24px]">
               {/* Stat Card 1 (Memories) */}
-<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
-  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">auto_awesome</span>
-  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_memories ?? 0}</span>
-  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Memories</span>
-</div>
+              <div className="bg-card-warm border border-outline-variant/50 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
+                <span className="material-symbols-outlined absolute top-3 sm:top-4 left-3 sm:left-4 text-on-surface-variant/30 dark:text-white/20 text-[18px] sm:text-[20px]">auto_awesome</span>
+                <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_memories ?? 0}</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a] text-center">Memories</span>
+              </div>
               {/* Stat Card 2 (Photos & videos) */}
-<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
-  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">photo_library</span>
-  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_media ?? 0}</span>
-  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Photos & videos</span>
-</div>
+              <div className="bg-card-warm border border-outline-variant/50 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 transition-transform duration-300 relative dark:bg-[#1a1c1c] dark:border-white/10">
+                <span className="material-symbols-outlined absolute top-3 sm:top-4 left-3 sm:left-4 text-on-surface-variant/30 dark:text-white/20 text-[18px] sm:text-[20px]">photo_library</span>
+                <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_media ?? 0}</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a] text-center">Photos & videos</span>
+              </div>
               {/* Stat Card 3 (Comments) */}
-<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
-  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">chat_bubble</span>
-  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_comments ?? 0}</span>
-  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Comments</span>
-</div>
+              <div className="bg-card-warm border border-outline-variant/50 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
+                <span className="material-symbols-outlined absolute top-3 sm:top-4 left-3 sm:left-4 text-on-surface-variant/30 dark:text-white/20 text-[18px] sm:text-[20px]">chat_bubble</span>
+                <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_comments ?? 0}</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a] text-center">Comments</span>
+              </div>
               {/* Stat Card 4 (Reactions) */}
-<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
-  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">favorite</span>
-  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_reactions ?? 0}</span>
-  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Reactions</span>
-</div>
+              <div className="bg-card-warm border border-outline-variant/50 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
+                <span className="material-symbols-outlined absolute top-3 sm:top-4 left-3 sm:left-4 text-on-surface-variant/30 dark:text-white/20 text-[18px] sm:text-[20px]">favorite</span>
+                <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.total_reactions ?? 0}</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a] text-center">Reactions</span>
+              </div>
               {/* Stat Card 5 (Members) */}
-<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
-  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">group</span>
-  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.member_count ?? 0}</span>
-  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Members</span>
-</div>
+              <div className="bg-card-warm border border-outline-variant/50 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
+                <span className="material-symbols-outlined absolute top-3 sm:top-4 left-3 sm:left-4 text-on-surface-variant/30 dark:text-white/20 text-[18px] sm:text-[20px]">group</span>
+                <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.member_count ?? 0}</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a] text-center">Members</span>
+              </div>
               {/* Stat Card 6 (Days old) */}
-<div className="bg-card-warm border border-outline-variant/50 rounded-xl p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
-  <span className="material-symbols-outlined absolute top-4 left-4 text-on-surface-variant/30 dark:text-white/20 text-[20px]">schedule</span>
-  <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.space_age_days ?? 0}</span>
-  <span className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#8d8d8a]">Days old</span>
-</div>
+              <div className="bg-card-warm border border-outline-variant/50 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center gap-1 hover:-translate-y-0.5 duration-[300ms] relative dark:bg-[#1a1c1c] dark:border-white/10">
+                <span className="material-symbols-outlined absolute top-3 sm:top-4 left-3 sm:left-4 text-on-surface-variant/30 dark:text-white/20 text-[18px] sm:text-[20px]">schedule</span>
+                <span className="font-headline-lg text-headline-lg text-accent-warm dark:text-[#f7d6ac] tabular-nums">{stats?.space_age_days ?? 0}</span>
+              </div>
             </div>
           </section>
 
@@ -310,17 +309,17 @@ export default function SpaceStatsPage() {
                   )}
                 </svg>
               </div>
-              <div className="flex justify-between items-center mt-4 font-mono-data text-mono-data text-on-surface-variant dark:text-[#8d8d8a]">
+              <div className="flex justify-between items-center mt-4 font-mono-data text-mono-data text-on-surface-variant dark:text-[#8d8d8a] text-[11px] sm:text-mono-data">
                 {histogram.length > 0 && (
                   <>
                     <span>{formatMonth(histogram[0].month)}</span>
-                    <span className="opacity-50 dark:opacity-40">
+                    <span className="hidden sm:inline opacity-50 dark:opacity-40">
                       {formatMonth(histogram[Math.floor(histogram.length / 4)].month)}
                     </span>
                     <span className="opacity-50 dark:opacity-40">
                       {formatMonth(histogram[Math.floor(histogram.length / 2)].month)}
                     </span>
-                    <span className="opacity-50 dark:opacity-40">
+                    <span className="hidden sm:inline opacity-50 dark:opacity-40">
                       {formatMonth(histogram[Math.floor(histogram.length * 3 / 4)].month)}
                     </span>
                     <span>{formatMonth(histogram[histogram.length - 1].month)}</span>

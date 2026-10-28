@@ -185,7 +185,7 @@ return (
       {/* Content Area */}
       <div>
         {/* Title & Category Pill */}
-        <div className="flex items-start justify-between gap-4 mb-2">
+        <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-2 sm:gap-4 mb-2">
           <h3 className="font-headline-md text-headline-md text-on-surface dark:text-surface-container-lowest leading-tight transition-colors duration-300">
             <Link
               to={memoryDetailPath(spaceId, memory.id)}
@@ -195,14 +195,14 @@ return (
             </Link>
           </h3>
           {memory.memory_type && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full bg-accent-warm/10 dark:bg-primary-fixed-dim/10 text-accent-warm dark:text-primary-fixed-dim font-mono-label text-mono-label uppercase tracking-widest whitespace-nowrap mt-1 transition-colors duration-300">
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-accent-warm/10 dark:bg-primary-fixed-dim/10 text-accent-warm dark:text-primary-fixed-dim font-mono-label text-mono-label uppercase tracking-widest whitespace-nowrap mt-1 transition-colors duration-300 shrink-0">
               {formatMemoryType(memory.memory_type)}
             </span>
           )}
         </div>
 
         {/* Metadata Row */}
-        <div className="flex items-center gap-3 font-mono-data text-mono-data tabular-nums text-on-surface-variant dark:text-secondary-fixed-dim mb-4 opacity-80 transition-colors duration-300">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono-data text-mono-data tabular-nums text-on-surface-variant dark:text-secondary-fixed-dim mb-4 opacity-80 transition-colors duration-300">
           <span className="flex items-center gap-1.5">
             <span className="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
             {formatMemoryDate(memory.memory_date)}
@@ -249,19 +249,25 @@ return (
               aria-haspopup="menu"
               aria-expanded={open}
               onClick={handleMenuOpen}
-              className="text-on-surface-variant dark:text-secondary-fixed-dim hover:text-primary transition-colors p-1"
+              className="text-on-surface-variant dark:text-secondary-fixed-dim hover:text-primary transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center -mr-2 p-1"
             >
               <span className="material-symbols-outlined text-[20px]" data-icon="more_horiz">more_horiz</span>
             </button>
             
-            {/* Dropdown menu */}
+            {/* Dropdown menu and mobile click-away backdrop */}
             {open && (
-              <div
-                className="absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-canvas-warm dark:bg-canvas-dark shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-20"
-                role="menu"
-                aria-orientation="vertical"
-                aria-labelledby={id}
-              >
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={handleMenuClose}
+                  aria-hidden="true"
+                />
+                <div
+                  className="absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-canvas-warm dark:bg-canvas-dark shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-20"
+                  role="menu"
+                  aria-orientation="vertical"
+                  aria-labelledby={id}
+                >
                 <div className="py-1" role="none">
                   {/* Edit option */}
                   <button
@@ -285,7 +291,8 @@ return (
                   </button>
                 </div>
               </div>
-            )}
+            </>
+          )}
           </div>
         </div>
       </div>

@@ -836,7 +836,7 @@ export default function SpaceSettingsPage() {
 
           {/* Danger zone */}
           <section className="mt-8 pt-8 border-t border-error/20 dark:border-error-container/20">
-            <div className="bg-surface-bright dark:bg-card-dark rounded-lg border border-error/30 dark:border-error-container/30 p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between shadow-stone transition-colors duration-300">
+            <div className="bg-surface-bright dark:bg-card-dark rounded-lg border border-error/30 dark:border-error-container/30 p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center justify-between shadow-stone transition-colors duration-300">
               <div className="flex flex-col gap-2 flex-grow">
                 <h2 className="font-headline-md text-headline-md text-error dark:text-error-container font-medium">
                   Danger zone
@@ -851,7 +851,7 @@ export default function SpaceSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setIsDeleteDialogOpen(true)}
-                  className="px-5 py-2.5 rounded border border-error dark:border-error-container text-error dark:text-error-container hover:bg-error/5 dark:hover:bg-error-container/10 active:scale-95 transition-all duration-200 font-body-sm text-body-sm font-medium whitespace-nowrap"
+                  className="w-full sm:w-auto text-center px-5 py-2.5 rounded border border-error dark:border-error-container text-error dark:text-error-container hover:bg-error/5 dark:hover:bg-error-container/10 active:scale-95 transition-all duration-200 font-body-sm text-body-sm font-medium whitespace-nowrap"
                 >
                   Delete Space
                 </button>
@@ -859,7 +859,7 @@ export default function SpaceSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setIsLeaveDialogOpen(true)}
-                  className="px-5 py-2.5 rounded border border-error dark:border-error-container text-error dark:text-error-container hover:bg-error/5 dark:hover:bg-error-container/10 active:scale-95 transition-all duration-200 font-body-sm text-body-sm font-medium whitespace-nowrap"
+                  className="w-full sm:w-auto text-center px-5 py-2.5 rounded border border-error dark:border-error-container text-error dark:text-error-container hover:bg-error/5 dark:hover:bg-error-container/10 active:scale-95 transition-all duration-200 font-body-sm text-body-sm font-medium whitespace-nowrap"
                 >
                   Leave Space
                 </button>

@@ -150,13 +150,13 @@ export default function ConfirmDialog({
             </div>
 
             {/* Footer Actions */}
-            <div className="bg-surface-container-lowest px-6 py-4 flex items-center justify-end gap-3 border-t border-outline-variant/30 dark:border-white/10 dark:bg-transparent">
+            <div className="bg-surface-container-lowest px-4 sm:px-6 py-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-3 border-t border-outline-variant/30 dark:border-white/10 dark:bg-transparent">
               <button
                 type="button"
                 ref={cancelRef}
                 onClick={onCancel}
                 disabled={loading}
-                className="px-5 py-2.5 rounded font-body-md text-body-md font-medium border border-outline text-on-surface-variant bg-transparent hover:bg-surface-variant transition-colors duration-200 dark:text-surface-container-lowest/80"
+                className="w-full sm:w-auto px-5 py-2.5 rounded font-body-md text-body-md font-medium border border-outline text-on-surface-variant bg-transparent hover:bg-surface-variant transition-colors duration-200 dark:text-surface-container-lowest/80 text-center"
               >
                 {cancelLabel}
               </button>
@@ -165,7 +165,7 @@ export default function ConfirmDialog({
                 onClick={onConfirm}
                 disabled={isConfirmDisabled}
                 aria-busy={loading || undefined}
-                className="px-5 py-2.5 rounded font-body-md text-body-md font-medium border border-error dark:border-[#e27b5f] text-error dark:text-[#e27b5f] bg-transparent hover:bg-error/5 transition-colors duration-200 shadow-sm active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded font-body-md text-body-md font-medium border border-error dark:border-[#e27b5f] text-error dark:text-[#e27b5f] bg-transparent hover:bg-error/5 transition-colors duration-200 shadow-sm active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 text-center"
               >
                 {loading && <Spinner size={16} />}
                 <span>{confirmLabel}</span>

@@ -154,7 +154,7 @@ export default function CreateSpacePage() {
         </div>
 
         <form
-          className="space-y-6 rounded-xl border border-ink/5 bg-canvas-soft p-8 sm:p-12"
+          className="space-y-6 rounded-xl border border-ink/5 bg-canvas-soft p-5 sm:p-12"
           onSubmit={handleSubmit}
           noValidate
           aria-describedby={formError ? "create-space-form-error" : undefined}

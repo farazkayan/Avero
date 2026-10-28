@@ -213,9 +213,9 @@ export default function SpacesDashboardPage() {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 sm:gap-6">
         <div>
-          <h1 className="font-headline-lg text-headline-lg text-on-surface dark:text-surface-container-lowest mb-2">
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface dark:text-surface-container-lowest mb-1 sm:mb-2">
             Your Spaces
           </h1>
           <p className="font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">
@@ -252,7 +252,7 @@ export default function SpacesDashboardPage() {
           </Link>
         </EmptyState>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {memberships.map((membership) => {
             const space = membership.spaces;
             const stats = space.space_stats_cache?.[0];

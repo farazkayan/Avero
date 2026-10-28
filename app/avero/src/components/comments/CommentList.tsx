@@ -684,7 +684,7 @@ function CommentMenu({
         aria-label="Comment actions"
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted opacity-0 transition-opacity duration-200 hover:text-ink focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 group-hover:opacity-100"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted opacity-100 md:opacity-0 transition-opacity duration-200 hover:text-ink focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/60 md:group-hover:opacity-100"
       >
         <MoreIcon />
       </button>

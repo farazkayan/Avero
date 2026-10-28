@@ -45,10 +45,10 @@ export default function AuthShell({ children, ambientCopy }: AuthShellProps) {
         )}
       </button>
 
-      {/* Left Panel (Emotional Space) */}
+      {/* Left Panel (Emotional Space) - Desktop only (hidden on mobile per auth-design §1) */}
       <aside
         aria-hidden="true"
-        className="auth-left-panel relative w-full md:w-[55%] min-h-[409px] md:min-h-screen flex flex-col p-4 md:p-12 border-b md:border-b-0 md:border-r"
+        className="auth-left-panel relative hidden md:flex md:w-[55%] md:min-h-screen flex-col p-6 md:p-12 border-b md:border-b-0 md:border-r"
       >
         {/* Noise overlay */}
         <div className="noise" />
@@ -92,14 +92,14 @@ export default function AuthShell({ children, ambientCopy }: AuthShellProps) {
       </aside>
 
       {/* Right Panel (Auth Form) */}
-      <main className="auth-right-panel w-full md:w-[45%] min-h-screen flex items-center justify-center p-4 md:p-12 relative z-20">
+      <main className="auth-right-panel w-full md:w-[45%] min-h-screen flex items-center justify-center p-6 sm:p-8 md:p-12 relative z-20">
         <div className="w-full max-w-[400px]">
-          {/* Wordmark at top on mobile (ambient panel absent) */}
-          <div className="lg:hidden mb-8">
+          {/* Wordmark at top on mobile (ambient panel hidden) */}
+          <div className="md:hidden mb-8">
             <BrandWordmark />
           </div>
 
-          <div className="flex flex-1 items-center justify-center lg:flex-none">
+          <div className="flex flex-1 items-center justify-center md:flex-none">
             {children}
           </div>
         </div>
