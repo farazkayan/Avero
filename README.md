@@ -94,16 +94,9 @@ The goal is simple: make it easier to keep a life well remembered.
 
 ## A look at the architecture
 
-```mermaid
-flowchart TD
-    Person[People in a browser] --> App[React + TypeScript + Vite]
-    App --> Auth[Supabase Auth]
-    App --> DB[(Supabase Postgres)]
-    App --> Functions[Supabase Edge Functions]
-    Functions --> Media[Cloudflare Worker]
-    Media --> B2[(Backblaze B2 media storage)]
-    DB -. access policies .-> App
-```
+<p align="center">
+  <img src="Logo/avero-architecture.svg" alt="Avero architecture: the React web app connects to Supabase Auth, PostgreSQL, and Edge Functions; media flows through a Cloudflare Worker to private Backblaze B2 storage." width="100%" />
+</p>
 
 <details>
   <summary><strong>How the pieces fit together</strong></summary>
